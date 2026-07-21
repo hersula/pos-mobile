@@ -8,6 +8,7 @@ import '../../data/models/category.dart';
 import '../../data/models/product.dart';
 import '../../data/repositories/product_repository.dart';
 import '../../state/auth_provider.dart';
+import '../procurement/purchase_order_list_screen.dart';
 import 'product_form_screen.dart';
 
 class ProductListScreen extends StatefulWidget {
@@ -79,6 +80,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
       appBar: AppBar(
         title: const Text('Inventori'),
         actions: [
+          if (canManage)
+            IconButton(
+              icon: const Icon(Icons.local_shipping_outlined),
+              tooltip: 'Pengadaan Barang',
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PurchaseOrderListScreen())),
+            ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: _loadProducts,

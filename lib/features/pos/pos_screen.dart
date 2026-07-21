@@ -6,6 +6,7 @@ import '../../core/utils/currency_formatter.dart';
 import '../../data/models/product.dart';
 import '../../data/repositories/product_repository.dart';
 import '../../state/cart_provider.dart';
+import '../common/barcode_scanner_screen.dart';
 import 'cart_screen.dart';
 
 class PosScreen extends StatefulWidget {
@@ -49,12 +50,60 @@ class _PosScreenState extends State<PosScreen> {
     }
   }
 
+  Future<void> _scanAndAddProduct() async {
+    final code = await scanBarcode(context, title: 'Scan Barcode Produk');
+    if (code == null || !mounted) return;
+
+    try {
+      final results = await _productRepo.getProducts(search: code);
+      final product = results.where((p) => p.barcode == code).isNotEmpty
+          ? results.firstWhere((p) => p.barcode == code)
+          : (results.isNotEmpty ? results.first : null);
+
+      if (!mounted) return;
+
+      if (product == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Produk dengan barcode "$code" tidak ditemukan')),
+        );
+        return;
+      }
+
+      if (product.totalStock <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Stok ${product.name} habis'), backgroundColor: AppColors.danger),
+        );
+        return;
+      }
+
+      context.read<CartProvider>().addProduct(product);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${product.name} ditambahkan'), duration: const Duration(milliseconds: 800)),
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal mencari produk berdasarkan barcode')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Kasir')),
+      appBar: AppBar(
+        title: const Text('Kasir'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner_rounded),
+            tooltip: 'Scan barcode',
+            onPressed: _scanAndAddProduct,
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [

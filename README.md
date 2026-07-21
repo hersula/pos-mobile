@@ -33,6 +33,7 @@ Tempel di dalam tag `<manifest>`, sebelum tag `<application>`:
 
 ```xml
 <uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.CAMERA" />
 <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
 <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
 <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
@@ -45,6 +46,8 @@ Kalau backend dites di HTTP lokal (bukan HTTPS) saat development, tambahkan juga
 android:usesCleartextTraffic="true"
 ```
 
+> **Catatan `mobile_scanner`**: pastikan `minSdkVersion` di `android/app/build.gradle` minimal **21**, dan `compileSdkVersion`/`targetSdkVersion` mengikuti default `flutter create` terbaru (biasanya sudah otomatis terpenuhi).
+
 ### b. Tambahkan izin di `ios/Runner/Info.plist` (kalau target iOS)
 
 ```xml
@@ -52,6 +55,8 @@ android:usesCleartextTraffic="true"
 <string>Aplikasi butuh akses Bluetooth untuk mencetak struk ke printer thermal.</string>
 <key>NSBluetoothPeripheralUsageDescription</key>
 <string>Aplikasi butuh akses Bluetooth untuk mencetak struk ke printer thermal.</string>
+<key>NSCameraUsageDescription</key>
+<string>Aplikasi butuh akses kamera untuk scan barcode produk.</string>
 ```
 
 ### c. Set alamat backend
@@ -103,9 +108,11 @@ lib/
 │   └── cart_provider.dart        # keranjang POS (ChangeNotifier)
 ├── features/
 │   ├── auth/                     # login, register, status pending/ditolak
+│   ├── common/                   # komponen dipakai lintas modul (scan barcode)
 │   ├── dashboard/                # bottom navigation antar modul
 │   ├── inventory/                # daftar & form produk
 │   ├── pos/                      # kasir, keranjang, checkout, struk
+│   ├── procurement/               # pengadaan barang (PO) & supplier
 │   ├── reports/                  # tutup kasir & laba rugi
 │   └── settings/                 # profil, printer, logout
 └── services/
@@ -128,6 +135,20 @@ Di `CheckoutScreen`, tombol **Split Bayar** menambah baris metode pembayaran bar
 2. Alamat MAC printer yang dipilih disimpan lokal (`LocalStorage`)
 3. Saat transaksi selesai, `ReceiptScreen` memanggil `ReceiptBuilder.build()` untuk membentuk bytes ESC/POS dari data transaksi (termasuk rincian tiap metode pembayaran & sisa tagihan kalau `PARTIAL`), lalu mengirimkannya lewat `BluetoothPrinterService.printBytes()`
 
+### Scan Barcode
+Tombol ikon scan (📷) tersedia di beberapa tempat:
+- **Form Produk** (`ProductFormScreen`) — hasil scan langsung mengisi field Barcode, memudahkan input barang baru tanpa ketik manual.
+- **Halaman Kasir** (`PosScreen`, ikon di AppBar) — hasil scan langsung dicari lewat `GET /api/products?search=<kode>` (backend sudah mendukung pencarian barcode di endpoint ini sejak Fase 2), dan kalau ketemu langsung ditambahkan ke keranjang tanpa perlu cari manual dari grid produk.
+- **Form Pengadaan Barang** (`PurchaseOrderFormScreen`) — di dalam pemilih produk, tombol scan mempercepat pencarian barang yang mau dibeli.
+
+Komponen `BarcodeScannerScreen` (`lib/features/common/barcode_scanner_screen.dart`) dipakai bersama oleh semuanya lewat helper `scanBarcode(context)`, jadi kalau butuh titik scan baru di layar lain, tinggal panggil fungsi yang sama.
+
+### Pengadaan Barang (Purchase Order)
+Diakses lewat ikon truk (🚚) di AppBar tab **Inventori** (khusus role OWNER/MANAGER/GUDANG, sesuai role yang diizinkan backend):
+- **Buat PO baru** — pilih gudang tujuan & supplier (opsional), tambah produk (bisa lewat scan barcode juga), isi qty & harga beli per item. PO tersimpan berstatus `DRAFT` — **stok belum bertambah**.
+- **Terima Barang** — dari halaman detail PO, tombol ini memanggil `POST /api/purchase-orders/:id/receive`: stok otomatis bertambah di gudang tujuan, dan harga modal (`costPrice`) tiap produk ter-update mengikuti harga beli terbaru. Aksi ini final (PO jadi `RECEIVED`, tidak bisa di-receive dua kali — sudah divalidasi juga di backend).
+- **Kelola Supplier** — ikon di AppBar halaman Pengadaan Barang, list & tambah supplier baru lewat dialog singkat.
+
 ### Sesi Login & Refresh Token
 `ApiClient` otomatis menyisipkan `Authorization: Bearer <token>` di setiap request. Kalau server balas 401 (access token kedaluwarsa), client otomatis mencoba `POST /api/auth/refresh` sekali, lalu mengulang request asli. Kalau refresh juga gagal, sesi dianggap habis dan pengguna diarahkan ke halaman login (lihat `AuthProvider._handleSessionExpired`).
 
@@ -136,7 +157,5 @@ Di `CheckoutScreen`, tombol **Split Bayar** menambah baris metode pembayaran bar
 ## 6. Belum Termasuk / Pengembangan Lanjutan
 
 - Mode offline (draft transaksi tersimpan lokal saat tidak ada internet, baru sync belakangan)
-- Scan barcode kamera untuk cari produk cepat di halaman Kasir
 - Halaman detail & pembatalan transaksi dari riwayat penjualan (endpoint backend `POST /api/sales/:id/cancel` sudah siap, tinggal dibuatkan UI-nya)
-- Modul pembelian/PO ke supplier (endpoint backend sudah ada di `/api/purchase-orders`)
 - Push notification saat tenant di-approve admin

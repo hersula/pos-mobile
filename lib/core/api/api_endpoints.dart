@@ -17,6 +17,8 @@ class ApiEndpoints {
   static const stocks = '/stocks';
   static const stockMovements = '/stock-movements';
   static const purchaseOrders = '/purchase-orders';
+  static String purchaseOrderDetail(String id) => '/purchase-orders/$id';
+  static String purchaseOrderReceive(String id) => '/purchase-orders/$id/receive';
 
   // Penjualan
   static const sales = '/sales';

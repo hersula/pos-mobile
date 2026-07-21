@@ -1,0 +1,218 @@
+import 'package:flutter/material.dart';
+
+import '../../core/api/api_exception.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/date_formatter.dart';
+import '../../data/models/purchase_order.dart';
+import '../../data/repositories/purchase_order_repository.dart';
+
+const _statusLabels = {
+  'DRAFT': 'Menunggu Diterima',
+  'RECEIVED': 'Sudah Diterima',
+  'CANCELLED': 'Dibatalkan',
+};
+
+const _statusColors = {
+  'DRAFT': AppColors.pending,
+  'RECEIVED': AppColors.accent,
+  'CANCELLED': AppColors.danger,
+};
+
+class PurchaseOrderDetailScreen extends StatefulWidget {
+  final String purchaseOrderId;
+  const PurchaseOrderDetailScreen({super.key, required this.purchaseOrderId});
+
+  @override
+  State<PurchaseOrderDetailScreen> createState() => _PurchaseOrderDetailScreenState();
+}
+
+class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
+  final _repo = PurchaseOrderRepository();
+  PurchaseOrder? _po;
+  bool _loading = true;
+  bool _receiving = false;
+  String? _error;
+  bool _changed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final po = await _repo.getPurchaseOrderDetail(widget.purchaseOrderId);
+      if (mounted) setState(() => _po = po);
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _confirmReceive() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Terima Barang?'),
+        content: Text(
+          'Stok untuk ${_po?.items.length ?? 0} produk akan otomatis bertambah di gudang "${_po?.warehouse?.name ?? '-'}", dan harga modal produk ter-update mengikuti harga beli ini. Tindakan ini tidak bisa dibatalkan.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Terima Barang')),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    setState(() => _receiving = true);
+    try {
+      await _repo.receivePurchaseOrder(widget.purchaseOrderId);
+      _changed = true;
+      await _load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Barang diterima, stok berhasil diperbarui'), backgroundColor: AppColors.accent),
+        );
+      }
+    } on ApiException catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: AppColors.danger));
+    } finally {
+      if (mounted) setState(() => _receiving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {},
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_po?.poNumber ?? 'Detail Pengadaan'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () => Navigator.of(context).pop(_changed),
+          ),
+        ),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(_error!, style: const TextStyle(color: AppColors.muted)),
+                        const SizedBox(height: 10),
+                        OutlinedButton(onPressed: _load, child: const Text('Coba Lagi')),
+                      ],
+                    ),
+                  )
+                : _po == null
+                    ? const SizedBox()
+                    : SafeArea(child: _buildContent(_po!)),
+        bottomNavigationBar: (_po?.status == 'DRAFT')
+            ? SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: ElevatedButton.icon(
+                    onPressed: _receiving ? null : _confirmReceive,
+                    icon: _receiving
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.inventory_rounded, size: 18),
+                    label: const Text('Terima Barang'),
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent),
+                  ),
+                ),
+              )
+            : null,
+      ),
+    );
+  }
+
+  Widget _buildContent(PurchaseOrder po) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: (_statusColors[po.status] ?? AppColors.muted).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            _statusLabels[po.status] ?? po.status,
+            style: TextStyle(fontWeight: FontWeight.w800, color: _statusColors[po.status] ?? AppColors.muted),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              children: [
+                _infoRow('No. Pengadaan', po.poNumber),
+                _infoRow('Tanggal Dibuat', DateFormatter.dateTime(po.createdAt)),
+                _infoRow('Supplier', po.supplier?.name ?? 'Tanpa supplier'),
+                _infoRow('Gudang/Toko', po.warehouse?.name ?? '-'),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        const Text('Item Pembelian', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
+        const SizedBox(height: 8),
+        ...po.items.map((item) => Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                title: Text(item.productName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
+                subtitle: Text('${item.qty} ${item.unit} x ${CurrencyFormatter.format(item.unitCost)}', style: const TextStyle(fontSize: 12)),
+                trailing: Text(CurrencyFormatter.format(item.subtotal), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              ),
+            )),
+        const SizedBox(height: 8),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Total', style: TextStyle(fontWeight: FontWeight.w700)),
+                Text(CurrencyFormatter.format(po.total), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: AppColors.ink)),
+              ],
+            ),
+          ),
+        ),
+        if (po.status == 'DRAFT')
+          const Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: Text(
+              'Stok belum bertambah sampai barang ini ditandai "Terima Barang".',
+              style: TextStyle(color: AppColors.muted, fontSize: 12),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 12.5)),
+          Flexible(child: Text(value, textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5))),
+        ],
+      ),
+    );
+  }
+}

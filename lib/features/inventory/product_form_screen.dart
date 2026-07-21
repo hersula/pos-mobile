@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../data/models/category.dart';
 import '../../data/models/product.dart';
 import '../../data/repositories/product_repository.dart';
+import '../common/barcode_scanner_screen.dart';
 
 class ProductFormScreen extends StatefulWidget {
   final Product? product; // null = mode tambah
@@ -127,6 +128,13 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     }
   }
 
+  Future<void> _scanBarcode() async {
+    final code = await scanBarcode(context, title: 'Scan Barcode Produk');
+    if (code != null && mounted) {
+      setState(() => _barcodeCtrl.text = code);
+    }
+  }
+
   Future<void> _confirmDeactivate() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -214,7 +222,14 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _barcodeCtrl,
-                        decoration: const InputDecoration(labelText: 'Barcode (opsional)'),
+                        decoration: InputDecoration(
+                          labelText: 'Barcode (opsional)',
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.qr_code_scanner_rounded),
+                            tooltip: 'Scan barcode',
+                            onPressed: _scanBarcode,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Row(
