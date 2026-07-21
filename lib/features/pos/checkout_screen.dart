@@ -46,11 +46,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   bool _submitting = false;
   String? _error;
 
-  final List<_PaymentEntry> _payments = [_PaymentEntry()];
+  final List<_PaymentEntry> _payments = [];
 
   @override
   void initState() {
     super.initState();
+    final cart = context.read<CartProvider>();
+    // Default: asumsikan dibayar penuh tunai, kasir tinggal ubah kalau mau split/metode lain
+    _payments.add(_PaymentEntry(amount: cart.grandTotal > 0 ? cart.grandTotal.toStringAsFixed(0) : ''));
     _loadWarehouses();
   }
 
@@ -255,7 +258,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     items: _paymentMethods.entries
                         .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
                         .toList(),
-                    onChanged: (v) => setState(() => entry.method = v ?? 'CASH'),
+                    onChanged: (v) {
+                      setState(() {
+                        entry.method = v ?? 'CASH';
+                        // Kalau nominal belum diisi kasir, otomatis isi dengan sisa tagihan
+                        if (entry.amountCtrl.text.trim().isEmpty) {
+                          final cart = context.read<CartProvider>();
+                          final remaining = cart.grandTotal - _totalPaid;
+                          if (remaining > 0) entry.amountCtrl.text = remaining.toStringAsFixed(0);
+                        }
+                      });
+                    },
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -291,7 +304,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 13.5)),
+        Expanded(
+          child: Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 13.5)),
+        ),
         Text(
           CurrencyFormatter.format(amount),
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: color ?? AppColors.ink),

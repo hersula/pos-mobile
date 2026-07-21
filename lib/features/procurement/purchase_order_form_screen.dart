@@ -38,6 +38,7 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
   List<Supplier> _suppliers = [];
   String? _warehouseId;
   String? _supplierId;
+  String _paymentMethod = 'CASH'; // CASH | CREDIT | TRANSFER
   final List<_POItemDraft> _items = [];
 
   bool _loadingRefData = true;
@@ -175,6 +176,7 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
       await _poRepo.createPurchaseOrder(
         supplierId: _supplierId,
         warehouseId: _warehouseId!,
+        paymentMethod: _paymentMethod,
         items: _items
             .map((e) => PurchaseOrderItem(
                   productId: e.product.id,
@@ -225,6 +227,26 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
                     items: _suppliers.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(),
                     onChanged: (v) => setState(() => _supplierId = v),
                   ),
+                  const SizedBox(height: 16),
+                  const Text('Metode Pembayaran', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                  const SizedBox(height: 8),
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: 'CASH', label: Text('Tunai'), icon: Icon(Icons.payments_outlined, size: 16)),
+                      ButtonSegment(value: 'CREDIT', label: Text('Tempo'), icon: Icon(Icons.schedule_rounded, size: 16)),
+                      ButtonSegment(value: 'TRANSFER', label: Text('Transfer'), icon: Icon(Icons.account_balance_outlined, size: 16)),
+                    ],
+                    selected: {_paymentMethod},
+                    onSelectionChanged: (s) => setState(() => _paymentMethod = s.first),
+                  ),
+                  if (_paymentMethod == 'CREDIT')
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Pembayaran tempo akan tercatat sebagai hutang usaha, bisa dilunasi bertahap nanti dari halaman detail.',
+                        style: TextStyle(color: AppColors.muted, fontSize: 12),
+                      ),
+                    ),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -254,7 +276,7 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Total Pembelian', style: TextStyle(fontWeight: FontWeight.w700)),
+                          const Expanded(child: Text('Total Pembelian', style: TextStyle(fontWeight: FontWeight.w700))),
                           Text(CurrencyFormatter.format(_total), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: AppColors.ink)),
                         ],
                       ),

@@ -176,6 +176,11 @@ class _PurchaseOrderListScreenState extends State<PurchaseOrderListScreen> {
                     _statusLabels[po.status] ?? po.status,
                     style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: _statusColors[po.status] ?? AppColors.muted),
                   ),
+                  if (po.status == 'RECEIVED' && po.isCreditPurchase && !po.isDebtSettled)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: Text('Ada Hutang', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.danger)),
+                    ),
                 ],
               ),
             ),

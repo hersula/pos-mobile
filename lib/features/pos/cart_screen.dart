@@ -265,7 +265,7 @@ class _CartScreenState extends State<CartScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: style.copyWith(color: bold ? AppColors.ink : AppColors.muted)),
+          Expanded(child: Text(label, style: style.copyWith(color: bold ? AppColors.ink : AppColors.muted))),
           Text(CurrencyFormatter.format(amount), style: style),
         ],
       ),

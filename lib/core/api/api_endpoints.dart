@@ -19,6 +19,7 @@ class ApiEndpoints {
   static const purchaseOrders = '/purchase-orders';
   static String purchaseOrderDetail(String id) => '/purchase-orders/$id';
   static String purchaseOrderReceive(String id) => '/purchase-orders/$id/receive';
+  static String purchaseOrderPayments(String id) => '/purchase-orders/$id/payments';
 
   // Penjualan
   static const sales = '/sales';
@@ -35,4 +36,5 @@ class ApiEndpoints {
   // Laporan
   static const reportSalesSummary = '/reports/sales-summary';
   static const reportProfitLoss = '/reports/profit-loss';
+  static const reportPurchasesSummary = '/reports/purchases-summary';
 }

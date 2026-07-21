@@ -19,6 +19,24 @@ const _statusColors = {
   'CANCELLED': AppColors.danger,
 };
 
+const _paymentMethodLabels = {
+  'CASH': 'Tunai',
+  'CREDIT': 'Tempo',
+  'TRANSFER': 'Transfer Bank',
+};
+
+const _debtStatusLabels = {
+  'UNPAID': 'Belum Dibayar',
+  'PARTIAL': 'Dibayar Sebagian',
+  'PAID': 'Lunas',
+};
+
+const _debtStatusColors = {
+  'UNPAID': AppColors.danger,
+  'PARTIAL': AppColors.pending,
+  'PAID': AppColors.accent,
+};
+
 class PurchaseOrderDetailScreen extends StatefulWidget {
   final String purchaseOrderId;
   const PurchaseOrderDetailScreen({super.key, required this.purchaseOrderId});
@@ -89,14 +107,113 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
     }
   }
 
+  Future<void> _showPayDebtDialog() async {
+    final po = _po;
+    if (po == null) return;
+
+    String method = 'CASH';
+    final amountCtrl = TextEditingController(text: po.outstandingDebt.toStringAsFixed(0));
+    final refCtrl = TextEditingController();
+    String? dialogError;
+    bool submitting = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Bayar Hutang'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Sisa hutang: ${CurrencyFormatter.format(po.outstandingDebt)}', style: const TextStyle(color: AppColors.muted, fontSize: 12.5)),
+              const SizedBox(height: 14),
+              if (dialogError != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(dialogError!, style: const TextStyle(color: AppColors.danger, fontSize: 12.5)),
+                ),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'CASH', label: Text('Tunai')),
+                  ButtonSegment(value: 'TRANSFER', label: Text('Transfer')),
+                ],
+                selected: {method},
+                onSelectionChanged: (s) => setDialogState(() => method = s.first),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: amountCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(labelText: 'Jumlah Bayar'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: refCtrl,
+                decoration: const InputDecoration(labelText: 'No. Referensi (opsional)'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: submitting ? null : () => Navigator.pop(ctx), child: const Text('Batal')),
+            ElevatedButton(
+              onPressed: submitting
+                  ? null
+                  : () async {
+                      final amount = num.tryParse(amountCtrl.text);
+                      if (amount == null || amount <= 0) {
+                        setDialogState(() => dialogError = 'Jumlah bayar tidak valid');
+                        return;
+                      }
+                      if (amount > po.outstandingDebt + 0.01) {
+                        setDialogState(() => dialogError = 'Jumlah melebihi sisa hutang');
+                        return;
+                      }
+
+                      setDialogState(() {
+                        submitting = true;
+                        dialogError = null;
+                      });
+
+                      try {
+                        await _repo.payDebt(po.id, method: method, amount: amount, referenceNo: refCtrl.text.trim());
+                        _changed = true;
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        await _load();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Pembayaran hutang berhasil dicatat'), backgroundColor: AppColors.accent),
+                          );
+                        }
+                      } on ApiException catch (e) {
+                        setDialogState(() {
+                          dialogError = e.message;
+                          submitting = false;
+                        });
+                      }
+                    },
+              child: submitting
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Text('Bayar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final po = _po;
+    final showReceiveButton = po?.status == 'DRAFT';
+    final showPayDebtButton = po != null && po.status == 'RECEIVED' && po.isCreditPurchase && !po.isDebtSettled;
+
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, result) {},
       child: Scaffold(
         appBar: AppBar(
-          title: Text(_po?.poNumber ?? 'Detail Pengadaan'),
+          title: Text(po?.poNumber ?? 'Detail Pengadaan'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
             onPressed: () => Navigator.of(context).pop(_changed),
@@ -115,10 +232,10 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
                       ],
                     ),
                   )
-                : _po == null
+                : po == null
                     ? const SizedBox()
-                    : SafeArea(child: _buildContent(_po!)),
-        bottomNavigationBar: (_po?.status == 'DRAFT')
+                    : SafeArea(child: _buildContent(po)),
+        bottomNavigationBar: showReceiveButton
             ? SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.all(12),
@@ -132,7 +249,19 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
                   ),
                 ),
               )
-            : null,
+            : showPayDebtButton
+                ? SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: ElevatedButton.icon(
+                        onPressed: _showPayDebtDialog,
+                        icon: const Icon(Icons.payments_rounded, size: 18),
+                        label: Text('Bayar Hutang · ${CurrencyFormatter.format(po!.outstandingDebt)}'),
+                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.pending),
+                      ),
+                    ),
+                  )
+                : null,
       ),
     );
   }
@@ -163,10 +292,64 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
                 _infoRow('Tanggal Dibuat', DateFormatter.dateTime(po.createdAt)),
                 _infoRow('Supplier', po.supplier?.name ?? 'Tanpa supplier'),
                 _infoRow('Gudang/Toko', po.warehouse?.name ?? '-'),
+                _infoRow('Metode Pembayaran', _paymentMethodLabels[po.paymentMethod] ?? po.paymentMethod),
               ],
             ),
           ),
         ),
+        if (po.status == 'RECEIVED' && po.isCreditPurchase) ...[
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Status Hutang', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: (_debtStatusColors[po.paymentStatus] ?? AppColors.muted).withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          _debtStatusLabels[po.paymentStatus] ?? po.paymentStatus,
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _debtStatusColors[po.paymentStatus] ?? AppColors.muted),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _infoRow('Sudah Dibayar', CurrencyFormatter.format(po.paidAmount)),
+                  _infoRow('Sisa Hutang', CurrencyFormatter.format(po.outstandingDebt)),
+                  if (po.payments.isNotEmpty) ...[
+                    const Divider(height: 20),
+                    const Text('Riwayat Pembayaran', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+                    const SizedBox(height: 6),
+                    ...po.payments.map((p) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${_paymentMethodLabels[p.method] ?? p.method} · ${DateFormatter.short(p.createdAt)}',
+                                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                                ),
+                              ),
+                              Text(CurrencyFormatter.format(p.amount), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        )),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         const Text('Item Pembelian', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
         const SizedBox(height: 8),
@@ -185,7 +368,7 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Total', style: TextStyle(fontWeight: FontWeight.w700)),
+                const Expanded(child: Text('Total', style: TextStyle(fontWeight: FontWeight.w700))),
                 Text(CurrencyFormatter.format(po.total), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: AppColors.ink)),
               ],
             ),
@@ -209,7 +392,7 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 12.5)),
+          Expanded(child: Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 12.5))),
           Flexible(child: Text(value, textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5))),
         ],
       ),

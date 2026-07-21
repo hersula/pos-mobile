@@ -17,6 +17,12 @@ const _paymentMethodLabels = {
   'EWALLET': 'E-Wallet',
 };
 
+const _purchasePaymentMethodLabels = {
+  'CASH': 'Tunai',
+  'CREDIT': 'Tempo',
+  'TRANSFER': 'Transfer Bank',
+};
+
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
 
@@ -26,6 +32,10 @@ class ReportsScreen extends StatefulWidget {
 
 class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late bool _canViewAccounting;
+  late bool _canViewPurchases;
+  late int _tabCount;
+
   final _reportRepo = ReportRepository();
 
   DateTime _selectedDate = DateTime.now();
@@ -39,10 +49,21 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   bool _loadingPl = false;
   String? _plError;
 
+  DateTime _purchaseFrom = DateTime(DateTime.now().year, DateTime.now().month, 1);
+  DateTime _purchaseTo = DateTime.now();
+  PurchasesSummary? _purchasesSummary;
+  bool _loadingPurchases = false;
+  String? _purchasesError;
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    final user = context.read<AuthProvider>().currentUser;
+    _canViewAccounting = user?.canViewAccounting ?? false;
+    _canViewPurchases = (user?.canManageInventory ?? false) || _canViewAccounting;
+    _tabCount = 1 + (_canViewAccounting ? 1 : 0) + (_canViewPurchases ? 1 : 0);
+
+    _tabController = TabController(length: _tabCount, vsync: this);
     _loadSummary();
   }
 
@@ -53,6 +74,10 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   }
 
   String _ymd(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  // Index tab: 0 = Tutup Kasir (selalu ada), lalu Laba Rugi & Pembelian menyusul sesuai hak akses
+  int get _profitLossTabIndex => _canViewAccounting ? 1 : -1;
+  int get _purchasesTabIndex => _canViewPurchases ? (1 + (_canViewAccounting ? 1 : 0)) : -1;
 
   Future<void> _loadSummary() async {
     setState(() {
@@ -84,33 +109,54 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
     }
   }
 
+  Future<void> _loadPurchasesSummary() async {
+    setState(() {
+      _loadingPurchases = true;
+      _purchasesError = null;
+    });
+    try {
+      final report = await _reportRepo.getPurchasesSummary(dateFrom: _ymd(_purchaseFrom), dateTo: _ymd(_purchaseTo));
+      if (mounted) setState(() => _purchasesSummary = report);
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _purchasesError = e.message);
+    } finally {
+      if (mounted) setState(() => _loadingPurchases = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<AuthProvider>().currentUser;
-    final canViewAccounting = user?.canViewAccounting ?? false;
+    final tabs = <Tab>[const Tab(text: 'Tutup Kasir')];
+    final views = <Widget>[_buildSummaryTab()];
+
+    if (_canViewAccounting) {
+      tabs.add(const Tab(text: 'Laba Rugi'));
+      views.add(_buildProfitLossTab());
+    }
+    if (_canViewPurchases) {
+      tabs.add(const Tab(text: 'Pembelian'));
+      views.add(_buildPurchasesTab());
+    }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Laporan'),
-        bottom: canViewAccounting
+        bottom: _tabCount > 1
             ? TabBar(
                 controller: _tabController,
                 labelColor: AppColors.ink,
                 indicatorColor: AppColors.accent,
+                isScrollable: _tabCount > 2,
                 onTap: (i) {
-                  if (i == 1 && _profitLoss == null) _loadProfitLoss();
+                  if (i == _profitLossTabIndex && _profitLoss == null) _loadProfitLoss();
+                  if (i == _purchasesTabIndex && _purchasesSummary == null) _loadPurchasesSummary();
                 },
-                tabs: const [Tab(text: 'Tutup Kasir'), Tab(text: 'Laba Rugi')],
+                tabs: tabs,
               )
             : null,
       ),
       body: SafeArea(
-        child: canViewAccounting
-            ? TabBarView(
-                controller: _tabController,
-                children: [_buildSummaryTab(), _buildProfitLossTab()],
-              )
-            : _buildSummaryTab(),
+        child: _tabCount > 1 ? TabBarView(controller: _tabController, children: views) : views.first,
       ),
     );
   }
@@ -250,6 +296,128 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
         _plSection('Beban Operasional', r.expenseAccounts, r.totalOperatingExpenses),
         const Divider(height: 24),
         _plRow('LABA BERSIH', r.netProfit, bold: true, big: true, color: r.netProfit >= 0 ? AppColors.accent : AppColors.danger),
+        if (r.totalPurchasesInPeriod > 0 || r.accountsPayableBalance > 0) ...[
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.line)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Info Tambahan: Pengadaan Barang', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+                const SizedBox(height: 4),
+                const Text(
+                  'Pembelian tidak mengurangi laba di sini — baru jadi HPP saat barang terjual. Angka di bawah cuma info posisi pembelian & hutang usaha berjalan.',
+                  style: TextStyle(color: AppColors.muted, fontSize: 11.5),
+                ),
+                const SizedBox(height: 10),
+                _plRow('Pembelian Periode Ini', r.totalPurchasesInPeriod),
+                if (r.accountsPayableBalance > 0) _plRow('Saldo Hutang Usaha', r.accountsPayableBalance, color: AppColors.danger),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPurchasesTab() {
+    return RefreshIndicator(
+      onRefresh: _loadPurchasesSummary,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _DatePickerRow(
+                  label: DateFormatter.short(_purchaseFrom),
+                  onPick: () async {
+                    final picked = await showDatePicker(context: context, initialDate: _purchaseFrom, firstDate: DateTime(2024), lastDate: DateTime.now());
+                    if (picked != null) setState(() => _purchaseFrom = picked);
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text('s/d', style: TextStyle(color: AppColors.muted)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _DatePickerRow(
+                  label: DateFormatter.short(_purchaseTo),
+                  onPick: () async {
+                    final picked = await showDatePicker(context: context, initialDate: _purchaseTo, firstDate: DateTime(2024), lastDate: DateTime.now());
+                    if (picked != null) setState(() => _purchaseTo = picked);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton(onPressed: _loadPurchasesSummary, child: const Text('Terapkan')),
+          const SizedBox(height: 16),
+          if (_loadingPurchases)
+            const Padding(padding: EdgeInsets.only(top: 40), child: Center(child: CircularProgressIndicator()))
+          else if (_purchasesError != null)
+            Text(_purchasesError!, style: const TextStyle(color: AppColors.danger))
+          else if (_purchasesSummary != null)
+            _buildPurchasesContent(_purchasesSummary!),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPurchasesContent(PurchasesSummary s) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(child: _statCard('Transaksi Pembelian', '${s.totalTransactions}', AppColors.info)),
+            const SizedBox(width: 10),
+            Expanded(child: _statCard('Total Pembelian', CurrencyFormatter.format(s.totalPurchases), AppColors.accent)),
+          ],
+        ),
+        if (s.totalOutstandingDebt > 0) ...[
+          const SizedBox(height: 10),
+          _statCard('Hutang Usaha Belum Lunas', CurrencyFormatter.format(s.totalOutstandingDebt), AppColors.danger, full: true),
+        ],
+        const SizedBox(height: 20),
+        const Text('Rincian per Metode Pembayaran', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
+        const SizedBox(height: 10),
+        if (s.byPaymentMethod.isEmpty)
+          const Text('Belum ada pembelian', style: TextStyle(color: AppColors.muted))
+        else
+          Card(
+            child: Column(
+              children: s.byPaymentMethod.entries
+                  .map((e) => ListTile(
+                        dense: true,
+                        title: Text(_purchasePaymentMethodLabels[e.key] ?? e.key),
+                        trailing: Text(CurrencyFormatter.format(e.value), style: const TextStyle(fontWeight: FontWeight.w700)),
+                      ))
+                  .toList(),
+            ),
+          ),
+        if (s.outstandingDebts.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          const Text('Daftar Hutang Usaha Belum Lunas', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
+          const SizedBox(height: 10),
+          Card(
+            child: Column(
+              children: s.outstandingDebts
+                  .map((d) => ListTile(
+                        dense: true,
+                        title: Text(d.poNumber, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                        subtitle: Text(d.supplierName ?? 'Tanpa supplier', style: const TextStyle(fontSize: 11.5)),
+                        trailing: Text(
+                          CurrencyFormatter.format(d.outstanding),
+                          style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.danger, fontSize: 13),
+                        ),
+                      ))
+                  .toList(),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -275,7 +443,9 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(fontSize: big ? 15 : 13, fontWeight: bold ? FontWeight.w800 : FontWeight.w500)),
+        Expanded(
+          child: Text(label, style: TextStyle(fontSize: big ? 15 : 13, fontWeight: bold ? FontWeight.w800 : FontWeight.w500)),
+        ),
         Text(
           CurrencyFormatter.format(amount),
           style: TextStyle(fontSize: big ? 16 : 13, fontWeight: bold ? FontWeight.w800 : FontWeight.w600, color: color),
