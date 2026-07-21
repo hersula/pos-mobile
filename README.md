@@ -135,6 +135,15 @@ Di `CheckoutScreen`, tombol **Split Bayar** menambah baris metode pembayaran bar
 2. Alamat MAC printer yang dipilih disimpan lokal (`LocalStorage`)
 3. Saat transaksi selesai, `ReceiptScreen` memanggil `ReceiptBuilder.build()` untuk membentuk bytes ESC/POS dari data transaksi (termasuk rincian tiap metode pembayaran & sisa tagihan kalau `PARTIAL`), lalu mengirimkannya lewat `BluetoothPrinterService.printBytes()`
 
+#### Troubleshooting: printer tidak muncul di daftar
+
+Penyebab paling umum (contoh kasus: printer generik seperti **PRJ-R58B**) beserta urutan solusinya, sesuai yang sudah dibuatkan di `PrinterSettingsScreen`:
+
+1. **Printer belum di-pairing di level Android** — `getPairedDevices()` HANYA membaca device yang sudah di-pairing lewat Pengaturan Bluetooth sistem, plugin ini **tidak** melakukan scan BLE ke device baru. Tombol **"Pairing di Pengaturan HP"** di halaman ini langsung membuka `Settings > Bluetooth` Android (via `android_intent_plus`) supaya user bisa pairing tanpa keluar-masuk app. PIN pairing printer thermal generik biasanya `0000` atau `1234`.
+2. **Izin Bluetooth ditolak** — sebelumnya app meminta izin Lokasi yang sebenarnya tidak diperlukan untuk sekadar baca daftar pairing/connect classic Bluetooth (izin Lokasi cuma relevan untuk *scan* BLE), sehingga permintaan izin bisa gagal tanpa alasan yang jelas ke user. Sekarang hanya meminta `BLUETOOTH_CONNECT` (satu-satunya yang benar-benar wajib di Android 12+). Kalau masih tertolak permanen, ada tombol **"Buka Pengaturan Aplikasi"** di banner error untuk mengaktifkannya manual.
+3. **Plugin gagal membaca daftar meski printer sudah paired** (kadang terjadi di beberapa merek/OEM Android) — pakai tombol **"Hubungkan Manual via MAC Address"**: masukkan MAC address printer (cek di stiker printer atau di detail device pairing pada Pengaturan Bluetooth HP), app akan connect langsung tanpa bergantung pada hasil `pairedBluetooths`.
+4. Setelah pairing baru, tekan ikon refresh (⟳) di AppBar halaman Printer Bluetooth — daftar tidak auto-refresh sendiri.
+
 ### Scan Barcode
 Tombol ikon scan (📷) tersedia di beberapa tempat:
 - **Form Produk** (`ProductFormScreen`) — hasil scan langsung mengisi field Barcode, memudahkan input barang baru tanpa ketik manual.
@@ -142,6 +151,7 @@ Tombol ikon scan (📷) tersedia di beberapa tempat:
 - **Form Pengadaan Barang** (`PurchaseOrderFormScreen`) — di dalam pemilih produk, tombol scan mempercepat pencarian barang yang mau dibeli.
 
 Komponen `BarcodeScannerScreen` (`lib/features/common/barcode_scanner_screen.dart`) dipakai bersama oleh semuanya lewat helper `scanBarcode(context)`, jadi kalau butuh titik scan baru di layar lain, tinggal panggil fungsi yang sama.
+
 
 ### Pengadaan Barang (Purchase Order)
 Diakses lewat ikon truk (🚚) di AppBar tab **Inventori** (khusus role OWNER/MANAGER/GUDANG, sesuai role yang diizinkan backend):

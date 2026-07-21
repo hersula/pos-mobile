@@ -26,6 +26,8 @@ dependencies:
   # Cetak struk via printer thermal Bluetooth (ESC/POS)
   print_bluetooth_thermal: ^1.1.4
   esc_pos_utils_plus: ^2.0.4
+  # Buka halaman pengaturan Bluetooth sistem Android langsung dari dalam app
+  android_intent_plus: ^5.1.0
 
   # Cek & minta izin Bluetooth (Android 12+)
   permission_handler: ^11.3.1
