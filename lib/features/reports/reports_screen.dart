@@ -27,10 +27,10 @@ class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
 
   @override
-  State<ReportsScreen> createState() => _ReportsScreenState();
+  State<ReportsScreen> createState() => ReportsScreenState();
 }
 
-class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProviderStateMixin {
+class ReportsScreenState extends State<ReportsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late bool _canViewAccounting;
   late bool _canViewPurchases;
@@ -124,6 +124,18 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
     }
   }
 
+  /// Dipanggil dari [DashboardScreen] setiap kali kasir/owner pindah ke tab
+  /// Laporan, supaya angkanya selalu segar tanpa perlu tarik-refresh manual.
+  /// Tab "Tutup Kasir" selalu di-refresh (murah & selalu jadi tab default),
+  /// sedangkan tab Laba Rugi/Pembelian cuma di-refresh kalau sebelumnya
+  /// sudah pernah dibuka (hemat request kalau belum pernah disentuh sama sekali).
+  Future<void> refreshActiveTab() async {
+    final futures = <Future<void>>[_loadSummary()];
+    if (_profitLoss != null) futures.add(_loadProfitLoss());
+    if (_purchasesSummary != null) futures.add(_loadPurchasesSummary());
+    await Future.wait(futures);
+  }
+
   @override
   Widget build(BuildContext context) {
     final tabs = <Tab>[const Tab(text: 'Tutup Kasir')];
@@ -202,17 +214,19 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
           children: [
             Expanded(child: _statCard('Transaksi', '${s.totalTransactions}', AppColors.info)),
             const SizedBox(width: 10),
-            Expanded(child: _statCard('Omzet Bersih', CurrencyFormatter.format(s.totalNetSales), AppColors.accent)),
+            Expanded(child: _statCard('Item Terjual', '${s.totalItemsSold}', AppColors.info)),
           ],
         ),
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(child: _statCard('Total Diskon', CurrencyFormatter.format(s.totalDiscount), AppColors.pending)),
+            Expanded(child: _statCard('Omzet Bersih', CurrencyFormatter.format(s.totalNetSales), AppColors.accent)),
             const SizedBox(width: 10),
-            Expanded(child: _statCard('PPN Terkumpul', CurrencyFormatter.format(s.totalTax), AppColors.muted)),
+            Expanded(child: _statCard('Total Diskon', CurrencyFormatter.format(s.totalDiscount), AppColors.pending)),
           ],
         ),
+        const SizedBox(height: 10),
+        _statCard('PPN Terkumpul', CurrencyFormatter.format(s.totalTax), AppColors.muted, full: true),
         if (s.totalOutstanding > 0) ...[
           const SizedBox(height: 10),
           _statCard('Piutang Belum Lunas', CurrencyFormatter.format(s.totalOutstanding), AppColors.danger, full: true),
@@ -234,6 +248,30 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                   .toList(),
             ),
           ),
+        if (s.topProducts.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          const Text('Produk Terlaris', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
+          const SizedBox(height: 10),
+          Card(
+            child: Column(
+              children: s.topProducts.asMap().entries.map((entry) {
+                final rank = entry.key + 1;
+                final p = entry.value;
+                return ListTile(
+                  dense: true,
+                  leading: CircleAvatar(
+                    radius: 13,
+                    backgroundColor: AppColors.accentSoft,
+                    child: Text('$rank', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: AppColors.accent)),
+                  ),
+                  title: Text(p.productName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  subtitle: Text(CurrencyFormatter.format(p.revenue), style: const TextStyle(fontSize: 11.5)),
+                  trailing: Text('${p.qtySold} terjual', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.accent)),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
       ],
     );
   }

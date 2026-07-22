@@ -13,14 +13,34 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int _index = 0;
+  static const _reportsTabIndex = 2;
 
-  final _screens = const [
-    PosScreen(),
-    ProductListScreen(),
-    ReportsScreen(),
-    SettingsScreen(),
-  ];
+  int _index = 0;
+  final GlobalKey<ReportsScreenState> _reportsKey = GlobalKey<ReportsScreenState>();
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const PosScreen(),
+      const ProductListScreen(),
+      ReportsScreen(key: _reportsKey),
+      const SettingsScreen(),
+    ];
+  }
+
+  void _onDestinationSelected(int index) {
+    setState(() => _index = index);
+
+    // Refresh otomatis setiap kali kasir/owner pindah ke tab Laporan, supaya
+    // angka penjualan/laba-rugi/pembelian selalu terbaru tanpa perlu
+    // tarik-refresh manual. ReportsScreen tetap hidup di IndexedStack (state-nya
+    // tidak hilang saat pindah tab), jadi butuh trigger manual lewat GlobalKey ini.
+    if (index == _reportsTabIndex) {
+      _reportsKey.currentState?.refreshActiveTab();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +48,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: IndexedStack(index: _index, children: _screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
+        onDestinationSelected: _onDestinationSelected,
         backgroundColor: AppColors.surface,
         indicatorColor: AppColors.accentSoft,
         destinations: const [

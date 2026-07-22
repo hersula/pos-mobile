@@ -2,35 +2,60 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_endpoints.dart';
 import '../../core/utils/num_parser.dart';
 
+class TopProduct {
+  final String productId;
+  final String productName;
+  final int qtySold;
+  final num revenue;
+
+  TopProduct({required this.productId, required this.productName, required this.qtySold, required this.revenue});
+
+  factory TopProduct.fromJson(Map<String, dynamic> json) {
+    return TopProduct(
+      productId: json['productId'] as String,
+      productName: json['productName'] as String,
+      qtySold: parseInt(json['qtySold']),
+      revenue: parseNum(json['revenue']),
+    );
+  }
+}
+
 class SalesSummary {
   final int totalTransactions;
+  final int totalItemsSold;
   final num totalGrossSales;
   final num totalDiscount;
   final num totalTax;
   final num totalNetSales;
   final num totalOutstanding;
   final Map<String, num> byPaymentMethod;
+  final List<TopProduct> topProducts;
 
   SalesSummary({
     required this.totalTransactions,
+    required this.totalItemsSold,
     required this.totalGrossSales,
     required this.totalDiscount,
     required this.totalTax,
     required this.totalNetSales,
     required this.totalOutstanding,
     required this.byPaymentMethod,
+    this.topProducts = const [],
   });
 
   factory SalesSummary.fromJson(Map<String, dynamic> json) {
     final byMethodJson = (json['byPaymentMethod'] as Map<String, dynamic>?) ?? {};
+    final topProductsJson = (json['topProducts'] as List<dynamic>?) ?? [];
     return SalesSummary(
       totalTransactions: parseInt(json['totalTransactions']),
+      totalItemsSold: parseInt(json['totalItemsSold']),
       totalGrossSales: parseNum(json['totalGrossSales']),
       totalDiscount: parseNum(json['totalDiscount']),
       totalTax: parseNum(json['totalTax']),
       totalNetSales: parseNum(json['totalNetSales']),
       totalOutstanding: parseNum(json['totalOutstanding']),
       byPaymentMethod: byMethodJson.map((k, v) => MapEntry(k, parseNum(v))),
+      topProducts: topProductsJson.map((e) => TopProduct.fromJson(e as Map<String, dynamic>)).toList(),
     );
   }
 }

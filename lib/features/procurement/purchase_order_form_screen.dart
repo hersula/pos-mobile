@@ -216,6 +216,7 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
                     ),
                   DropdownButtonFormField<String>(
                     value: _warehouseId,
+                    isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Gudang/Toko Tujuan'),
                     items: _warehouses.map((w) => DropdownMenuItem(value: w.id, child: Text(w.name))).toList(),
                     onChanged: (v) => setState(() => _warehouseId = v),
@@ -223,6 +224,7 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: _supplierId,
+                    isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Supplier (opsional)'),
                     items: _suppliers.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(),
                     onChanged: (v) => setState(() => _supplierId = v),

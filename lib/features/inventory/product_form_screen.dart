@@ -195,6 +195,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
                         value: _categoryId,
+                        isExpanded: true,
                         decoration: const InputDecoration(labelText: 'Kategori (opsional)'),
                         items: _categories
                             .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
@@ -264,6 +265,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         const SizedBox(height: 10),
                         DropdownButtonFormField<String>(
                           value: _warehouseId,
+                          isExpanded: true,
                           decoration: const InputDecoration(labelText: 'Gudang/Toko'),
                           items: _warehouses
                               .map((w) => DropdownMenuItem(value: w.id, child: Text(w.name)))

@@ -180,6 +180,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   if (_warehouses.length > 1) ...[
                     DropdownButtonFormField<String>(
                       value: _warehouseId,
+                      isExpanded: true,
                       decoration: const InputDecoration(labelText: 'Gudang/Toko'),
                       items: _warehouses.map((w) => DropdownMenuItem(value: w.id, child: Text(w.name))).toList(),
                       onChanged: (v) => setState(() => _warehouseId = v),
@@ -254,6 +255,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   child: DropdownButtonFormField<String>(
                     value: entry.method,
                     isDense: true,
+                    isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Metode'),
                     items: _paymentMethods.entries
                         .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))

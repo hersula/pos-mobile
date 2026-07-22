@@ -12,7 +12,7 @@ dependencies:
   cupertino_icons: ^1.0.6
 
   # Networking
-  dio: ^5.5.0
+  dio: ^5.4.3
 
   # State management
   provider: ^6.1.2
@@ -26,8 +26,6 @@ dependencies:
   # Cetak struk via printer thermal Bluetooth (ESC/POS)
   print_bluetooth_thermal: ^1.1.4
   esc_pos_utils_plus: ^2.0.4
-  # Buka halaman pengaturan Bluetooth sistem Android langsung dari dalam app
-  android_intent_plus: ^5.1.0
 
   # Cek & minta izin Bluetooth (Android 12+)
   permission_handler: ^11.3.1
@@ -38,34 +36,13 @@ dependencies:
   # Scan barcode pakai kamera - dipakai di form produk & halaman kasir
   mobile_scanner: ^5.2.3
 
-  package_info_plus: ^8.0.0
-  http: ^1.2.2
-  open_filex: ^4.4.0
-  path_provider: ^2.1.3
-  install_plugin: ^2.1.0
+  # Buka halaman pengaturan Bluetooth sistem Android langsung dari dalam app
+  android_intent_plus: ^5.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
 
-  # App Icon Generator
-  flutter_launcher_icons: ^0.14.4
-
-# Konfigurasi Icon Aplikasi
-flutter_launcher_icons:
-  android: true
-  ios: true
-
-  # lokasi file icon
-  image_path: "assets/icon/pos-mobile.png"
-
-  # Android adaptive icon
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/icon/pos-mobile.png"
-
 flutter:
   uses-material-design: true
-
-  assets:
-    - assets/icon/
