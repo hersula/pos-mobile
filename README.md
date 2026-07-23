@@ -144,6 +144,18 @@ Penyebab paling umum (contoh kasus: printer generik seperti **PRJ-R58B**) besert
 3. **Plugin gagal membaca daftar meski printer sudah paired** (kadang terjadi di beberapa merek/OEM Android) — pakai tombol **"Hubungkan Manual via MAC Address"**: masukkan MAC address printer (cek di stiker printer atau di detail device pairing pada Pengaturan Bluetooth HP), app akan connect langsung tanpa bergantung pada hasil `pairedBluetooths`.
 4. Setelah pairing baru, tekan ikon refresh (⟳) di AppBar halaman Printer Bluetooth — daftar tidak auto-refresh sendiri.
 
+#### Troubleshooting: struk cuma tercetak sebagian (mis. cuma nama toko, lalu berhenti)
+
+Ini bukan masalah data (semua field — nama toko, jam transaksi `HH:mm`, daftar item, harga, subtotal, total, metode bayar — sudah dibentuk lengkap oleh `ReceiptBuilder`), tapi masalah **transmisi ke printer**. Banyak printer thermal murah/generik punya buffer terima yang kecil; kalau seluruh data struk (bisa 800+ byte untuk transaksi dengan banyak item) dikirim sekaligus dalam satu panggilan, sisa data yang tidak muat di buffer akan hilang — printer cuma sempat mencetak bagian paling awal (biasanya nama toko, karena dicetak besar/bold jadi makan waktu lebih lama, keburu buffer penuh sebelum sisanya sampai).
+
+**Fix yang sudah diterapkan** di `BluetoothPrinterService.printBytes()`:
+- Data dikirim bertahap per **200 byte**, bukan sekaligus, dengan jeda 30ms di antaranya — memberi waktu printer "mencerna" tiap potongan sebelum menerima potongan berikutnya.
+- `generator.reset()` (perintah ESC/POS inisialisasi ulang) ditambahkan di awal setiap cetak (`ReceiptBuilder` & `PurchaseOrderReceiptBuilder`) untuk membersihkan sisa state cetak sebelumnya.
+
+Fix ini otomatis berlaku untuk **semua** jenis cetakan (struk penjualan maupun nota pengadaan barang) karena keduanya lewat method `printBytes()` yang sama.
+
+Kalau setelah update ini masih terpotong juga, coba lakukan **Test Print** di halaman Printer Bluetooth (Pengaturan → Printer Bluetooth → Test Print) — sekarang mencetak 15 baris uji coba sekaligus, kalau baris terakhir "SELESAI" ikut tercetak utuh berarti printer sudah beres; kalau masih terpotong di tengah, coba naikkan jeda `delayBetweenChunks` di `bluetooth_printer_service.dart` (mis. jadi 50-80ms) atau kecilkan `chunkSize` (mis. jadi 100) — beberapa printer generik butuh jeda lebih panjang dari yang lain.
+
 ### Scan Barcode
 Tombol ikon scan (📷) tersedia di beberapa tempat:
 - **Form Produk** (`ProductFormScreen`) — hasil scan langsung mengisi field Barcode, memudahkan input barang baru tanpa ketik manual.
@@ -158,6 +170,7 @@ Diakses lewat ikon truk (🚚) di AppBar tab **Inventori** (khusus role OWNER/MA
 - **Buat PO baru** — pilih gudang tujuan & supplier (opsional), tambah produk (bisa lewat scan barcode juga), isi qty & harga beli per item. PO tersimpan berstatus `DRAFT` — **stok belum bertambah**.
 - **Terima Barang** — dari halaman detail PO, tombol ini memanggil `POST /api/purchase-orders/:id/receive`: stok otomatis bertambah di gudang tujuan, dan harga modal (`costPrice`) tiap produk ter-update mengikuti harga beli terbaru. Aksi ini final (PO jadi `RECEIVED`, tidak bisa di-receive dua kali — sudah divalidasi juga di backend).
 - **Kelola Supplier** — ikon di AppBar halaman Pengadaan Barang, list & tambah supplier baru lewat dialog singkat.
+- **Cetak Nota** — tombol di halaman detail PO (AppBar & tombol utama), mencetak nota pengadaan barang ke printer thermal Bluetooth (`PurchaseOrderReceiptBuilder`, format ESC/POS sama dengan struk penjualan). Nota mencantumkan No. PO, tanggal, supplier, gudang tujuan, rincian item, metode bayar, dan status hutang + sisa tagihan kalau pembeliannya tempo (`CREDIT`) — plus kolom tanda tangan "Diserahkan oleh / Diterima oleh" untuk bukti serah terima fisik. Bisa dicetak kapan saja, termasuk saat PO masih `DRAFT` (nota otomatis menandai "barang belum diterima").
 
 ### Laporan (Tutup Kasir, Laba Rugi, Pembelian)
 - **Auto-refresh saat pindah tab** — `DashboardScreen` memakai `IndexedStack` supaya state tiap tab (termasuk filter tanggal di Laporan) tidak hilang saat pindah-pindah menu. Konsekuensinya, `ReportsScreen` normalnya *tidak* otomatis reload data saat dibuka ulang. Untuk mengatasi ini, `DashboardScreen` menyimpan `GlobalKey<ReportsScreenState>` dan memanggil method publik `refreshActiveTab()` setiap kali bottom nav pindah ke tab **Laporan** — jadi kasir selalu lihat angka terbaru tanpa perlu tarik-refresh manual. Tab "Tutup Kasir" selalu di-refresh (murah, tab default); tab Laba Rugi/Pembelian cuma ikut di-refresh kalau sebelumnya sudah pernah dibuka (hemat request).
@@ -166,10 +179,21 @@ Diakses lewat ikon truk (🚚) di AppBar tab **Inventori** (khusus role OWNER/MA
 ### Sesi Login & Refresh Token
 `ApiClient` otomatis menyisipkan `Authorization: Bearer <token>` di setiap request. Kalau server balas 401 (access token kedaluwarsa), client otomatis mencoba `POST /api/auth/refresh` sekali, lalu mengulang request asli. Kalau refresh juga gagal, sesi dianggap habis dan pengguna diarahkan ke halaman login (lihat `AuthProvider._handleSessionExpired`).
 
+### ⚠️ Pola Wajib: `TextEditingController` Tidak Boleh Dibuat di Dalam Method `build`
+
+Bug yang pernah terjadi (field qty di form Pengadaan Barang cuma bisa diisi 1 digit, field diskon/PPN di Keranjang serupa) disebabkan `TextEditingController(text: ...)` dibuat ulang setiap kali widget di-*rebuild* — begitu `setState`/`onChanged` jalan, controller lama "dibuang" dan diganti yang baru dengan cursor/teks ke-reset, jadi user cuma sempat mengetik 1 karakter sebelum field terasa "macet".
+
+**Aturan:** controller untuk field yang nilainya berubah lewat `setState`/Provider harus dibuat **sekali saja** dan disimpan sebagai field/instance variable (bukan variabel lokal di dalam `build()` atau method yang dipanggil dari `build()`), lalu di-`dispose()` saat widget/item-nya tidak dipakai lagi. Pola yang benar:
+- Form dengan field tetap (jumlah item statis) → buat controller di `initState()`, simpan sebagai `late final` field di State, dispose di `dispose()`. Contoh: `ProductFormScreen`.
+- List item dinamis (bisa nambah/hapus baris, mis. item PO) → simpan controller sebagai field di dalam model item itu sendiri (bukan di widget-nya), dibuat sekali saat item ditambahkan, di-dispose saat item dihapus atau saat State di-dispose. Contoh: `_POItemDraft` di `purchase_order_form_screen.dart`.
+- Dialog sementara (`showDialog`) → boleh dibuat sekali di scope function sebelum `showDialog` dipanggil, selama TIDAK dibuat ulang di dalam `builder:`/`StatefulBuilder`'s `builder:` callback (yang itu yang di-rebuild berulang).
+
+Sebelum menambah field input baru yang controlled, cek dulu apakah controller-nya berpotensi ikut ke-rebuild bareng parent widget-nya.
+
 ---
 
 ## 6. Belum Termasuk / Pengembangan Lanjutan
 
 - Mode offline (draft transaksi tersimpan lokal saat tidak ada internet, baru sync belakangan)
 - Halaman detail & pembatalan transaksi dari riwayat penjualan (endpoint backend `POST /api/sales/:id/cancel` sudah siap, tinggal dibuatkan UI-nya)
-- Push notification saat tenant di-approve admin
+- Push notification saat tenant di-approve admin (saat ini notifikasi dikirim lewat WhatsApp dari backend, lihat README backend)

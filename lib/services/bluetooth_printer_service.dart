@@ -49,7 +49,34 @@ class BluetoothPrinterService {
 
   /// Kirim bytes ESC/POS yang sudah jadi (lihat [ReceiptBuilder]) ke printer
   /// yang sedang terkoneksi. Return false kalau printer belum/tidak terhubung.
-  Future<bool> printBytes(List<int> bytes) => PrintBluetoothThermal.writeBytes(bytes);
+  ///
+  /// PENTING: data dikirim per potongan kecil (bukan sekaligus dalam satu
+  /// panggilan) dengan jeda singkat di antaranya. Banyak printer thermal
+  /// murah (generik, mis. seri PRJ-R58B) punya buffer terima yang kecil —
+  /// kalau seluruh data struk (bisa 800+ byte untuk transaksi dengan banyak
+  /// item) dikirim sekaligus, sisa data yang tidak muat di buffer akan
+  /// hilang begitu saja, dan printer cuma sempat mencetak bagian paling awal
+  /// (biasanya nama toko, karena itu yang paling duluan terkirim). Mengirim
+  /// bertahap dengan jeda memberi waktu printer "mencerna" tiap potongan
+  /// sebelum menerima potongan berikutnya.
+  Future<bool> printBytes(List<int> bytes) async {
+    const chunkSize = 200;
+    const delayBetweenChunks = Duration(milliseconds: 30);
+
+    var allSuccess = true;
+    for (var i = 0; i < bytes.length; i += chunkSize) {
+      final end = (i + chunkSize < bytes.length) ? i + chunkSize : bytes.length;
+      final chunk = bytes.sublist(i, end);
+
+      final success = await PrintBluetoothThermal.writeBytes(chunk);
+      if (!success) allSuccess = false;
+
+      if (end < bytes.length) {
+        await Future.delayed(delayBetweenChunks);
+      }
+    }
+    return allSuccess;
+  }
 
   /// Validasi format MAC address kasar (mis. "AA:BB:CC:DD:EE:FF"), dipakai
   /// untuk opsi "Hubungkan Manual" saat printer tidak muncul di daftar pairing.

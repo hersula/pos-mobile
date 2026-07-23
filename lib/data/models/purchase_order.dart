@@ -67,6 +67,9 @@ class PurchaseOrder {
   final Warehouse? warehouse;
   final List<PurchaseOrderItem> items;
   final List<PurchasePayment> payments;
+  final String? businessName;
+  final String? businessAddress;
+  final String? businessPhone;
 
   PurchaseOrder({
     required this.id,
@@ -81,6 +84,9 @@ class PurchaseOrder {
     this.warehouse,
     required this.items,
     this.payments = const [],
+    this.businessName,
+    this.businessAddress,
+    this.businessPhone,
   });
 
   /// Sisa hutang yang belum dibayar. Hanya relevan kalau [paymentMethod] == CREDIT.
@@ -95,6 +101,7 @@ class PurchaseOrder {
   factory PurchaseOrder.fromJson(Map<String, dynamic> json) {
     final itemsJson = (json['items'] as List<dynamic>?) ?? [];
     final paymentsJson = (json['payments'] as List<dynamic>?) ?? [];
+    final tenant = json['tenant'] as Map<String, dynamic>?;
     return PurchaseOrder(
       id: json['id'] as String,
       poNumber: json['poNumber'] as String,
@@ -108,6 +115,9 @@ class PurchaseOrder {
       warehouse: json['warehouse'] != null ? Warehouse.fromJson(json['warehouse'] as Map<String, dynamic>) : null,
       items: itemsJson.map((e) => PurchaseOrderItem.fromJson(e as Map<String, dynamic>)).toList(),
       payments: paymentsJson.map((e) => PurchasePayment.fromJson(e as Map<String, dynamic>)).toList(),
+      businessName: tenant?['businessName'] as String?,
+      businessAddress: tenant?['address'] as String?,
+      businessPhone: tenant?['phone'] as String?,
     );
   }
 }

@@ -16,9 +16,20 @@ class _POItemDraft {
   final Product product;
   int qty;
   num unitCost;
-  _POItemDraft({required this.product, this.qty = 1, num? unitCost}) : unitCost = unitCost ?? product.costPrice;
+  late final TextEditingController qtyCtrl;
+  late final TextEditingController unitCostCtrl;
+
+  _POItemDraft({required this.product, this.qty = 1, num? unitCost}) : unitCost = unitCost ?? product.costPrice {
+    qtyCtrl = TextEditingController(text: qty.toString());
+    unitCostCtrl = TextEditingController(text: this.unitCost.toString());
+  }
 
   num get subtotal => qty * unitCost;
+
+  void dispose() {
+    qtyCtrl.dispose();
+    unitCostCtrl.dispose();
+  }
 }
 
 class PurchaseOrderFormScreen extends StatefulWidget {
@@ -49,6 +60,14 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
   void initState() {
     super.initState();
     _loadRefData();
+  }
+
+  @override
+  void dispose() {
+    for (final item in _items) {
+      item.dispose();
+    }
+    super.dispose();
   }
 
   Future<void> _loadRefData() async {
@@ -149,13 +168,19 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
       final existing = _items.where((e) => e.product.id == product.id);
       if (existing.isNotEmpty) {
         existing.first.qty += 1;
+        existing.first.qtyCtrl.text = existing.first.qty.toString();
       } else {
         _items.add(_POItemDraft(product: product));
       }
     });
   }
 
-  void _removeItem(int index) => setState(() => _items.removeAt(index));
+  void _removeItem(int index) {
+    setState(() {
+      _items[index].dispose();
+      _items.removeAt(index);
+    });
+  }
 
   Future<void> _submit() async {
     if (_warehouseId == null) {
@@ -303,8 +328,6 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
 
   Widget _buildItemCard(int index) {
     final item = _items[index];
-    final qtyCtrl = TextEditingController(text: item.qty.toString());
-    final costCtrl = TextEditingController(text: item.unitCost.toString());
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -328,7 +351,7 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: qtyCtrl,
+                    controller: item.qtyCtrl,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(labelText: 'Qty (${item.product.unit})', isDense: true),
                     onChanged: (v) => setState(() => item.qty = int.tryParse(v) ?? item.qty),
@@ -338,7 +361,7 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
                 Expanded(
                   flex: 2,
                   child: TextField(
-                    controller: costCtrl,
+                    controller: item.unitCostCtrl,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(labelText: 'Harga Beli/Satuan', isDense: true),
                     onChanged: (v) => setState(() => item.unitCost = num.tryParse(v) ?? item.unitCost),

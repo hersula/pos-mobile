@@ -22,6 +22,9 @@ class ReceiptBuilder {
     final generator = Generator(paperSize, profile);
     final bytes = <int>[];
 
+    // Reset printer ke kondisi default dulu (bersihkan sisa state cetak sebelumnya)
+    bytes.addAll(generator.reset());
+
     bytes.addAll(generator.text(
       sale.businessName ?? 'Toko',
       styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2),

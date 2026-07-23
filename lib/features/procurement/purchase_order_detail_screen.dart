@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/storage/local_storage.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../data/models/purchase_order.dart';
 import '../../data/repositories/purchase_order_repository.dart';
+import '../../services/bluetooth_printer_service.dart';
+import '../../services/purchase_order_receipt_builder.dart';
+import '../settings/printer_settings_screen.dart';
 
 const _statusLabels = {
   'DRAFT': 'Menunggu Diterima',
@@ -47,9 +52,11 @@ class PurchaseOrderDetailScreen extends StatefulWidget {
 
 class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
   final _repo = PurchaseOrderRepository();
+  final _printerService = BluetoothPrinterService();
   PurchaseOrder? _po;
   bool _loading = true;
   bool _receiving = false;
+  bool _printing = false;
   String? _error;
   bool _changed = false;
 
@@ -202,6 +209,50 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
     );
   }
 
+  Future<void> _printNota() async {
+    final po = _po;
+    if (po == null) return;
+
+    setState(() => _printing = true);
+    try {
+      String? address = await LocalStorage.instance.getPrinterAddress();
+      if (address == null) {
+        _showMessage('Belum ada printer terhubung. Atur dulu di menu Pengaturan.', isError: true);
+        final connected = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(builder: (_) => const PrinterSettingsScreen()),
+        );
+        if (connected != true) return;
+        address = await LocalStorage.instance.getPrinterAddress();
+        if (address == null) return;
+      }
+
+      final isConnected = await _printerService.isConnected();
+      if (!isConnected) {
+        final ok = await _printerService.connect(address);
+        if (!ok) {
+          _showMessage('Gagal terhubung ke printer. Coba sambungkan ulang di Pengaturan.', isError: true);
+          return;
+        }
+      }
+
+      final bytes = await PurchaseOrderReceiptBuilder.build(po, paperSize: PaperSize.mm58);
+      final success = await _printerService.printBytes(bytes);
+
+      _showMessage(success ? 'Nota berhasil dicetak' : 'Gagal mengirim data ke printer', isError: !success);
+    } catch (e) {
+      _showMessage('Terjadi kesalahan saat mencetak: $e', isError: true);
+    } finally {
+      if (mounted) setState(() => _printing = false);
+    }
+  }
+
+  void _showMessage(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: isError ? AppColors.danger : AppColors.accent),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final po = _po;
@@ -218,6 +269,16 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
             icon: const Icon(Icons.arrow_back_rounded),
             onPressed: () => Navigator.of(context).pop(_changed),
           ),
+          actions: [
+            if (po != null)
+              IconButton(
+                icon: _printing
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.print_rounded),
+                tooltip: 'Cetak Nota',
+                onPressed: _printing ? null : _printNota,
+              ),
+          ],
         ),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
@@ -235,33 +296,50 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
                 : po == null
                     ? const SizedBox()
                     : SafeArea(child: _buildContent(po)),
-        bottomNavigationBar: showReceiveButton
-            ? SafeArea(
+        bottomNavigationBar: po == null
+            ? null
+            : SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.all(12),
-                  child: ElevatedButton.icon(
-                    onPressed: _receiving ? null : _confirmReceive,
-                    icon: _receiving
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Icon(Icons.inventory_rounded, size: 18),
-                    label: const Text('Terima Barang'),
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _printing ? null : _printNota,
+                          icon: _printing
+                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Icons.print_rounded, size: 18),
+                          label: const Text('Cetak Nota'),
+                        ),
+                      ),
+                      if (showReceiveButton) ...[
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _receiving ? null : _confirmReceive,
+                            icon: _receiving
+                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                : const Icon(Icons.inventory_rounded, size: 18),
+                            label: const Text('Terima Barang'),
+                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent),
+                          ),
+                        ),
+                      ] else if (showPayDebtButton) ...[
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton.icon(
+                            onPressed: _showPayDebtDialog,
+                            icon: const Icon(Icons.payments_rounded, size: 18),
+                            label: Text('Bayar Hutang · ${CurrencyFormatter.format(po.outstandingDebt)}'),
+                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.pending),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-              )
-            : showPayDebtButton
-                ? SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: ElevatedButton.icon(
-                        onPressed: _showPayDebtDialog,
-                        icon: const Icon(Icons.payments_rounded, size: 18),
-                        label: Text('Bayar Hutang · ${CurrencyFormatter.format(po!.outstandingDebt)}'),
-                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.pending),
-                      ),
-                    ),
-                  )
-                : null,
+              ),
       ),
     );
   }

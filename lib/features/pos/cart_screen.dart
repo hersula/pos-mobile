@@ -18,6 +18,23 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   final _customerRepo = CustomerRepository();
+  late final TextEditingController _discountCtrl;
+  late final TextEditingController _taxCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    final cart = context.read<CartProvider>();
+    _discountCtrl = TextEditingController(text: cart.discountValue == 0 ? '' : cart.discountValue.toString());
+    _taxCtrl = TextEditingController(text: cart.taxPercent.toString());
+  }
+
+  @override
+  void dispose() {
+    _discountCtrl.dispose();
+    _taxCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -189,9 +206,6 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildDiscountAndTax(CartProvider cart) {
-    final discountCtrl = TextEditingController(text: cart.discountValue == 0 ? '' : cart.discountValue.toString());
-    final taxCtrl = TextEditingController(text: cart.taxPercent.toString());
-
     return _SectionCard(
       title: 'Diskon & PPN',
       child: Column(
@@ -201,7 +215,7 @@ class _CartScreenState extends State<CartScreen> {
               Expanded(
                 flex: 3,
                 child: TextField(
-                  controller: discountCtrl,
+                  controller: _discountCtrl,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(labelText: 'Diskon'),
                   onChanged: (v) => cart.setDiscount(cart.discountType, num.tryParse(v) ?? 0),
@@ -223,7 +237,7 @@ class _CartScreenState extends State<CartScreen> {
           ),
           const SizedBox(height: 12),
           TextField(
-            controller: taxCtrl,
+            controller: _taxCtrl,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(labelText: 'PPN (%)'),
             onChanged: (v) => cart.setTaxPercent(num.tryParse(v) ?? 0),

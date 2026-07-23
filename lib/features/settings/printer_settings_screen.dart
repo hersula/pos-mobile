@@ -188,10 +188,25 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
       final profile = await CapabilityProfile.load();
       final generator = Generator(PaperSize.mm58, profile);
       final bytes = <int>[];
+      bytes.addAll(generator.reset());
       bytes.addAll(generator.text('TEST PRINT', styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2)));
       bytes.addAll(generator.text('Printer berhasil terhubung', styles: const PosStyles(align: PosAlign.center)));
       bytes.addAll(generator.hr());
-      bytes.addAll(generator.text('Aplikasi POS siap mencetak struk.'));
+      // Cetak beberapa baris sekaligus (bukan cuma 1-2 baris) supaya kalau ada
+      // masalah struk terpotong di tengah (buffer printer kewalahan), langsung
+      // ketahuan dari sini — baris terakhir "SELESAI" harus ikut tercetak utuh.
+      for (var i = 1; i <= 15; i++) {
+        bytes.addAll(generator.row([
+          PosColumn(text: 'Baris pengujian ke-$i', width: 8),
+          PosColumn(text: 'OK', width: 4, styles: const PosStyles(align: PosAlign.right)),
+        ]));
+      }
+      bytes.addAll(generator.hr());
+      bytes.addAll(generator.text('SELESAI', styles: const PosStyles(align: PosAlign.center, bold: true)));
+      bytes.addAll(generator.text(
+        'Kalau baris ini ikut tercetak, printer siap dipakai untuk struk penjualan.',
+        styles: const PosStyles(align: PosAlign.center),
+      ));
       bytes.addAll(generator.feed(2));
       bytes.addAll(generator.cut());
 
