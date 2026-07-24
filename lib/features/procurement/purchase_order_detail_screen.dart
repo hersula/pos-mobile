@@ -235,7 +235,8 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
         }
       }
 
-      final bytes = await PurchaseOrderReceiptBuilder.build(po, paperSize: PaperSize.mm58);
+      final paperSize = await _getSavedPaperSize();
+      final bytes = await PurchaseOrderReceiptBuilder.build(po, paperSize: paperSize);
       final success = await _printerService.printBytes(bytes);
 
       _showMessage(success ? 'Nota berhasil dicetak' : 'Gagal mengirim data ke printer', isError: !success);
@@ -244,6 +245,11 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
     } finally {
       if (mounted) setState(() => _printing = false);
     }
+  }
+
+  Future<PaperSize> _getSavedPaperSize() async {
+    final saved = await LocalStorage.instance.getPrinterPaperSize();
+    return saved == 'mm80' ? PaperSize.mm80 : PaperSize.mm58;
   }
 
   void _showMessage(String message, {bool isError = false}) {

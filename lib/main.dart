@@ -3,15 +3,26 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 
 import 'core/constants/app_theme.dart';
+import 'core/storage/local_storage.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/pending_status_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
+import 'services/bluetooth_printer_service.dart';
 import 'state/auth_provider.dart';
 import 'state/cart_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id_ID');
+
+  // Terapkan preset kecepatan cetak yang pernah dipilih user (lihat
+  // PrinterSettingsScreen) supaya konsisten dipakai tiap kali cetak,
+  // tanpa perlu diatur ulang setiap buka app.
+  final savedPreset = await LocalStorage.instance.getPrintSpeedPreset();
+  if (savedPreset != null) {
+    BluetoothPrinterService.applySpeedPreset(savedPreset);
+  }
+
   runApp(const PosApp());
 }
 

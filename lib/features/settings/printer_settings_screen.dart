@@ -19,6 +19,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   final _printerService = BluetoothPrinterService();
   List<PrinterDevice> _devices = [];
   String? _savedAddress;
+  String _speedPreset = 'normal';
+  String _paperSize = 'mm58';
   bool _loading = true;
   bool _connecting = false;
   bool _permissionDenied = false;
@@ -38,6 +40,9 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     });
     try {
       _savedAddress = await LocalStorage.instance.getPrinterAddress();
+      _speedPreset = await LocalStorage.instance.getPrintSpeedPreset() ?? 'normal';
+      _paperSize = await LocalStorage.instance.getPrinterPaperSize() ?? 'mm58';
+      BluetoothPrinterService.applySpeedPreset(_speedPreset);
 
       final granted = await _printerService.requestPermissions();
       if (!granted) {
@@ -59,6 +64,17 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
 
   /// Buka halaman Pengaturan > Bluetooth bawaan Android supaya user bisa
   /// pairing printer dulu, tanpa harus keluar-masuk app secara manual.
+  Future<void> _setSpeedPreset(String preset) async {
+    setState(() => _speedPreset = preset);
+    BluetoothPrinterService.applySpeedPreset(preset);
+    await LocalStorage.instance.savePrintSpeedPreset(preset);
+  }
+
+  Future<void> _setPaperSize(String size) async {
+    setState(() => _paperSize = size);
+    await LocalStorage.instance.savePrinterPaperSize(size);
+  }
+
   Future<void> _openSystemBluetoothSettings() async {
     if (!Platform.isAndroid) {
       _showSnack('Buka Pengaturan > Bluetooth di HP kamu secara manual untuk pairing printer.');
@@ -179,18 +195,32 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   Future<void> _testPrint() async {
     setState(() => _connecting = true);
     try {
-      final isConnected = await _printerService.isConnected();
+      var isConnected = await _printerService.isConnected();
       if (!isConnected) {
-        _showSnack('Belum terhubung ke printer manapun', isError: true);
-        return;
+        // Koneksi Bluetooth SPP tidak bertahan lintas sesi app — device yang
+        // sudah dipilih/paired sebelumnya (ada di _savedAddress) belum tentu
+        // socket-nya masih aktif kalau app baru saja dibuka lagi. Sebelum
+        // bilang "belum terhubung", coba sambungkan ulang otomatis dulu.
+        if (_savedAddress != null) {
+          isConnected = await _printerService.connect(_savedAddress!);
+        }
+        if (!isConnected) {
+          _showSnack('Belum terhubung ke printer manapun. Pilih printer dari daftar di atas dulu.', isError: true);
+          return;
+        }
       }
 
+      final paperSize = _paperSize == 'mm80' ? PaperSize.mm80 : PaperSize.mm58;
       final profile = await CapabilityProfile.load();
-      final generator = Generator(PaperSize.mm58, profile);
+      final generator = Generator(paperSize, profile);
       final bytes = <int>[];
       bytes.addAll(generator.reset());
       bytes.addAll(generator.text('TEST PRINT', styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2)));
       bytes.addAll(generator.text('Printer berhasil terhubung', styles: const PosStyles(align: PosAlign.center)));
+      bytes.addAll(generator.text(
+        paperSize == PaperSize.mm80 ? 'Kertas: 80mm' : 'Kertas: 58mm',
+        styles: const PosStyles(align: PosAlign.center),
+      ));
       bytes.addAll(generator.hr());
       // Cetak beberapa baris sekaligus (bukan cuma 1-2 baris) supaya kalau ada
       // masalah struk terpotong di tengah (buffer printer kewalahan), langsung
@@ -204,7 +234,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
       bytes.addAll(generator.hr());
       bytes.addAll(generator.text('SELESAI', styles: const PosStyles(align: PosAlign.center, bold: true)));
       bytes.addAll(generator.text(
-        'Kalau baris ini ikut tercetak, printer siap dipakai untuk struk penjualan.',
+        'Kalau baris ini ikut tercetak DAN lebar teks di atas pas dengan lebar kertas kamu, printer siap dipakai.',
         styles: const PosStyles(align: PosAlign.center),
       ));
       bytes.addAll(generator.feed(2));
@@ -315,7 +345,41 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        const Text('Lebar Kertas', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Kalau hasil cetak kelihatan tidak pas dengan lebar kertas fisik (kepenuhan/kesempitan), coba ganti opsi ini — beberapa printer generik tidak konsisten dengan label resminya.',
+                          style: TextStyle(color: AppColors.muted, fontSize: 12),
+                        ),
+                        const SizedBox(height: 10),
+                        SegmentedButton<String>(
+                          segments: const [
+                            ButtonSegment(value: 'mm58', label: Text('58mm')),
+                            ButtonSegment(value: 'mm80', label: Text('80mm')),
+                          ],
+                          selected: {_paperSize},
+                          onSelectionChanged: (s) => _setPaperSize(s.first),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text('Kecepatan Cetak', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Kalau struk masih terpotong/berhenti di tengah jalan, coba turunkan kecepatan ini bertahap.',
+                          style: TextStyle(color: AppColors.muted, fontSize: 12),
+                        ),
+                        const SizedBox(height: 10),
+                        SegmentedButton<String>(
+                          segments: const [
+                            ButtonSegment(value: 'normal', label: Text('Normal')),
+                            ButtonSegment(value: 'slow', label: Text('Lambat')),
+                            ButtonSegment(value: 'very_slow', label: Text('Sangat Lambat')),
+                          ],
+                          selected: {_speedPreset},
+                          onSelectionChanged: (s) => _setSpeedPreset(s.first),
+                        ),
+                        const SizedBox(height: 16),
                         OutlinedButton.icon(
                           onPressed: _showManualConnectDialog,
                           icon: const Icon(Icons.keyboard_rounded, size: 18),

@@ -12,6 +12,8 @@ class LocalStorage {
   static const _kUserProfile = 'user_profile';
   static const _kPrinterAddress = 'printer_address';
   static const _kPrinterName = 'printer_name';
+  static const _kPrintSpeedPreset = 'print_speed_preset';
+  static const _kPrinterPaperSize = 'printer_paper_size';
 
   Future<void> saveSession({
     required String accessToken,
@@ -68,5 +70,32 @@ class LocalStorage {
   Future<String?> getPrinterName() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kPrinterName);
+  }
+
+  /// Preset kecepatan cetak (lihat [BluetoothPrinterService.applySpeedPreset]):
+  /// "normal" | "slow" | "very_slow". Disimpan supaya pilihan user tetap
+  /// dipakai lagi tiap buka app, tidak perlu diatur ulang tiap kali cetak.
+  Future<void> savePrintSpeedPreset(String preset) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kPrintSpeedPreset, preset);
+  }
+
+  Future<String?> getPrintSpeedPreset() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kPrintSpeedPreset);
+  }
+
+  /// Lebar kertas printer: "mm58" (default) | "mm80". Beberapa printer generik
+  /// tidak konsisten dengan label lebar kertas resminya (kepala cetak fisik
+  /// beda dot-width dari yang diklaim), jadi dibuat bisa dipilih manual lewat
+  /// Pengaturan Printer daripada di-hardcode.
+  Future<void> savePrinterPaperSize(String size) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kPrinterPaperSize, size);
+  }
+
+  Future<String?> getPrinterPaperSize() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kPrinterPaperSize);
   }
 }

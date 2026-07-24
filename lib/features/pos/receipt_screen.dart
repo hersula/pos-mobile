@@ -6,6 +6,7 @@ import '../../core/storage/local_storage.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../data/models/sale.dart';
+import '../../data/repositories/sales_repository.dart';
 import '../../services/bluetooth_printer_service.dart';
 import '../../services/receipt_builder.dart';
 import '../settings/printer_settings_screen.dart';
@@ -29,6 +30,7 @@ class ReceiptScreen extends StatefulWidget {
 
 class _ReceiptScreenState extends State<ReceiptScreen> {
   final _printerService = BluetoothPrinterService();
+  final _salesRepo = SalesRepository();
   bool _printing = false;
 
   Future<void> _printReceipt() async {
@@ -46,16 +48,32 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
       final printerAddress = await LocalStorage.instance.getPrinterAddress();
       if (printerAddress == null) return;
 
-      final isConnected = await _printerService.isConnected();
+      var isConnected = await _printerService.isConnected();
       if (!isConnected) {
-        final ok = await _printerService.connect(printerAddress);
-        if (!ok) {
+        // Koneksi Bluetooth SPP tidak bertahan lintas sesi app — walau device
+        // sudah paired & pernah dipilih sebelumnya, socket-nya perlu di-connect
+        // ulang tiap kali app dibuka lagi. Coba sambungkan otomatis dulu di sini
+        // sebelum nyerah, supaya user tidak perlu bolak-balik ke Pengaturan.
+        isConnected = await _printerService.connect(printerAddress);
+        if (!isConnected) {
           _showMessage('Gagal terhubung ke printer. Coba sambungkan ulang di Pengaturan.', isError: true);
           return;
         }
       }
 
-      final bytes = await ReceiptBuilder.build(widget.sale, paperSize: PaperSize.mm58);
+      // Ambil ulang detail transaksi dari server sebelum cetak — memastikan
+      // data toko/kasir/item selalu lengkap & terbaru, apapun sumber objek
+      // Sale yang dipakai untuk buka layar ini (mis. langsung dari respons
+      // checkout yang mungkin belum lengkap relasinya).
+      Sale saleToPrint = widget.sale;
+      try {
+        saleToPrint = await _salesRepo.getSaleDetail(widget.sale.id);
+      } catch (_) {
+        // Kalau gagal (mis. offline), tetap lanjut cetak pakai data yang ada
+      }
+
+      final paperSize = await _getSavedPaperSize();
+      final bytes = await ReceiptBuilder.build(saleToPrint, paperSize: paperSize);
       final success = await _printerService.printBytes(bytes);
 
       _showMessage(success ? 'Struk berhasil dicetak' : 'Gagal mengirim data ke printer', isError: !success);
@@ -64,6 +82,11 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     } finally {
       if (mounted) setState(() => _printing = false);
     }
+  }
+
+  Future<PaperSize> _getSavedPaperSize() async {
+    final saved = await LocalStorage.instance.getPrinterPaperSize();
+    return saved == 'mm80' ? PaperSize.mm80 : PaperSize.mm58;
   }
 
   void _showMessage(String message, {bool isError = false}) {

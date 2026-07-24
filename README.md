@@ -144,17 +144,32 @@ Penyebab paling umum (contoh kasus: printer generik seperti **PRJ-R58B**) besert
 3. **Plugin gagal membaca daftar meski printer sudah paired** (kadang terjadi di beberapa merek/OEM Android) — pakai tombol **"Hubungkan Manual via MAC Address"**: masukkan MAC address printer (cek di stiker printer atau di detail device pairing pada Pengaturan Bluetooth HP), app akan connect langsung tanpa bergantung pada hasil `pairedBluetooths`.
 4. Setelah pairing baru, tekan ikon refresh (⟳) di AppBar halaman Printer Bluetooth — daftar tidak auto-refresh sendiri.
 
-#### Troubleshooting: struk cuma tercetak sebagian (mis. cuma nama toko, lalu berhenti)
+#### Bug yang sudah diperbaiki: struk penjualan cuma keluar tulisan "Toko"
 
-Ini bukan masalah data (semua field — nama toko, jam transaksi `HH:mm`, daftar item, harga, subtotal, total, metode bayar — sudah dibentuk lengkap oleh `ReceiptBuilder`), tapi masalah **transmisi ke printer**. Banyak printer thermal murah/generik punya buffer terima yang kecil; kalau seluruh data struk (bisa 800+ byte untuk transaksi dengan banyak item) dikirim sekaligus dalam satu panggilan, sisa data yang tidak muat di buffer akan hilang — printer cuma sempat mencetak bagian paling awal (biasanya nama toko, karena dicetak besar/bold jadi makan waktu lebih lama, keburu buffer penuh sebelum sisanya sampai).
+**Root cause sebenarnya bukan kecepatan cetak** (walau itu juga sempat diperbaiki di preset kecepatan di bawah), tapi **data yang dikirim ke printer memang tidak lengkap**: endpoint `POST /api/sales` (dipanggil saat checkout) ternyata tidak menyertakan relasi `tenant` di response-nya, jadi begitu transaksi baru selesai dibuat dan langsung dicetak, `sale.businessName` masih `null` → `ReceiptBuilder` fallback ke teks literal **"Toko"** (lihat `sale.businessName ?? 'Toko'`) — persis apa yang dilihat user. Sudah diperbaiki di dua lapis:
 
-**Fix yang sudah diterapkan** di `BluetoothPrinterService.printBytes()`:
-- Data dikirim bertahap per **200 byte**, bukan sekaligus, dengan jeda 30ms di antaranya — memberi waktu printer "mencerna" tiap potongan sebelum menerima potongan berikutnya.
+1. **Backend** — `POST /api/sales` sekarang ikut meng-include `tenant`, `cashier`, `customer`, `warehouse`, jadi respons langsung setelah checkout sudah lengkap.
+2. **Mobile (lapis pengaman tambahan)** — sebelum benar-benar mengirim ke printer, `ReceiptScreen` sekarang selalu **ambil ulang detail transaksi terbaru** lewat `GET /api/sales/:id` (`SalesRepository.getSaleDetail`), bukan langsung pakai objek `Sale` yang diterima dari layar sebelumnya. Kalau fetch ini gagal (mis. lagi offline), tetap lanjut cetak pakai data yang ada sebagai fallback — supaya cetak tidak pernah gagal total gara-gara masalah jaringan sesaat.
+
+#### Bug yang sudah diperbaiki: Test Print bilang "belum terhubung" padahal printer sudah terhubung
+
+Koneksi Bluetooth klasik (SPP) **tidak bertahan lintas sesi aplikasi** — walau printer sudah pernah dipilih & terhubung sebelumnya (tersimpan di `LocalStorage`), begitu app ditutup lalu dibuka lagi, socket-nya sudah putus dan perlu `connect()` ulang secara eksplisit. Sebelumnya `_testPrint()` di `PrinterSettingsScreen` langsung nyerah begitu `isConnected()` balas `false`, tanpa coba sambungkan ulang dulu pakai alamat yang tersimpan. Sekarang diperbaiki: kalau belum terkoneksi, otomatis coba `connect()` pakai `_savedAddress` dulu sebelum benar-benar dianggap gagal. Perbaikan yang sama juga sudah ada di alur cetak struk penjualan & nota pembelian.
+
+#### Ukuran/lebar hasil cetak tidak sesuai fisik kertas (mis. sudah pilih 58mm tapi hasilnya kelihatan salah)
+
+Beberapa printer generik murah **tidak konsisten dengan label lebar kertas resminya** — kepala cetak fisiknya bisa saja beda dot-width dari yang diklaim di kardus/nama produk, jadi walau kode sudah eksplisit set `PaperSize.mm58`, hasil cetak masih bisa kelihatan tidak pas di kertas 58mm fisik pada model tertentu. Karena ini murni karakteristik hardware yang beda-beda per merek dan tidak bisa dideteksi otomatis dari software, sekarang ada pemilih **Lebar Kertas: 58mm / 80mm** di halaman **Pengaturan → Printer Bluetooth** — tinggal coba kedua opsi lewat **Test Print** (sekarang juga menampilkan baris "Kertas: 58mm/80mm" supaya gampang dibandingkan) dan pakai yang hasilnya paling pas secara fisik. Pilihan otomatis tersimpan dan dipakai untuk struk penjualan maupun nota pembelian.
+
+#### Troubleshooting: struk masih terpotong di tengah jalan (bukan cuma "Toko" doang, tapi beneran kepotong sebagian)
+
+Ini beda kasus dari bug "Toko" di atas — kalau datanya sudah lengkap (nama toko asli muncul, bukan fallback) tapi tetap berhenti di tengah struk yang panjang, ini soal **kecepatan cetak fisik**. Printer thermal itu perangkat mekanik — kepala cetak butuh waktu nyata untuk menggerakkan kertas & "membakar" tiap baris, apalagi baris besar/tebal seperti nama toko (jauh lebih lambat dicetak daripada teks biasa). Kalau software terus mengirim data baru lebih cepat daripada kecepatan cetak fisik printer, buffer terima printer (yang di printer generik murah biasanya kecil) jadi penuh dan **sisa data yang belum sempat dicetak dibuang begitu saja**.
+
+**Solusi cepat tanpa perlu update aplikasi** — buka **Pengaturan → Printer Bluetooth**, di bagian bawah ada pemilih **Kecepatan Cetak**: Normal / Lambat / Sangat Lambat. Kalau struk masih terpotong di "Normal", coba "Lambat", lalu "Sangat Lambat" kalau masih belum cukup. Pilihan ini otomatis tersimpan (`LocalStorage`) dan langsung dipakai untuk semua cetakan berikutnya (struk penjualan maupun nota pengadaan barang, karena keduanya lewat method `printBytes()` yang sama). Setelah ganti preset, coba **Test Print** dulu (mencetak 15 baris uji coba) — kalau baris terakhir "SELESAI" ikut tercetak utuh, berarti preset itu sudah cukup untuk printer kamu.
+
+**Detail teknis** (`BluetoothPrinterService`):
+- Data dikirim bertahap per potongan kecil (default 48 byte di preset Normal, turun ke 16 byte di preset Sangat Lambat), dengan jeda di antaranya (120ms Normal, sampai 280ms Sangat Lambat) — bukan dikirim sekaligus dalam satu panggilan.
+- Ada jeda "pemanasan" 250ms di awal (kasih waktu printer siap menerima setelah `connect()`/`reset()`) dan jeda "penutup" 200ms di akhir sebelum proses cetak dianggap selesai.
 - `generator.reset()` (perintah ESC/POS inisialisasi ulang) ditambahkan di awal setiap cetak (`ReceiptBuilder` & `PurchaseOrderReceiptBuilder`) untuk membersihkan sisa state cetak sebelumnya.
-
-Fix ini otomatis berlaku untuk **semua** jenis cetakan (struk penjualan maupun nota pengadaan barang) karena keduanya lewat method `printBytes()` yang sama.
-
-Kalau setelah update ini masih terpotong juga, coba lakukan **Test Print** di halaman Printer Bluetooth (Pengaturan → Printer Bluetooth → Test Print) — sekarang mencetak 15 baris uji coba sekaligus, kalau baris terakhir "SELESAI" ikut tercetak utuh berarti printer sudah beres; kalau masih terpotong di tengah, coba naikkan jeda `delayBetweenChunks` di `bluetooth_printer_service.dart` (mis. jadi 50-80ms) atau kecilkan `chunkSize` (mis. jadi 100) — beberapa printer generik butuh jeda lebih panjang dari yang lain.
+- Preset kecepatan didefinisikan di `BluetoothPrinterService.speedPresets` — kalau preset "Sangat Lambat" masih belum cukup untuk printer tertentu yang benar-benar bermasalah, nilainya bisa ditambah manual di kode (chunk makin kecil, delay makin panjang).
 
 ### Scan Barcode
 Tombol ikon scan (📷) tersedia di beberapa tempat:
