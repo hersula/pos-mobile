@@ -37,4 +37,9 @@ class ApiEndpoints {
   static const reportSalesSummary = '/reports/sales-summary';
   static const reportProfitLoss = '/reports/profit-loss';
   static const reportPurchasesSummary = '/reports/purchases-summary';
+
+  // Langganan tenant
+  static const tenantSubscription = '/tenant/subscription';
+  static const tenantSubscriptionUpgrade = '/tenant/subscription/upgrade';
+  static const tenantSubscriptionRequestPayment = '/tenant/subscription/request-payment';
 }

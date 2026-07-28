@@ -133,10 +133,38 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         );
       }
     } on ApiException catch (e) {
+      if (e.data?['code'] == 'FREE_LIMIT_REACHED') {
+        setState(() => _submitting = false);
+        _showFreeLimitDialog(e.message);
+        return;
+      }
       setState(() => _error = e.message);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  Future<void> _showFreeLimitDialog(String message) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Batas Transaksi Harian Tercapai'),
+        content: Text(message),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nanti Saja')),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Buka tab "Pengaturan" untuk upgrade ke Berlangganan')),
+              );
+            },
+            child: const Text('Lihat Opsi Upgrade'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

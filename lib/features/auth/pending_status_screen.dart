@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 
 class PendingStatusArgs {
-  final String status; // PENDING | REJECTED | SUSPENDED
+  final String status; // PENDING | REJECTED | SUSPENDED | SUBSCRIPTION_EXPIRED
   final String message;
   PendingStatusArgs({required this.status, required this.message});
 }
@@ -27,6 +27,13 @@ class PendingStatusScreen extends StatelessWidget {
           color: AppColors.muted,
           bg: AppColors.paper,
           title: 'Akun Ditangguhkan',
+        );
+      case 'SUBSCRIPTION_EXPIRED':
+        return (
+          icon: Icons.workspace_premium_outlined,
+          color: AppColors.pending,
+          bg: AppColors.pendingSoft,
+          title: 'Langganan Berakhir',
         );
       case 'PENDING':
       default:

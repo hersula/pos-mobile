@@ -191,6 +191,14 @@ Diakses lewat ikon truk (🚚) di AppBar tab **Inventori** (khusus role OWNER/MA
 - **Auto-refresh saat pindah tab** — `DashboardScreen` memakai `IndexedStack` supaya state tiap tab (termasuk filter tanggal di Laporan) tidak hilang saat pindah-pindah menu. Konsekuensinya, `ReportsScreen` normalnya *tidak* otomatis reload data saat dibuka ulang. Untuk mengatasi ini, `DashboardScreen` menyimpan `GlobalKey<ReportsScreenState>` dan memanggil method publik `refreshActiveTab()` setiap kali bottom nav pindah ke tab **Laporan** — jadi kasir selalu lihat angka terbaru tanpa perlu tarik-refresh manual. Tab "Tutup Kasir" selalu di-refresh (murah, tab default); tab Laba Rugi/Pembelian cuma ikut di-refresh kalau sebelumnya sudah pernah dibuka (hemat request).
 - **Jumlah item terjual & produk terlaris** — tab "Tutup Kasir" sekarang menampilkan total qty barang yang terjual (`totalItemsSold`) dan daftar 5 produk terlaris berdasarkan qty (`topProducts`), diambil dari endpoint `GET /api/reports/sales-summary` yang sudah diperluas di backend.
 
+### Paket & Langganan (FREE 10 transaksi/hari, SUBSCRIBE trial 30 hari)
+
+- **Kartu status langganan** (`SubscriptionCard`, tampil di halaman Pengaturan) — beda tampilan tergantung `user.tenant.planType`:
+  - **FREE**: progress bar "X dari 10 transaksi hari ini", berubah merah kalau sisa ≤3. Tombol **"Upgrade ke Berlangganan"** (khusus role OWNER) langsung memanggil `POST /api/tenant/subscription/upgrade` dan aktifkan trial 30 hari seketika.
+  - **SUBSCRIBE**: badge status (Trial/Aktif/Menunggu Konfirmasi/Sudah Berakhir) + hitung mundur hari tersisa. Tombol **"Ajukan Pembayaran"** buka dialog catatan singkat (mis. "sudah transfer via BCA"), mengirim ke `POST /api/tenant/subscription/request-payment` — admin lalu konfirmasi lewat Admin Panel.
+- **Batas transaksi FREE tercapai saat checkout** — `POST /api/sales` balas `403` dengan `code: "FREE_LIMIT_REACHED"`. `CheckoutScreen` mendeteksi kode ini secara spesifik (bukan cuma tampilkan pesan error generik) dan munculkan dialog dengan CTA "Lihat Opsi Upgrade" yang mengarahkan ke tab Pengaturan.
+- **"Sistem off" saat trial/langganan SUBSCRIBE habis** — kalau backend balas `tenantStatus: "SUBSCRIPTION_EXPIRED"` (baik saat `login` maupun saat auto-refresh token gagal di tengah sesi), `LoginScreen` otomatis mengarahkan ke `PendingStatusScreen` dengan pesan yang jelas. Data toko **tidak pernah hilang** — begitu admin konfirmasi pembayaran, tinggal login lagi seperti biasa dan semua data (produk, transaksi, laporan) langsung utuh seperti sebelumnya.
+
 ### Sesi Login & Refresh Token
 `ApiClient` otomatis menyisipkan `Authorization: Bearer <token>` di setiap request. Kalau server balas 401 (access token kedaluwarsa), client otomatis mencoba `POST /api/auth/refresh` sekali, lalu mengulang request asli. Kalau refresh juga gagal, sesi dianggap habis dan pengguna diarahkan ke halaman login (lihat `AuthProvider._handleSessionExpired`).
 

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../state/auth_provider.dart';
 import 'printer_settings_screen.dart';
+import 'subscription_card.dart';
 
 const _roleLabels = {
   'OWNER': 'Pemilik',
@@ -93,6 +94,8 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 10),
+            SubscriptionCard(isOwner: user?.role == 'OWNER'),
             const SizedBox(height: 10),
             Card(
               child: Column(

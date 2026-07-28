@@ -93,14 +93,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 10),
                 _PlanCard(
                   title: 'Gratis',
-                  subtitle: 'Mulai pakai langsung, cocok untuk usaha kecil yang baru mulai.',
+                  subtitle: 'Mulai pakai langsung, cocok untuk usaha kecil yang baru mulai. Dibatasi 10 transaksi per hari.',
                   selected: _planType == 'FREE',
                   onTap: () => setState(() => _planType = 'FREE'),
                 ),
                 const SizedBox(height: 10),
                 _PlanCard(
                   title: 'Berlangganan',
-                  subtitle: 'Fitur lebih lengkap untuk usaha yang berkembang. Info harga dikirim setelah disetujui admin.',
+                  subtitle: 'Transaksi tanpa batas + trial gratis 30 hari. Setelah trial, cukup ajukan pembayaran untuk lanjut.',
                   selected: _planType == 'SUBSCRIBE',
                   onTap: () => setState(() => _planType = 'SUBSCRIBE'),
                 ),
