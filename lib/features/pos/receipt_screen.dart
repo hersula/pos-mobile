@@ -74,9 +74,9 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
 
       final paperSize = await _getSavedPaperSize();
       final bytes = await ReceiptBuilder.build(saleToPrint, paperSize: paperSize);
-      final success = await _printerService.printBytes(bytes);
+      final result = await _printerService.printBytes(bytes);
 
-      _showMessage(success ? 'Struk berhasil dicetak' : 'Gagal mengirim data ke printer', isError: !success);
+      _showMessage(result.success ? 'Struk berhasil dicetak' : 'Gagal mengirim data ke printer', isError: !result.success);
     } catch (e) {
       _showMessage('Terjadi kesalahan saat mencetak: $e', isError: true);
     } finally {

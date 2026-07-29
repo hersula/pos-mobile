@@ -237,9 +237,9 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
 
       final paperSize = await _getSavedPaperSize();
       final bytes = await PurchaseOrderReceiptBuilder.build(po, paperSize: paperSize);
-      final success = await _printerService.printBytes(bytes);
+      final result = await _printerService.printBytes(bytes);
 
-      _showMessage(success ? 'Nota berhasil dicetak' : 'Gagal mengirim data ke printer', isError: !success);
+      _showMessage(result.success ? 'Nota berhasil dicetak' : 'Gagal mengirim data ke printer', isError: !result.success);
     } catch (e) {
       _showMessage('Terjadi kesalahan saat mencetak: $e', isError: true);
     } finally {

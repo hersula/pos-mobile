@@ -9,6 +9,31 @@ class PrinterDevice {
   PrinterDevice({required this.name, required this.address});
 }
 
+/// Hasil detail satu proses cetak — dipakai supaya user (atau developer yang
+/// bantu troubleshoot) bisa lihat PERSIS apa yang terjadi, bukan cuma
+/// sukses/gagal generik. Ini penting karena masalah print terpotong itu
+/// hardware-dependent banget, jadi diagnosa yang jelas jauh lebih berguna
+/// daripada nebak-nebak lagi.
+class PrintResult {
+  final bool success;
+  final String mode;
+  final int totalBytes;
+  final int chunksSent;
+  final int chunksFailed;
+
+  PrintResult({
+    required this.success,
+    required this.mode,
+    required this.totalBytes,
+    required this.chunksSent,
+    required this.chunksFailed,
+  });
+
+  String get summary =>
+      'Mode: $mode · $totalBytes byte · ${success ? "berhasil" : "GAGAL"}'
+      '${chunksFailed > 0 ? " ($chunksFailed dari ${chunksSent + chunksFailed} kirim gagal)" : ""}';
+}
+
 /// Wrapper tipis di atas `print_bluetooth_thermal`. Aplikasi hanya berurusan
 /// dengan device yang sudah *paired* lewat pengaturan Bluetooth Android bawaan
 /// (paling stabil untuk printer thermal 58mm/80mm) — bukan scan BLE manual.
@@ -24,14 +49,8 @@ class BluetoothPrinterService {
   ///  - Android < 12: BLUETOOTH/BLUETOOTH_ADMIN (normal permission, otomatis
   ///    granted oleh sistem — permission_handler akan langsung melaporkan
   ///    `.granted` tanpa munculkan dialog)
-  ///
-  /// Sengaja TIDAK mewajibkan izin Lokasi — itu hanya relevan untuk *scan*
-  /// device BLE baru, bukan untuk membaca daftar device yang sudah di-pairing
-  /// atau untuk connect ke device classic Bluetooth (SPP) seperti printer
-  /// thermal. Mewajibkannya cuma bikin proses gagal tanpa alasan yang jelas.
   Future<bool> requestPermissions() async {
     if (!Platform.isAndroid) return true;
-
     final connectStatus = await Permission.bluetoothConnect.request();
     return connectStatus.isGranted;
   }
@@ -47,35 +66,28 @@ class BluetoothPrinterService {
 
   Future<bool> disconnect() => PrintBluetoothThermal.disconnect;
 
-  /// Kirim bytes ESC/POS yang sudah jadi (lihat [ReceiptBuilder]) ke printer
-  /// yang sedang terkoneksi. Return false kalau printer belum/tidak terhubung.
-  ///
-  /// PENTING — kenapa dikirim per potongan kecil dengan jeda, bukan sekaligus:
-  /// Bluetooth (RFCOMM/SPP) bisa saja "berhasil" mengirim seluruh data dalam
-  /// hitungan milidetik, tapi printer thermal itu perangkat MEKANIK — kepala
-  /// cetak butuh waktu fisik nyata untuk menggerakkan kertas & membakar tiap
-  /// baris (apalagi baris besar/tebal seperti nama toko, yang jauh lebih
-  /// lambat dicetak daripada teks biasa). Kalau software terus mengirim data
-  /// baru lebih cepat daripada kecepatan cetak fisiknya, buffer terima
-  /// printer (yang di printer generik murah biasanya kecil) jadi penuh dan
-  /// SISA DATA YANG BELUM SEMPAT DICETAK DIBUANG BEGITU SAJA — makanya struk
-  /// keliatan "berhenti" persis di titik printer paling lambat (baris
-  /// besar/tebal atau baris pertama setelah reset).
-  ///
-  /// [chunkSize] & [delayBetweenChunks] sengaja dibuat `static` (bukan
-  /// `const` lokal) supaya gampang di-tuning tanpa bongkar kode kalau printer
-  /// tertentu masih terpotong — printer generik beda merek/firmware punya
-  /// kecepatan cetak & ukuran buffer terima yang beda-beda:
-  ///   - Masih terpotong? Naikkan [delayBetweenChunks] (mis. jadi 150-200ms)
-  ///     dan/atau kecilkan [chunkSize] (mis. jadi 32).
-  ///   - Cetak sudah lengkap tapi kelamaan? Turunkan pelan-pelan sampai
-  ///     ketemu titik teraman-tercepat untuk printer itu.
+  // ================= MODE CETAK (bisa dipilih di Pengaturan Printer) =================
+  //
+  // Percobaan sebelumnya (kirim bertahap + jeda, berbagai preset kecepatan) TERNYATA
+  // TIDAK cukup untuk beberapa printer generik — struk/nota tetap berhenti persis
+  // setelah header, bahkan di preset paling lambat. Ini artinya dugaan "buffer printer
+  // kewalahan karena kecepatan fisik" kemungkinan BUKAN akar masalah sebenarnya untuk
+  // printer tersebut. Daripada terus menebak, sekarang disediakan beberapa MODE yang
+  // bisa dicoba satu-satu lewat Test Print di Pengaturan, supaya ketemu kombinasi yang
+  // benar-benar cocok untuk printer spesifik yang dipakai:
+  //
+  //   "single"  -> kirim SEMUA byte dalam SATU panggilan writeBytes (paling sederhana,
+  //                cara paling "standar" dipakai kebanyakan contoh/dokumentasi plugin
+  //                print_bluetooth_thermal). DEFAULT.
+  //   "chunked" -> kirim bertahap per potongan kecil + jeda (pendekatan sebelumnya).
+  //
+  // Kalau salah satu mode bikin printer tertentu cetak lengkap sementara mode lain
+  // tidak, itu petunjuk kuat akar masalahnya ADA di sisi mana (transmisi vs lainnya).
+  static String printMode = 'single'; // 'single' | 'chunked'
+
   static int chunkSize = 48;
   static Duration delayBetweenChunks = const Duration(milliseconds: 120);
 
-  /// Preset kecepatan cetak. "normal" cukup untuk kebanyakan printer;
-  /// "slow"/"very_slow" untuk printer generik yang masih kepotong di
-  /// preset normal — kirim lebih sedikit byte per kirim, jeda lebih panjang.
   static const Map<String, ({int chunkSize, int delayMs})> speedPresets = {
     'normal': (chunkSize: 48, delayMs: 120),
     'slow': (chunkSize: 32, delayMs: 180),
@@ -88,30 +100,62 @@ class BluetoothPrinterService {
     delayBetweenChunks = Duration(milliseconds: config.delayMs);
   }
 
-  Future<bool> printBytes(List<int> bytes) async {
-    // Jeda "pemanasan" di awal — kasih waktu printer benar-benar siap
-    // menerima (apalagi kalau baru saja connect() atau baru dikirim perintah
-    // reset()) sebelum data pertama ditembakkan.
+  static void applyPrintMode(String mode) {
+    printMode = (mode == 'chunked') ? 'chunked' : 'single';
+  }
+
+  /// Kirim bytes ESC/POS ke printer yang sedang terkoneksi, sesuai [printMode]
+  /// yang aktif. Return [PrintResult] berisi rincian (bukan cuma true/false)
+  /// supaya kalau masih gagal, ada info konkret buat di-diagnosa lebih lanjut
+  /// daripada cuma "gagal" tanpa konteks.
+  Future<PrintResult> printBytes(List<int> bytes) async {
+    if (printMode == 'chunked') {
+      return _printChunked(bytes);
+    }
+    return _printSingle(bytes);
+  }
+
+  Future<PrintResult> _printSingle(List<int> bytes) async {
+    final success = await PrintBluetoothThermal.writeBytes(bytes);
+    return PrintResult(
+      success: success,
+      mode: 'single (sekaligus)',
+      totalBytes: bytes.length,
+      chunksSent: success ? 1 : 0,
+      chunksFailed: success ? 0 : 1,
+    );
+  }
+
+  Future<PrintResult> _printChunked(List<int> bytes) async {
     await Future.delayed(const Duration(milliseconds: 250));
 
-    var allSuccess = true;
+    var sent = 0;
+    var failed = 0;
     for (var i = 0; i < bytes.length; i += chunkSize) {
       final end = (i + chunkSize < bytes.length) ? i + chunkSize : bytes.length;
       final chunk = bytes.sublist(i, end);
 
       final success = await PrintBluetoothThermal.writeBytes(chunk);
-      if (!success) allSuccess = false;
+      if (success) {
+        sent++;
+      } else {
+        failed++;
+      }
 
       if (end < bytes.length) {
         await Future.delayed(delayBetweenChunks);
       }
     }
 
-    // Jeda penutup — beri waktu printer menghabiskan sisa buffer & menuntaskan
-    // perintah feed/cut di akhir sebelum dianggap selesai.
     await Future.delayed(const Duration(milliseconds: 200));
 
-    return allSuccess;
+    return PrintResult(
+      success: failed == 0,
+      mode: 'chunked (bertahap, ${chunkSize}b/${delayBetweenChunks.inMilliseconds}ms)',
+      totalBytes: bytes.length,
+      chunksSent: sent,
+      chunksFailed: failed,
+    );
   }
 
   /// Validasi format MAC address kasar (mis. "AA:BB:CC:DD:EE:FF"), dipakai

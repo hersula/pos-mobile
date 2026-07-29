@@ -159,17 +159,24 @@ Koneksi Bluetooth klasik (SPP) **tidak bertahan lintas sesi aplikasi** — walau
 
 Beberapa printer generik murah **tidak konsisten dengan label lebar kertas resminya** — kepala cetak fisiknya bisa saja beda dot-width dari yang diklaim di kardus/nama produk, jadi walau kode sudah eksplisit set `PaperSize.mm58`, hasil cetak masih bisa kelihatan tidak pas di kertas 58mm fisik pada model tertentu. Karena ini murni karakteristik hardware yang beda-beda per merek dan tidak bisa dideteksi otomatis dari software, sekarang ada pemilih **Lebar Kertas: 58mm / 80mm** di halaman **Pengaturan → Printer Bluetooth** — tinggal coba kedua opsi lewat **Test Print** (sekarang juga menampilkan baris "Kertas: 58mm/80mm" supaya gampang dibandingkan) dan pakai yang hasilnya paling pas secara fisik. Pilihan otomatis tersimpan dan dipakai untuk struk penjualan maupun nota pembelian.
 
-#### Troubleshooting: struk masih terpotong di tengah jalan (bukan cuma "Toko" doang, tapi beneran kepotong sebagian)
+#### Troubleshooting: struk/nota masih cuma header yang keluar, lalu berhenti (walau data sudah lengkap & sudah dicoba preset paling lambat)
 
-Ini beda kasus dari bug "Toko" di atas — kalau datanya sudah lengkap (nama toko asli muncul, bukan fallback) tapi tetap berhenti di tengah struk yang panjang, ini soal **kecepatan cetak fisik**. Printer thermal itu perangkat mekanik — kepala cetak butuh waktu nyata untuk menggerakkan kertas & "membakar" tiap baris, apalagi baris besar/tebal seperti nama toko (jauh lebih lambat dicetak daripada teks biasa). Kalau software terus mengirim data baru lebih cepat daripada kecepatan cetak fisik printer, buffer terima printer (yang di printer generik murah biasanya kecil) jadi penuh dan **sisa data yang belum sempat dicetak dibuang begitu saja**.
+Kalau bug "cuma tulisan Toko" di atas sudah tidak terjadi (nama toko asli sudah muncul) TAPI tetap berhenti tepat setelah header — bahkan sudah dicoba preset kecepatan "Sangat Lambat" — kemungkinan besar akar masalahnya **bukan soal kecepatan transmisi**, melainkan **cara data dikirim ke printer** yang tidak cocok dengan firmware printer spesifik itu. Setiap merek/klon printer thermal generik bisa beda-beda perilakunya, jadi sekarang disediakan dua **Mode Kirim Data** yang bisa dites langsung dari HP tanpa perlu update aplikasi:
 
-**Solusi cepat tanpa perlu update aplikasi** — buka **Pengaturan → Printer Bluetooth**, di bagian bawah ada pemilih **Kecepatan Cetak**: Normal / Lambat / Sangat Lambat. Kalau struk masih terpotong di "Normal", coba "Lambat", lalu "Sangat Lambat" kalau masih belum cukup. Pilihan ini otomatis tersimpan (`LocalStorage`) dan langsung dipakai untuk semua cetakan berikutnya (struk penjualan maupun nota pengadaan barang, karena keduanya lewat method `printBytes()` yang sama). Setelah ganti preset, coba **Test Print** dulu (mencetak 15 baris uji coba) — kalau baris terakhir "SELESAI" ikut tercetak utuh, berarti preset itu sudah cukup untuk printer kamu.
+- **Sekaligus** (default) — semua data struk dikirim dalam SATU panggilan `writeBytes()`, cara paling sederhana & paling umum dipakai contoh-contoh resmi plugin `print_bluetooth_thermal`.
+- **Bertahap** — data dipecah jadi potongan kecil dikirim satu-satu dengan jeda (pendekatan yang dipakai di versi sebelumnya).
+
+**Cara diagnosa** — buka **Pengaturan → Printer Bluetooth**, atur Mode Kirim Data ke salah satu opsi, lalu tekan **Test Print**. Fitur ini sekarang mencetak KEDUA mode berurutan dalam satu kali test (dipisah label "MODE: SEKALIGUS" dan "MODE: BERTAHAP" di kertas), dan setelah selesai muncul dialog ringkasan jumlah byte yang berhasil terkirim di masing-masing mode. Lihat langsung di kertas: mode mana yang isinya lengkap sampai baris "SELESAI (MODE: ...)"? Itu yang harus dipilih & disimpan sebagai Mode Kirim Data.
+
+Pilihan Mode Kirim Data (sama seperti Kecepatan Cetak & Lebar Kertas) otomatis tersimpan dan berlaku untuk struk penjualan maupun nota pengadaan barang.
+
+**Kalau KEDUA mode tetap gagal total** (bahkan header pun sekarang ikut hilang), kemungkinan pemicunya adalah format teks header yang dipakai. Sebagai catatan: header nama toko sempat dicetak pakai gaya "double-size" (`PosTextSize.size2`, teks besar 2x) yang **sudah dihapus** dari `ReceiptBuilder`/`PurchaseOrderReceiptBuilder` (sekarang cuma bold biasa) karena kombinasi bold+ukuran-ganda+rata-tengah termasuk command ESC/POS yang tidak semua printer klon dukung dengan benar — kalau masih pakai versi lama, update dulu ke versi terbaru.
 
 **Detail teknis** (`BluetoothPrinterService`):
-- Data dikirim bertahap per potongan kecil (default 48 byte di preset Normal, turun ke 16 byte di preset Sangat Lambat), dengan jeda di antaranya (120ms Normal, sampai 280ms Sangat Lambat) — bukan dikirim sekaligus dalam satu panggilan.
-- Ada jeda "pemanasan" 250ms di awal (kasih waktu printer siap menerima setelah `connect()`/`reset()`) dan jeda "penutup" 200ms di akhir sebelum proses cetak dianggap selesai.
-- `generator.reset()` (perintah ESC/POS inisialisasi ulang) ditambahkan di awal setiap cetak (`ReceiptBuilder` & `PurchaseOrderReceiptBuilder`) untuk membersihkan sisa state cetak sebelumnya.
-- Preset kecepatan didefinisikan di `BluetoothPrinterService.speedPresets` — kalau preset "Sangat Lambat" masih belum cukup untuk printer tertentu yang benar-benar bermasalah, nilainya bisa ditambah manual di kode (chunk makin kecil, delay makin panjang).
+- `printMode`: `'single'` (kirim sekaligus) atau `'chunked'` (kirim bertahap per potongan + jeda, cuma dipakai kalau mode ini yang aktif).
+- Mode chunked: default 48 byte/120ms di preset Normal, turun ke 16 byte/280ms di preset Sangat Lambat (`BluetoothPrinterService.speedPresets`).
+- `printBytes()` sekarang return `PrintResult` (bukan cuma `bool`) — berisi `mode`, `totalBytes`, `chunksSent`, `chunksFailed` — supaya kalau masih ada masalah, ada data konkret buat di-diagnosa lebih lanjut daripada cuma "gagal" tanpa konteks.
+- `generator.reset()` (perintah ESC/POS inisialisasi ulang) tetap disertakan di awal setiap cetak untuk membersihkan sisa state cetak sebelumnya.
 
 ### Scan Barcode
 Tombol ikon scan (📷) tersedia di beberapa tempat:

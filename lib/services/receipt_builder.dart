@@ -27,7 +27,7 @@ class ReceiptBuilder {
 
     bytes.addAll(generator.text(
       sale.businessName ?? 'Toko',
-      styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2),
+      styles: const PosStyles(align: PosAlign.center, bold: true),
     ));
 
     if (sale.businessAddress != null && sale.businessAddress!.isNotEmpty) {

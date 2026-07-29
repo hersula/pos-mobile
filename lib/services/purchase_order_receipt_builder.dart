@@ -36,7 +36,7 @@ class PurchaseOrderReceiptBuilder {
 
     bytes.addAll(generator.text(
       po.businessName ?? 'Toko',
-      styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2),
+      styles: const PosStyles(align: PosAlign.center, bold: true),
     ));
     if (po.businessAddress != null && po.businessAddress!.isNotEmpty) {
       bytes.addAll(generator.text(po.businessAddress!, styles: const PosStyles(align: PosAlign.center)));

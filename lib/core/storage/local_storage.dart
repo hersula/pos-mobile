@@ -14,6 +14,7 @@ class LocalStorage {
   static const _kPrinterName = 'printer_name';
   static const _kPrintSpeedPreset = 'print_speed_preset';
   static const _kPrinterPaperSize = 'printer_paper_size';
+  static const _kPrintMode = 'print_mode';
 
   Future<void> saveSession({
     required String accessToken,
@@ -97,5 +98,17 @@ class LocalStorage {
   Future<String?> getPrinterPaperSize() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kPrinterPaperSize);
+  }
+
+  /// Mode kirim data cetak: "single" (sekaligus, default) | "chunked" (bertahap).
+  /// Lihat [BluetoothPrinterService] untuk penjelasan lengkap perbedaannya.
+  Future<void> savePrintMode(String mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kPrintMode, mode);
+  }
+
+  Future<String?> getPrintMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kPrintMode);
   }
 }

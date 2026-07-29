@@ -15,12 +15,16 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id_ID');
 
-  // Terapkan preset kecepatan cetak yang pernah dipilih user (lihat
-  // PrinterSettingsScreen) supaya konsisten dipakai tiap kali cetak,
-  // tanpa perlu diatur ulang setiap buka app.
+  // Terapkan preset kecepatan & mode kirim data cetak yang pernah dipilih
+  // user (lihat PrinterSettingsScreen) supaya konsisten dipakai tiap kali
+  // cetak, tanpa perlu buka halaman Pengaturan Printer dulu tiap buka app.
   final savedPreset = await LocalStorage.instance.getPrintSpeedPreset();
   if (savedPreset != null) {
     BluetoothPrinterService.applySpeedPreset(savedPreset);
+  }
+  final savedPrintMode = await LocalStorage.instance.getPrintMode();
+  if (savedPrintMode != null) {
+    BluetoothPrinterService.applyPrintMode(savedPrintMode);
   }
 
   runApp(const PosApp());

@@ -21,6 +21,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   String? _savedAddress;
   String _speedPreset = 'normal';
   String _paperSize = 'mm58';
+  String _printMode = 'single';
   bool _loading = true;
   bool _connecting = false;
   bool _permissionDenied = false;
@@ -42,7 +43,9 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
       _savedAddress = await LocalStorage.instance.getPrinterAddress();
       _speedPreset = await LocalStorage.instance.getPrintSpeedPreset() ?? 'normal';
       _paperSize = await LocalStorage.instance.getPrinterPaperSize() ?? 'mm58';
+      _printMode = await LocalStorage.instance.getPrintMode() ?? 'single';
       BluetoothPrinterService.applySpeedPreset(_speedPreset);
+      BluetoothPrinterService.applyPrintMode(_printMode);
 
       final granted = await _printerService.requestPermissions();
       if (!granted) {
@@ -192,6 +195,42 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     );
   }
 
+  Future<void> _setPrintMode(String mode) async {
+    setState(() => _printMode = mode);
+    BluetoothPrinterService.applyPrintMode(mode);
+    await LocalStorage.instance.savePrintMode(mode);
+  }
+
+  /// Bangun konten test print dengan label mode di bagian atas, supaya kalau
+  /// dicetak berurutan (mode Sekaligus lalu Bertahap), gampang dibedakan
+  /// bagian mana yang punya konten dari mode mana saat baca hasil di kertas.
+  Future<List<int>> _buildTestBytes(PaperSize paperSize, String modeLabel) async {
+    final profile = await CapabilityProfile.load();
+    final generator = Generator(paperSize, profile);
+    final bytes = <int>[];
+    bytes.addAll(generator.reset());
+    bytes.addAll(generator.text(modeLabel, styles: const PosStyles(align: PosAlign.center, bold: true)));
+    bytes.addAll(generator.text(
+      paperSize == PaperSize.mm80 ? 'Kertas: 80mm' : 'Kertas: 58mm',
+      styles: const PosStyles(align: PosAlign.center),
+    ));
+    bytes.addAll(generator.hr());
+    // Cetak beberapa baris sekaligus (bukan cuma 1-2 baris) supaya kalau ada
+    // masalah struk terpotong di tengah, langsung ketahuan dari sini — baris
+    // terakhir "SELESAI" harus ikut tercetak utuh kalau mode ini beneran cocok.
+    for (var i = 1; i <= 15; i++) {
+      bytes.addAll(generator.row([
+        PosColumn(text: 'Baris pengujian ke-$i', width: 8),
+        PosColumn(text: 'OK', width: 4, styles: const PosStyles(align: PosAlign.right)),
+      ]));
+    }
+    bytes.addAll(generator.hr());
+    bytes.addAll(generator.text('SELESAI ($modeLabel)', styles: const PosStyles(align: PosAlign.center, bold: true)));
+    bytes.addAll(generator.feed(2));
+    bytes.addAll(generator.cut());
+    return bytes;
+  }
+
   Future<void> _testPrint() async {
     setState(() => _connecting = true);
     try {
@@ -211,37 +250,49 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
       }
 
       final paperSize = _paperSize == 'mm80' ? PaperSize.mm80 : PaperSize.mm58;
-      final profile = await CapabilityProfile.load();
-      final generator = Generator(paperSize, profile);
-      final bytes = <int>[];
-      bytes.addAll(generator.reset());
-      bytes.addAll(generator.text('TEST PRINT', styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2)));
-      bytes.addAll(generator.text('Printer berhasil terhubung', styles: const PosStyles(align: PosAlign.center)));
-      bytes.addAll(generator.text(
-        paperSize == PaperSize.mm80 ? 'Kertas: 80mm' : 'Kertas: 58mm',
-        styles: const PosStyles(align: PosAlign.center),
-      ));
-      bytes.addAll(generator.hr());
-      // Cetak beberapa baris sekaligus (bukan cuma 1-2 baris) supaya kalau ada
-      // masalah struk terpotong di tengah (buffer printer kewalahan), langsung
-      // ketahuan dari sini — baris terakhir "SELESAI" harus ikut tercetak utuh.
-      for (var i = 1; i <= 15; i++) {
-        bytes.addAll(generator.row([
-          PosColumn(text: 'Baris pengujian ke-$i', width: 8),
-          PosColumn(text: 'OK', width: 4, styles: const PosStyles(align: PosAlign.right)),
-        ]));
-      }
-      bytes.addAll(generator.hr());
-      bytes.addAll(generator.text('SELESAI', styles: const PosStyles(align: PosAlign.center, bold: true)));
-      bytes.addAll(generator.text(
-        'Kalau baris ini ikut tercetak DAN lebar teks di atas pas dengan lebar kertas kamu, printer siap dipakai.',
-        styles: const PosStyles(align: PosAlign.center),
-      ));
-      bytes.addAll(generator.feed(2));
-      bytes.addAll(generator.cut());
 
-      final success = await _printerService.printBytes(bytes);
-      _showSnack(success ? 'Test print terkirim' : 'Gagal mengirim test print', isError: !success);
+      // Cetak dua mode berurutan dalam SATU test print supaya gampang dibandingkan
+      // langsung di atas kertas yang sama: mode mana yang beneran tuntas sampai
+      // baris "SELESAI", itu yang harus dipilih di pengaturan Mode Kirim Data di bawah.
+      final singleBytes = await _buildTestBytes(paperSize, 'MODE: SEKALIGUS');
+      BluetoothPrinterService.printMode = 'single';
+      final resultSingle = await _printerService.printBytes(singleBytes);
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final chunkedBytes = await _buildTestBytes(paperSize, 'MODE: BERTAHAP');
+      BluetoothPrinterService.printMode = 'chunked';
+      final resultChunked = await _printerService.printBytes(chunkedBytes);
+
+      // Kembalikan ke mode yang benar-benar dipilih user di pengaturan (bukan
+      // ketinggalan di 'chunked' dari percobaan barusan)
+      BluetoothPrinterService.applyPrintMode(_printMode);
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Hasil Test Print'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Cek kertas yang baru tercetak — bagian mana yang isinya LENGKAP sampai baris "SELESAI"? Pilih Mode Kirim Data yang sesuai di bawah ini.',
+                  style: TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: 14),
+                Text('• Sekaligus: ${resultSingle.summary}', style: const TextStyle(fontSize: 12.5)),
+                const SizedBox(height: 4),
+                Text('• Bertahap: ${resultChunked.summary}', style: const TextStyle(fontSize: 12.5)),
+              ],
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Tutup')),
+            ],
+          ),
+        );
+      }
     } catch (e) {
       _showSnack('Terjadi kesalahan: $e', isError: true);
     } finally {
@@ -363,10 +414,26 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                           onSelectionChanged: (s) => _setPaperSize(s.first),
                         ),
                         const SizedBox(height: 20),
+                        const Text('Mode Kirim Data', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Kalau struk/nota cuma keluar bagian header lalu berhenti, coba ganti mode ini — printer beda merek/firmware bisa butuh cara kirim yang beda. Jalankan Test Print di bawah untuk membandingkan kedua mode langsung.',
+                          style: TextStyle(color: AppColors.muted, fontSize: 12),
+                        ),
+                        const SizedBox(height: 10),
+                        SegmentedButton<String>(
+                          segments: const [
+                            ButtonSegment(value: 'single', label: Text('Sekaligus')),
+                            ButtonSegment(value: 'chunked', label: Text('Bertahap')),
+                          ],
+                          selected: {_printMode},
+                          onSelectionChanged: (s) => _setPrintMode(s.first),
+                        ),
+                        const SizedBox(height: 20),
                         const Text('Kecepatan Cetak', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
                         const SizedBox(height: 4),
                         const Text(
-                          'Kalau struk masih terpotong/berhenti di tengah jalan, coba turunkan kecepatan ini bertahap.',
+                          'Cuma berlaku kalau Mode Kirim Data di atas "Bertahap". Kalau struk masih terpotong, turunkan kecepatan ini bertahap.',
                           style: TextStyle(color: AppColors.muted, fontSize: 12),
                         ),
                         const SizedBox(height: 10),
