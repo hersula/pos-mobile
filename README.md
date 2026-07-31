@@ -25,6 +25,10 @@ flutter create .
 
 # 3. Install dependencies
 flutter pub get
+
+# 4. Generate app icon (logo "sicerdiq") ke semua platform — sekali saja,
+#    atau ulangi tiap kali file di assets/icon/ diganti
+dart run flutter_launcher_icons
 ```
 
 ### a. Tambahkan izin di `android/app/src/main/AndroidManifest.xml`
@@ -123,6 +127,15 @@ lib/
 ---
 
 ## 5. Cara Kerja Fitur Kunci
+
+### Logo & App Icon ("sicerdiq")
+- **Sumber desain**: `assets/icon/app_icon_source.svg` — mark sederhana bertema struk (kartu putih dengan 3 baris item) + lencana centang kuning keemasan, di atas gradasi teal→navy yang konsisten dengan warna aksen aplikasi (`AppColors.accent` & `AppColors.ink`). Sengaja dibuat minim detail (cuma beberapa bentuk geometris dasar) supaya tetap jelas terbaca di ukuran kecil (ikon launcher HP).
+- **File yang dipakai**:
+  - `assets/icon/app_icon.png` — versi lengkap (latar + isi jadi satu), dipakai sebagai app icon utama & ditampilkan langsung di dalam UI (lihat di bawah).
+  - `assets/icon/app_icon_background.png` + `assets/icon/app_icon_foreground.png` — dua lapis terpisah (latar gradasi polos & isi transparan) khusus untuk **Android Adaptive Icon**, supaya ikon tetap terlihat benar dibulatkan/dipotong sesuai tema launcher HP masing-masing pengguna (lingkaran, squircle, dll) tanpa bagian penting ikonnya terpotong.
+  - Generate ke semua platform pakai `dart run flutter_launcher_icons` (lihat langkah setup di atas) — konfigurasinya ada di `pubspec.yaml` bagian `flutter_launcher_icons:`.
+- **Dipakai juga di dalam form aplikasi** (bukan cuma jadi ikon launcher) — muncul di halaman **Login** dan **Daftar Toko Baru** lewat `Image.asset('assets/icon/app_icon.png')`, menggantikan ikon generik supaya identitas brand konsisten sejak pertama kali pengguna buka aplikasi.
+- Mau ganti desain logo? Cukup edit `app_icon_source.svg` (dan turunannya `_background.svg` / `_foreground.svg`), render ulang ke PNG pakai tool SVG-ke-PNG apa saja (mis. `cairosvg`, Inkscape, atau situs konversi online) dengan resolusi minimal 1024×1024, timpa file PNG yang ada, lalu jalankan ulang `dart run flutter_launcher_icons`.
 
 ### Diskon & PPN
 Dihitung real-time di `CartProvider` (untuk preview di layar) memakai rumus yang sama persis dengan backend (`subtotal → diskon → PPN → total`), lalu backend **menghitung ulang dari nol saat transaksi disimpan** — jadi Flutter tidak pernah mengirim angka total, hanya item + persentase/nominal diskon & pajak. Ini mencegah manipulasi harga dari sisi client.

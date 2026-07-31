@@ -82,6 +82,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.asset('assets/icon/app_icon.png', width: 56, height: 56),
+                  ),
+                ),
+                const SizedBox(height: 20),
                 if (_error != null)
                   Container(
                     margin: const EdgeInsets.only(bottom: 16),

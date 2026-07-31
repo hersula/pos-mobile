@@ -68,11 +68,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 40),
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(14)),
-                    child: const Icon(Icons.point_of_sale_rounded, color: Colors.white, size: 28),
+                  Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(18),
+                      child: Image.asset('assets/icon/app_icon.png', width: 72, height: 72),
+                    ),
                   ),
                   const SizedBox(height: 20),
                   const Text('Masuk', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.ink)),
