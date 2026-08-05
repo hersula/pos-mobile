@@ -15,7 +15,7 @@ class PrinterSettingsScreen extends StatefulWidget {
   State<PrinterSettingsScreen> createState() => _PrinterSettingsScreenState();
 }
 
-class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
+class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with WidgetsBindingObserver {
   final _printerService = BluetoothPrinterService();
   List<PrinterDevice> _devices = [];
   String? _savedAddress;
@@ -30,7 +30,27 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _init();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Begitu user balik ke app dari Pengaturan Bluetooth HP (mis. setelah
+    // pairing printer di sana), otomatis muat ulang daftar device — supaya
+    // tidak perlu ingat-ingat tekan tombol refresh manual dulu. Ini jaga-jaga
+    // untuk kasus paling umum kenapa "pairing kelihatan tidak berhasil":
+    // sebenarnya sudah paired di level Android, tapi daftar di app-nya belum
+    // di-refresh.
+    if (state == AppLifecycleState.resumed && !_loading) {
+      _init();
+    }
   }
 
   Future<void> _init() async {
@@ -94,13 +114,24 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   Future<void> _connect(PrinterDevice device) async {
     setState(() => _connecting = true);
     try {
-      final ok = await _printerService.connect(device.address);
+      var ok = await _printerService.connect(device.address);
+      if (!ok) {
+        // Koneksi Bluetooth SPP klasik memang sering gagal di percobaan
+        // pertama (device belum "siap") tapi berhasil di percobaan kedua —
+        // coba sekali lagi otomatis sebelum benar-benar dianggap gagal.
+        await Future.delayed(const Duration(milliseconds: 800));
+        ok = await _printerService.connect(device.address);
+      }
+
       if (ok) {
         await LocalStorage.instance.savePrinter(address: device.address, name: device.name);
         setState(() => _savedAddress = device.address);
         _showSnack('Berhasil terhubung ke ${device.name}');
       } else {
-        _showSnack('Gagal terhubung ke ${device.name}. Pastikan printer menyala & dalam jangkauan.', isError: true);
+        _showSnack(
+          'Gagal terhubung ke ${device.name}. Pastikan printer menyala, baterainya cukup, dan tidak sedang terhubung ke HP/device lain.',
+          isError: true,
+        );
       }
     } catch (e) {
       _showSnack('Gagal terhubung: $e', isError: true);
@@ -236,15 +267,17 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     try {
       var isConnected = await _printerService.isConnected();
       if (!isConnected) {
+        if (_savedAddress == null) {
+          _showSnack('Belum ada printer dipilih. Pairing dulu di Pengaturan HP, lalu ketuk "Hubungkan" pada printer di daftar atas.', isError: true);
+          return;
+        }
         // Koneksi Bluetooth SPP tidak bertahan lintas sesi app — device yang
         // sudah dipilih/paired sebelumnya (ada di _savedAddress) belum tentu
         // socket-nya masih aktif kalau app baru saja dibuka lagi. Sebelum
         // bilang "belum terhubung", coba sambungkan ulang otomatis dulu.
-        if (_savedAddress != null) {
-          isConnected = await _printerService.connect(_savedAddress!);
-        }
+        isConnected = await _printerService.connect(_savedAddress!);
         if (!isConnected) {
-          _showSnack('Belum terhubung ke printer manapun. Pilih printer dari daftar di atas dulu.', isError: true);
+          _showSnack('Gagal terhubung ke printer yang tersimpan. Pastikan printer menyala & dalam jangkauan, lalu coba lagi.', isError: true);
           return;
         }
       }
@@ -452,14 +485,14 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                           icon: const Icon(Icons.keyboard_rounded, size: 18),
                           label: const Text('Hubungkan Manual via MAC Address'),
                         ),
-                        if (_savedAddress != null) ...[
-                          const SizedBox(height: 8),
-                          ElevatedButton.icon(
-                            onPressed: _connecting ? null : _testPrint,
-                            icon: const Icon(Icons.receipt_long_rounded, size: 18),
-                            label: const Text('Test Print'),
-                          ),
-                        ],
+                        const SizedBox(height: 8),
+                        ElevatedButton.icon(
+                          onPressed: _connecting ? null : _testPrint,
+                          icon: _connecting
+                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              : const Icon(Icons.receipt_long_rounded, size: 18),
+                          label: Text(_savedAddress == null ? 'Test Print (pilih printer dulu)' : 'Test Print'),
+                        ),
                       ],
                     ),
                   ),
