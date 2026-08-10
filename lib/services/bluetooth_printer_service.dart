@@ -51,8 +51,19 @@ class BluetoothPrinterService {
   ///    `.granted` tanpa munculkan dialog)
   Future<bool> requestPermissions() async {
     if (!Platform.isAndroid) return true;
-    final connectStatus = await Permission.bluetoothConnect.request();
-    return connectStatus.isGranted;
+
+    // Secara dokumentasi resmi Android, baca daftar bonded device & connect ke
+    // classic Bluetooth (SPP) cuma butuh BLUETOOTH_CONNECT (Android 12+).
+    // Tapi beberapa OEM/skin Android serta beberapa versi plugin ternyata
+    // masih mengecek BLUETOOTH_SCAN juga sebelum mau kasih akses daftar
+    // device — jadi diminta sekalian sebagai jaring pengaman, tidak
+    // menggantungkan hasil akhir cuma pada satu izin ini.
+    final statuses = await [
+      Permission.bluetoothConnect,
+      Permission.bluetoothScan,
+    ].request();
+
+    return statuses[Permission.bluetoothConnect]?.isGranted ?? false;
   }
 
   Future<List<PrinterDevice>> getPairedDevices() async {

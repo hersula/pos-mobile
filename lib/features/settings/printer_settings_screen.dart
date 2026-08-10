@@ -67,17 +67,26 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
       BluetoothPrinterService.applySpeedPreset(_speedPreset);
       BluetoothPrinterService.applyPrintMode(_printMode);
 
+      // Minta izin dulu (supaya dialog sistem muncul kalau memang belum pernah
+      // ditanya), TAPI tetap lanjut coba baca daftar printer apa pun hasilnya —
+      // jangan berhenti total cuma karena deteksi status izin di sisi Dart
+      // kelihatan "ditolak". Ini supaya kalau deteksinya salah/kurang akurat
+      // untuk versi Android tertentu, user tetap bisa lihat daftar aslinya
+      // alih-alih layar kosong tanpa penjelasan.
       final granted = await _printerService.requestPermissions();
       if (!granted) {
-        setState(() {
-          _permissionDenied = true;
-          _error = 'Izin Bluetooth ditolak. Aplikasi butuh izin ini untuk membaca daftar printer yang sudah di-pairing.';
-        });
-        return;
+        _permissionDenied = true;
       }
 
       final devices = await _printerService.getPairedDevices();
       setState(() => _devices = devices);
+
+      if (devices.isEmpty && _permissionDenied) {
+        setState(() {
+          _error =
+              'Izin Bluetooth kemungkinan belum aktif untuk aplikasi ini. Coba tombol "Buka Pengaturan Aplikasi" di bawah dan aktifkan izin Bluetooth secara manual, lalu kembali ke sini dan tekan refresh.';
+        });
+      }
     } catch (e) {
       setState(() => _error = 'Gagal membaca daftar printer Bluetooth: $e');
     } finally {
@@ -349,7 +358,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
       body: SafeArea(
         child: _loading
             ? const Center(child: CircularProgressIndicator())
-            : Column(
+            : ListView(
+                padding: const EdgeInsets.only(bottom: 28),
                 children: [
                   if (_error != null)
                     Container(
@@ -373,44 +383,31 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
                     ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Printer harus sudah di-pairing lewat Pengaturan Bluetooth HP dulu, baru bisa muncul & dipilih di sini.',
-                            style: TextStyle(color: AppColors.muted, fontSize: 12.5),
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'Printer harus sudah di-pairing lewat Pengaturan Bluetooth HP dulu, baru bisa muncul & dipilih di sini.',
+                      style: const TextStyle(color: AppColors.muted, fontSize: 12.5),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: _openSystemBluetoothSettings,
-                            icon: const Icon(Icons.settings_bluetooth_rounded, size: 17),
-                            label: const Text('Pairing di Pengaturan HP'),
-                          ),
-                        ),
-                      ],
+                    child: OutlinedButton.icon(
+                      onPressed: _openSystemBluetoothSettings,
+                      icon: const Icon(Icons.settings_bluetooth_rounded, size: 17),
+                      label: const Text('Pairing di Pengaturan HP'),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Expanded(
-                    child: _devices.isEmpty
-                        ? _buildEmptyState()
-                        : ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                            itemCount: _devices.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 8),
-                            itemBuilder: (context, i) {
-                              final d = _devices[i];
+                  if (_devices.isEmpty)
+                    _buildEmptyState()
+                  else
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: _devices
+                            .map((d) {
                               final isSaved = d.address == _savedAddress;
                               return Card(
-                                margin: EdgeInsets.zero,
+                                margin: const EdgeInsets.only(bottom: 8),
                                 child: ListTile(
                                   leading: Icon(Icons.print_rounded, color: isSaved ? AppColors.accent : AppColors.muted),
                                   title: Text(d.name, style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -423,9 +420,11 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
                                         ),
                                 ),
                               );
-                            },
-                          ),
-                  ),
+                            })
+                            .toList(),
+                      ),
+                    ),
+                  const SizedBox(height: 8),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     child: Column(
@@ -503,27 +502,29 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
   }
 
   Widget _buildEmptyState() {
-    return ListView(
+    return Padding(
       padding: const EdgeInsets.all(24),
-      children: [
-        const Icon(Icons.print_disabled_rounded, size: 40, color: AppColors.muted),
-        const SizedBox(height: 12),
-        const Text(
-          'Belum ada printer yang di-pairing',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Kalau printer PRJ-R58B (atau merek lain) sudah dinyalakan tapi tetap tidak muncul di sini, coba urutan ini:\n\n'
-          '1. Pastikan Bluetooth di HP menyala\n'
-          '2. Buka "Pairing di Pengaturan HP" di atas, cari & pasangkan printer dari sana (sering minta PIN "0000" atau "1234")\n'
-          '3. Kembali ke halaman ini dan ketuk ikon refresh di kanan atas\n'
-          '4. Kalau masih belum muncul, coba "Hubungkan Manual via MAC Address" di bawah — cek MAC address di stiker printer atau di daftar Bluetooth HP',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: AppColors.muted, fontSize: 12.5, height: 1.5),
-        ),
-      ],
+      child: Column(
+        children: [
+          const Icon(Icons.print_disabled_rounded, size: 40, color: AppColors.muted),
+          const SizedBox(height: 12),
+          const Text(
+            'Belum ada printer yang di-pairing',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Kalau printer PRJ-R58B (atau merek lain) sudah dinyalakan tapi tetap tidak muncul di sini, coba urutan ini:\n\n'
+            '1. Pastikan Bluetooth di HP menyala\n'
+            '2. Buka "Pairing di Pengaturan HP" di atas, cari & pasangkan printer dari sana (sering minta PIN "0000" atau "1234")\n'
+            '3. Kembali ke halaman ini dan ketuk ikon refresh di kanan atas\n'
+            '4. Kalau masih belum muncul, coba "Hubungkan Manual via MAC Address" di bawah — cek MAC address di stiker printer atau di daftar Bluetooth HP',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.muted, fontSize: 12.5, height: 1.5),
+          ),
+        ],
+      ),
     );
   }
 }
