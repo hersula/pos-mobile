@@ -113,7 +113,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         items: cart.items,
         discountType: cart.discountType,
         discountValue: cart.discountValue,
-        taxPercent: cart.taxPercent,
+        taxPercent: cart.useTax ? cart.taxPercent : 0,
         note: cart.note,
         payments: validPayments
             .map((p) => SalePayment(

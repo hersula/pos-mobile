@@ -235,9 +235,17 @@ class _CartScreenState extends State<CartScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: const Text('Pakai PPN'),
+            value: cart.useTax,
+            onChanged: (v) => cart.setUseTax(v ?? false),
+          ),
           TextField(
             controller: _taxCtrl,
+            enabled: cart.useTax,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(labelText: 'PPN (%)'),
             onChanged: (v) => cart.setTaxPercent(num.tryParse(v) ?? 0),

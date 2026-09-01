@@ -1,11 +1,17 @@
 class Category {
   final String id;
   final String name;
+  final int productCount;
 
-  Category({required this.id, required this.name});
+  Category({required this.id, required this.name, this.productCount = 0});
 
   factory Category.fromJson(Map<String, dynamic> json) {
-    return Category(id: json['id'] as String, name: json['name'] as String);
+    final count = json['_count'] as Map<String, dynamic>?;
+    return Category(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      productCount: count?['products'] as int? ?? 0,
+    );
   }
 }
 

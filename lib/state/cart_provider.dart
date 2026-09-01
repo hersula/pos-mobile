@@ -10,6 +10,7 @@ class CartProvider extends ChangeNotifier {
   String discountType = 'NOMINAL'; // PERCENT | NOMINAL
   num discountValue = 0;
   num taxPercent = 11;
+  bool useTax = false; // default non-PPN
   Customer? selectedCustomer;
   String? note;
 
@@ -30,7 +31,7 @@ class CartProvider extends ChangeNotifier {
     return t < 0 ? 0 : _round2(t);
   }
 
-  num get taxAmount => _round2(taxableAmount * (taxPercent / 100));
+  num get taxAmount => useTax ? _round2(taxableAmount * (taxPercent / 100)) : 0;
 
   num get grandTotal => _round2(taxableAmount + taxAmount);
 
@@ -92,6 +93,11 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setUseTax(bool value) {
+    useTax = value;
+    notifyListeners();
+  }
+
   void setCustomer(Customer? customer) {
     selectedCustomer = customer;
     notifyListeners();
@@ -106,6 +112,7 @@ class CartProvider extends ChangeNotifier {
     discountType = 'NOMINAL';
     discountValue = 0;
     taxPercent = 11;
+    useTax = false;
     selectedCustomer = null;
     note = null;
     notifyListeners();

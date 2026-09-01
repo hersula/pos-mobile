@@ -70,6 +70,15 @@ class CategoryRepository {
     final res = await _client.post(ApiEndpoints.categories, data: {'name': name});
     return Category.fromJson(res['data'] as Map<String, dynamic>);
   }
+
+  Future<Category> updateCategory(String id, String name) async {
+    final res = await _client.put(ApiEndpoints.categoryDetail(id), data: {'name': name});
+    return Category.fromJson(res['data'] as Map<String, dynamic>);
+  }
+
+  Future<void> deleteCategory(String id) async {
+    await _client.delete(ApiEndpoints.categoryDetail(id));
+  }
 }
 
 class WarehouseRepository {

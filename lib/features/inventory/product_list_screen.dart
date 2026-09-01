@@ -9,6 +9,7 @@ import '../../data/models/product.dart';
 import '../../data/repositories/product_repository.dart';
 import '../../state/auth_provider.dart';
 import '../procurement/purchase_order_list_screen.dart';
+import 'category_management_screen.dart';
 import 'product_form_screen.dart';
 
 class ProductListScreen extends StatefulWidget {
@@ -80,6 +81,15 @@ class _ProductListScreenState extends State<ProductListScreen> {
       appBar: AppBar(
         title: const Text('Inventori'),
         actions: [
+          if (canManage)
+            IconButton(
+              icon: const Icon(Icons.category_outlined),
+              tooltip: 'Kelola Kategori/Jasa',
+              onPressed: () async {
+                await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CategoryManagementScreen()));
+                _loadCategories();
+              },
+            ),
           if (canManage)
             IconButton(
               icon: const Icon(Icons.local_shipping_outlined),

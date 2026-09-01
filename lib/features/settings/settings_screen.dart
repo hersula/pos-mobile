@@ -2,17 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/role_labels.dart';
 import '../../state/auth_provider.dart';
+import 'menu_permission_screen.dart';
 import 'printer_settings_screen.dart';
 import 'subscription_card.dart';
-
-const _roleLabels = {
-  'OWNER': 'Pemilik',
-  'MANAGER': 'Manajer',
-  'KASIR': 'Kasir',
-  'GUDANG': 'Gudang',
-  'AKUNTAN': 'Akuntan',
-};
+import 'user_management_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -68,7 +63,7 @@ class SettingsScreen extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(6)),
                             child: Text(
-                              _roleLabels[user?.role] ?? user?.role ?? '-',
+                              roleLabels[user?.role] ?? user?.role ?? '-',
                               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                             ),
                           ),
@@ -97,6 +92,29 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 10),
             SubscriptionCard(isOwner: user?.role == 'OWNER'),
             const SizedBox(height: 10),
+            if (user?.role == 'OWNER')
+              Card(
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.group_rounded, color: AppColors.muted),
+                      title: const Text('Manajemen User'),
+                      subtitle: const Text('Tambah user & atur level (role)'),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const UserManagementScreen())),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.lock_outline_rounded, color: AppColors.muted),
+                      title: const Text('Otoritas Menu'),
+                      subtitle: const Text('Atur menu yang boleh diakses tiap level'),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MenuPermissionScreen())),
+                    ),
+                  ],
+                ),
+              ),
+            if (user?.role == 'OWNER') const SizedBox(height: 10),
             Card(
               child: Column(
                 children: [
