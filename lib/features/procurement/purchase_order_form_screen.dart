@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/models/category.dart';
 import '../../data/models/product.dart';
+import '../../data/models/product_unit.dart';
 import '../../data/models/purchase_order.dart';
 import '../../data/models/supplier.dart';
 import '../../data/repositories/product_repository.dart';
@@ -14,15 +15,19 @@ import '../common/barcode_scanner_screen.dart';
 
 class _POItemDraft {
   final Product product;
+  final ProductUnit? unit; // null = beli pakai satuan dasar produk
   int qty;
   num unitCost;
   late final TextEditingController qtyCtrl;
   late final TextEditingController unitCostCtrl;
 
-  _POItemDraft({required this.product, this.qty = 1, num? unitCost}) : unitCost = unitCost ?? product.costPrice {
+  _POItemDraft({required this.product, this.unit, this.qty = 1, num? unitCost})
+      : unitCost = unitCost ?? (product.costPrice * (unit?.conversionQty ?? 1)) {
     qtyCtrl = TextEditingController(text: qty.toString());
     unitCostCtrl = TextEditingController(text: this.unitCost.toString());
   }
+
+  String get unitLabel => unit?.name ?? product.unit;
 
   num get subtotal => qty * unitCost;
 
@@ -148,7 +153,7 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
                                 subtitle: Text('Stok: ${results[i].totalStock} ${results[i].unit} · Modal: ${CurrencyFormatter.format(results[i].costPrice)}'),
                                 onTap: () {
                                   Navigator.pop(ctx);
-                                  _addItem(results[i]);
+                                  _pickUnitAndAddItem(results[i]);
                                 },
                               ),
                             ),
@@ -163,14 +168,54 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
     );
   }
 
-  void _addItem(Product product) {
+  // Sentinel baris "satuan dasar" di bottom sheet pilih satuan — beda dgn `null` yg dipakai
+  // showModalBottomSheet sendiri kalau sheet ditutup tanpa memilih (tap di luar/back).
+  static const Object _baseUnitChoice = Object();
+
+  Future<void> _pickUnitAndAddItem(Product product) async {
+    if (!product.hasMultipleUnits) {
+      _addItem(product);
+      return;
+    }
+
+    final choice = await showModalBottomSheet<Object>(
+      context: context,
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text('Beli per Satuan Apa? — ${product.name}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+              ),
+              ListTile(
+                title: Text(product.unit),
+                onTap: () => Navigator.pop(ctx, _baseUnitChoice),
+              ),
+              ...product.units.map((u) => ListTile(
+                    title: Text(u.name),
+                    subtitle: Text('1 ${u.name} = ${u.conversionQty} ${product.unit}'),
+                    onTap: () => Navigator.pop(ctx, u),
+                  )),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+    if (!mounted || choice == null) return; // sheet ditutup tanpa memilih -> batal
+    _addItem(product, unit: choice == _baseUnitChoice ? null : choice as ProductUnit);
+  }
+
+  void _addItem(Product product, {ProductUnit? unit}) {
     setState(() {
-      final existing = _items.where((e) => e.product.id == product.id);
+      final existing = _items.where((e) => e.product.id == product.id && e.unit?.id == unit?.id);
       if (existing.isNotEmpty) {
         existing.first.qty += 1;
         existing.first.qtyCtrl.text = existing.first.qty.toString();
       } else {
-        _items.add(_POItemDraft(product: product));
+        _items.add(_POItemDraft(product: product, unit: unit));
       }
     });
   }
@@ -205,8 +250,10 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
         items: _items
             .map((e) => PurchaseOrderItem(
                   productId: e.product.id,
+                  productUnitId: e.unit?.id ?? '',
                   productName: e.product.name,
                   unit: e.product.unit,
+                  unitLabel: e.unit?.name,
                   qty: e.qty,
                   unitCost: e.unitCost,
                   subtotal: e.subtotal,
@@ -339,7 +386,10 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
             Row(
               children: [
                 Expanded(
-                  child: Text(item.product.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
+                  child: Text(
+                    item.unit != null ? '${item.product.name} (${item.unitLabel})' : item.product.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.danger),
@@ -353,7 +403,7 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
                   child: TextField(
                     controller: item.qtyCtrl,
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(labelText: 'Qty (${item.product.unit})', isDense: true),
+                    decoration: InputDecoration(labelText: 'Qty (${item.unitLabel})', isDense: true),
                     onChanged: (v) => setState(() => item.qty = int.tryParse(v) ?? item.qty),
                   ),
                 ),

@@ -75,7 +75,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text('Masuk', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                  const Text(
+                    'Masuk',
+                    style: TextStyle(fontFamily: 'Archivo', fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.ink),
+                  ),
                   const SizedBox(height: 4),
                   const Text('Masuk ke akun kasir toko kamu', style: TextStyle(color: AppColors.muted, fontSize: 14)),
                   const SizedBox(height: 28),

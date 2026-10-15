@@ -64,7 +64,7 @@ class PurchaseOrderReceiptBuilder {
     for (final item in po.items) {
       bytes.addAll(generator.text(item.productName, styles: const PosStyles(bold: true)));
       bytes.addAll(generator.row([
-        PosColumn(text: '${item.qty} ${item.unit} x ${CurrencyFormatter.formatPlain(item.unitCost)}', width: 8),
+        PosColumn(text: '${item.qty} ${item.displayUnit} x ${CurrencyFormatter.formatPlain(item.unitCost)}', width: 8),
         PosColumn(
           text: CurrencyFormatter.formatPlain(item.subtotal),
           width: 4,

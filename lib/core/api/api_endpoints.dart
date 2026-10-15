@@ -9,8 +9,12 @@ class ApiEndpoints {
   // Master data
   static const categories = '/categories';
   static String categoryDetail(String id) => '/categories/$id';
+  static const priceLevels = '/price-levels';
+  static String priceLevelDetail(String id) => '/price-levels/$id';
   static const warehouses = '/warehouses';
   static const products = '/products';
+  static const productScan = '/products/scan';
+  static const upload = '/upload';
   static const suppliers = '/suppliers';
   static const customers = '/customers';
 

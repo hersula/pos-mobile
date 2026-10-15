@@ -441,7 +441,7 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
                 title: Text(item.productName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
-                subtitle: Text('${item.qty} ${item.unit} x ${CurrencyFormatter.format(item.unitCost)}', style: const TextStyle(fontSize: 12)),
+                subtitle: Text('${item.qty} ${item.displayUnit} x ${CurrencyFormatter.format(item.unitCost)}', style: const TextStyle(fontSize: 12)),
                 trailing: Text(CurrencyFormatter.format(item.subtotal), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
               ),
             )),

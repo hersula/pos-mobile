@@ -41,7 +41,7 @@ class PosApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CartProvider()),
       ],
       child: MaterialApp(
-        title: 'POS Kasir',
+        title: 'Q-Pos',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         home: const _RootGate(),

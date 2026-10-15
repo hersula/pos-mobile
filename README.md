@@ -1,4 +1,4 @@
-# POS Mobile (Flutter)
+# Q-Pos (Flutter)
 
 Aplikasi kasir mobile yang mengonsumsi backend `pos-backend` (Next.js). Mencakup modul Kasir/POS (diskon, PPN, split payment, cetak struk Bluetooth), Inventori, dan Laporan (tutup kasir + laba rugi), dengan alur login yang menghormati status persetujuan tenant (PENDING/APPROVED/REJECTED/SUSPENDED).
 
@@ -72,10 +72,10 @@ Default `lib/core/constants/app_config.dart` mengarah ke `http://10.0.2.2:3000` 
 flutter run
 
 # Device fisik / backend yang sudah di-deploy
-flutter run --dart-define=API_BASE_URL=https://api.tokokamu.com
+flutter run --dart-define=API_BASE_URL=https://api.tokokamu.com7
 
 # iOS Simulator (localhost langsung bisa dipakai)
-flutter run --dart-define=API_BASE_URL=http://localhost:3000
+flutter run --dart-define=API_BASE_URL=http://localhost:30007
 ```
 
 ---

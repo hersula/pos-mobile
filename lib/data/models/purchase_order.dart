@@ -4,20 +4,27 @@ import 'supplier.dart';
 
 class PurchaseOrderItem {
   final String productId;
+  final String productUnitId; // satuan tambahan yang dipilih saat beli (mis. "Dus"), null = satuan dasar
   final String productName;
   final String unit;
+  final String? unitLabel;
   final int qty;
   final num unitCost;
   final num subtotal;
 
   PurchaseOrderItem({
     required this.productId,
+    this.productUnitId = '',
     required this.productName,
     required this.unit,
+    this.unitLabel,
     required this.qty,
     required this.unitCost,
     required this.subtotal,
   });
+
+  /// Label satuan yang ditampilkan: satuan tambahan kalau dipilih, kalau tidak satuan dasar produk.
+  String get displayUnit => unitLabel ?? unit;
 
   factory PurchaseOrderItem.fromJson(Map<String, dynamic> json) {
     final product = json['product'] as Map<String, dynamic>?;
@@ -25,13 +32,19 @@ class PurchaseOrderItem {
       productId: json['productId'] as String,
       productName: product?['name'] as String? ?? '-',
       unit: product?['unit'] as String? ?? 'pcs',
+      unitLabel: json['unitLabel'] as String?,
       qty: parseInt(json['qty']),
       unitCost: parseNum(json['unitCost']),
       subtotal: parseNum(json['subtotal']),
     );
   }
 
-  Map<String, dynamic> toJson() => {'productId': productId, 'qty': qty, 'unitCost': unitCost};
+  Map<String, dynamic> toJson() => {
+        'productId': productId,
+        if (productUnitId.isNotEmpty) 'productUnitId': productUnitId,
+        'qty': qty,
+        'unitCost': unitCost,
+      };
 }
 
 class PurchasePayment {

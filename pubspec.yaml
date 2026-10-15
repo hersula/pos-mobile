@@ -1,5 +1,5 @@
 name: pos_mobile
-description: Aplikasi kasir (POS) mobile - inventori, penjualan, akunting.
+description: Q-Pos - aplikasi kasir (POS) mobile untuk inventori, penjualan, akunting.
 publish_to: "none"
 version: 1.0.0+1
 
@@ -36,6 +36,9 @@ dependencies:
   # Scan barcode pakai kamera - dipakai di form produk & halaman kasir
   mobile_scanner: ^5.2.3
 
+  # Pilih gambar produk dari galeri / kamera
+  image_picker: ^1.1.2
+
   # Buka halaman pengaturan Bluetooth sistem Android langsung dari dalam app
   android_intent_plus: ^5.1.0
 
@@ -49,6 +52,24 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/app_icon.png
+  # Font open-source (lisensi SIL OFL, lihat assets/fonts/OFL-*.txt) — aman
+  # di-bundle ke APK/IPA, beda arah dari font sistem Windows yang dipakai
+  # sementara di draft pitch identitas visual.
+  fonts:
+    - family: Archivo
+      fonts:
+        - asset: assets/fonts/Archivo-Variable.ttf
+    - family: Mulish
+      fonts:
+        - asset: assets/fonts/Mulish-Variable.ttf
+    - family: IBMPlexMono
+      fonts:
+        - asset: assets/fonts/IBMPlexMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/IBMPlexMono-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/IBMPlexMono-SemiBold.ttf
+          weight: 600
 
 # Konfigurasi flutter_launcher_icons — generate app icon semua platform dari
 # assets/icon/app_icon.png. Jalankan setelah `flutter create .`:

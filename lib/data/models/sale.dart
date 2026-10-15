@@ -4,6 +4,7 @@ class SaleItem {
   final String productId;
   final String productName;
   final String unit;
+  final String? unitLabel; // satuan tambahan yang dipilih saat jual (mis. "Dus"), null = satuan dasar
   final int qty;
   final num unitPrice;
   final num discountAmount;
@@ -13,11 +14,15 @@ class SaleItem {
     required this.productId,
     required this.productName,
     required this.unit,
+    this.unitLabel,
     required this.qty,
     required this.unitPrice,
     required this.discountAmount,
     required this.subtotal,
   });
+
+  /// Label satuan yang ditampilkan: satuan tambahan kalau dipilih, kalau tidak satuan dasar produk.
+  String get displayUnit => unitLabel ?? unit;
 
   factory SaleItem.fromJson(Map<String, dynamic> json) {
     final product = json['product'] as Map<String, dynamic>?;
@@ -25,6 +30,7 @@ class SaleItem {
       productId: json['productId'] as String,
       productName: product?['name'] as String? ?? '-',
       unit: product?['unit'] as String? ?? 'pcs',
+      unitLabel: json['unitLabel'] as String?,
       qty: parseInt(json['qty']),
       unitPrice: parseNum(json['unitPrice']),
       discountAmount: parseNum(json['discountAmount']),

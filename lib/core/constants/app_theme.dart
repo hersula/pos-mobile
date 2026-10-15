@@ -13,7 +13,10 @@ class AppTheme {
         surface: AppColors.surface,
       ),
       scaffoldBackgroundColor: AppColors.paper,
-      fontFamily: 'Roboto',
+      // Mulish untuk isi/body (brand Q-Pos) — menggantikan Roboto bawaan.
+      // Judul (AppBar dkk) pakai Archivo, lihat appBarTheme di bawah.
+      // Keduanya font open-source (SIL OFL), lihat assets/fonts/OFL-*.txt.
+      fontFamily: 'Mulish',
     );
 
     return base.copyWith(
@@ -24,14 +27,15 @@ class AppTheme {
         scrolledUnderElevation: 1,
         centerTitle: false,
         titleTextStyle: TextStyle(
+          fontFamily: 'Archivo',
           color: AppColors.text,
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
+          fontSize: 19,
+          fontWeight: FontWeight.w800,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.ink,
+          backgroundColor: AppColors.accent,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

@@ -47,7 +47,7 @@ class ReceiptBuilder {
     for (final item in sale.items) {
       bytes.addAll(generator.text(item.productName, styles: const PosStyles(bold: true)));
       bytes.addAll(generator.row([
-        PosColumn(text: '${item.qty} x ${CurrencyFormatter.formatPlain(item.unitPrice)}', width: 8),
+        PosColumn(text: '${item.qty} ${item.displayUnit} x ${CurrencyFormatter.formatPlain(item.unitPrice)}', width: 8),
         PosColumn(
           text: CurrencyFormatter.formatPlain(item.subtotal),
           width: 4,

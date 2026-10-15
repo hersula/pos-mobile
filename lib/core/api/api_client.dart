@@ -91,6 +91,22 @@ class ApiClient {
     return _handle(() => _dio.post(path, data: data));
   }
 
+  /// Kirim file (multipart/form-data). Dipakai untuk upload gambar produk.
+  Future<Map<String, dynamic>> postMultipart(
+    String path, {
+    required FormData formData,
+    void Function(int sent, int total)? onProgress,
+  }) async {
+    return _handle(
+      () => _dio.post(
+        path,
+        data: formData,
+        options: Options(contentType: 'multipart/form-data'),
+        onSendProgress: onProgress,
+      ),
+    );
+  }
+
   Future<Map<String, dynamic>> put(String path, {Map<String, dynamic>? data}) async {
     return _handle(() => _dio.put(path, data: data));
   }

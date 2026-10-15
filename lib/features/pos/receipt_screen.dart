@@ -152,7 +152,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(item.productName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                                    Text('${item.qty} x ${CurrencyFormatter.format(item.unitPrice)}',
+                                    Text('${item.qty} ${item.displayUnit} x ${CurrencyFormatter.format(item.unitPrice)}',
                                         style: const TextStyle(fontSize: 11.5, color: AppColors.muted)),
                                   ],
                                 ),

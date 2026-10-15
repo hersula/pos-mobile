@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_config.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/models/category.dart';
 import '../../data/models/product.dart';
@@ -10,6 +11,7 @@ import '../../data/repositories/product_repository.dart';
 import '../../state/auth_provider.dart';
 import '../procurement/purchase_order_list_screen.dart';
 import 'category_management_screen.dart';
+import 'price_level_management_screen.dart';
 import 'product_form_screen.dart';
 
 class ProductListScreen extends StatefulWidget {
@@ -89,6 +91,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CategoryManagementScreen()));
                 _loadCategories();
               },
+            ),
+          if (canManage)
+            IconButton(
+              icon: const Icon(Icons.sell_outlined),
+              tooltip: 'Kelola Level Harga',
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PriceLevelManagementScreen())),
             ),
           if (canManage)
             IconButton(
@@ -239,6 +247,7 @@ class _ProductTile extends StatelessWidget {
       margin: EdgeInsets.zero,
       child: ListTile(
         onTap: onTap,
+        leading: _Thumbnail(imageUrl: product.imageUrl),
         title: Text(product.name, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(
           '${product.categoryName ?? "Tanpa kategori"} · ${CurrencyFormatter.format(product.sellPrice)}',
@@ -261,6 +270,36 @@ class _ProductTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _Thumbnail extends StatelessWidget {
+  final String? imageUrl;
+
+  const _Thumbnail({this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final url = AppConfig.resolveImageUrl(imageUrl);
+
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        color: AppColors.paper,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.line),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: url == null
+          ? const Icon(Icons.inventory_2_outlined, size: 20, color: AppColors.muted)
+          : Image.network(
+              url,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  const Icon(Icons.broken_image_outlined, size: 20, color: AppColors.muted),
+            ),
     );
   }
 }

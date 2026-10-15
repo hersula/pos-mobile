@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import '../data/models/cart_item.dart';
 import '../data/models/customer.dart';
+import '../data/models/price_level.dart';
 import '../data/models/product.dart';
+import '../data/models/product_unit.dart';
 
 class CartProvider extends ChangeNotifier {
   final List<CartItem> _items = [];
@@ -13,6 +15,11 @@ class CartProvider extends ChangeNotifier {
   bool useTax = false; // default non-PPN
   Customer? selectedCustomer;
   String? note;
+
+  // Level harga aktif utk transaksi ini (null = "Umum"/default). Dipilih kasir sekali
+  // di halaman Kasir sebelum menambahkan produk -- lihat Product.priceForLevel().
+  // Hanya memengaruhi harga satuan DASAR; satuan tambahan (Dus dkk) tidak terpengaruh.
+  PriceLevel? activePriceLevel;
 
   bool get isEmpty => _items.isEmpty;
   int get totalQty => _items.fold(0, (sum, e) => sum + e.qty);
@@ -35,50 +42,63 @@ class CartProvider extends ChangeNotifier {
 
   num get grandTotal => _round2(taxableAmount + taxAmount);
 
-  void addProduct(Product product) {
-    final existingIndex = _items.indexWhere((e) => e.product.id == product.id);
+  // Produk yang sama tapi beda satuan (mis. Aqua per Botol vs per Dus) dianggap
+  // baris keranjang yang BERBEDA, jadi pencarian baris selalu cocokkan productId + unitId.
+  bool _matches(CartItem e, String productId, String? unitId) => e.product.id == productId && e.unit?.id == unitId;
+
+  void addProduct(Product product, {ProductUnit? unit, num? unitPriceOverride}) {
+    final existingIndex = _items.indexWhere((e) => _matches(e, product.id, unit?.id));
     if (existingIndex >= 0) {
       _items[existingIndex].qty += 1;
     } else {
-      _items.add(CartItem(product: product));
+      _items.add(CartItem(product: product, unit: unit, unitPrice: unitPriceOverride));
     }
     notifyListeners();
   }
 
-  void incrementQty(String productId) {
-    final item = _items.firstWhere((e) => e.product.id == productId);
+  void setPriceLevel(PriceLevel? level) {
+    activePriceLevel = level;
+    notifyListeners();
+  }
+
+  void incrementQty(String productId, {String? unitId}) {
+    final item = _items.firstWhere((e) => _matches(e, productId, unitId));
     item.qty += 1;
     notifyListeners();
   }
 
-  void decrementQty(String productId) {
-    final item = _items.firstWhere((e) => e.product.id == productId);
+  void decrementQty(String productId, {String? unitId}) {
+    final item = _items.firstWhere((e) => _matches(e, productId, unitId));
     if (item.qty <= 1) {
-      _items.removeWhere((e) => e.product.id == productId);
+      item.dispose();
+      _items.removeWhere((e) => _matches(e, productId, unitId));
     } else {
       item.qty -= 1;
     }
     notifyListeners();
   }
 
-  void updateQty(String productId, int qty) {
+  void updateQty(String productId, int qty, {String? unitId}) {
     if (qty <= 0) {
-      removeItem(productId);
+      removeItem(productId, unitId: unitId);
       return;
     }
-    final item = _items.firstWhere((e) => e.product.id == productId);
+    final item = _items.firstWhere((e) => _matches(e, productId, unitId));
     item.qty = qty;
     notifyListeners();
   }
 
-  void updateItemDiscount(String productId, num discount) {
-    final item = _items.firstWhere((e) => e.product.id == productId);
+  void updateItemDiscount(String productId, num discount, {String? unitId}) {
+    final item = _items.firstWhere((e) => _matches(e, productId, unitId));
     item.discountAmount = discount;
     notifyListeners();
   }
 
-  void removeItem(String productId) {
-    _items.removeWhere((e) => e.product.id == productId);
+  void removeItem(String productId, {String? unitId}) {
+    for (final e in _items.where((e) => _matches(e, productId, unitId))) {
+      e.dispose();
+    }
+    _items.removeWhere((e) => _matches(e, productId, unitId));
     notifyListeners();
   }
 
@@ -108,6 +128,9 @@ class CartProvider extends ChangeNotifier {
   }
 
   void clear() {
+    for (final e in _items) {
+      e.dispose();
+    }
     _items.clear();
     discountType = 'NOMINAL';
     discountValue = 0;
@@ -115,6 +138,7 @@ class CartProvider extends ChangeNotifier {
     useTax = false;
     selectedCustomer = null;
     note = null;
+    activePriceLevel = null;
     notifyListeners();
   }
 

@@ -260,6 +260,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           padding: const EdgeInsets.all(12),
           child: ElevatedButton(
             onPressed: _submitting ? null : _submit,
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.ember),
             child: _submitting
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                 : Text(remaining > 0 ? 'Simpan sebagai Piutang' : 'Selesaikan Transaksi'),
