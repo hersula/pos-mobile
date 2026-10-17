@@ -9,6 +9,7 @@ import '../../data/models/category.dart';
 import '../../data/models/product.dart';
 import '../../data/repositories/product_repository.dart';
 import '../../state/auth_provider.dart';
+import '../consignment/consignment_list_screen.dart';
 import '../procurement/purchase_order_list_screen.dart';
 import 'category_management_screen.dart';
 import 'price_level_management_screen.dart';
@@ -104,6 +105,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
               tooltip: 'Pengadaan Barang',
               onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PurchaseOrderListScreen())),
             ),
+          // Konsinyasi: semua role bisa melihat; aksi tulis dibatasi di dalam layar (OWNER/MANAGER).
+          IconButton(
+            icon: const Icon(Icons.handshake_outlined),
+            tooltip: 'Konsinyasi',
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ConsignmentListScreen())),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: _loadProducts,

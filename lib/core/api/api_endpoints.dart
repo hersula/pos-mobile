@@ -37,6 +37,15 @@ class ApiEndpoints {
   static String saleCancel(String id) => '/sales/$id/cancel';
   static String salePayments(String id) => '/sales/$id/payments';
 
+  // Konsinyasi
+  static const consignments = '/consignments';
+  static const consignmentOutletStock = '/consignments/outlet-stock';
+  static String consignmentDetail(String id) => '/consignments/$id';
+  static String consignmentSend(String id) => '/consignments/$id/send';
+  static String consignmentSettleSale(String id) => '/consignments/$id/settle-sale';
+  static String consignmentReturn(String id) => '/consignments/$id/return';
+  static String consignmentCancel(String id) => '/consignments/$id/cancel';
+
   // Akunting
   static const chartOfAccounts = '/accounting/chart-of-accounts';
   static const journal = '/accounting/journal';

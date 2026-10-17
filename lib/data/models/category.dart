@@ -18,10 +18,17 @@ class Category {
 class Warehouse {
   final String id;
   final String name;
+  final String type; // STORE | CONSIGNMENT
+  final String? customerId;
 
-  Warehouse({required this.id, required this.name});
+  Warehouse({required this.id, required this.name, this.type = 'STORE', this.customerId});
 
   factory Warehouse.fromJson(Map<String, dynamic> json) {
-    return Warehouse(id: json['id'] as String, name: json['name'] as String);
+    return Warehouse(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      type: json['type'] as String? ?? 'STORE',
+      customerId: json['customerId'] as String?,
+    );
   }
 }

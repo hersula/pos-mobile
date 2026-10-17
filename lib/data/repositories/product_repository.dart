@@ -156,8 +156,12 @@ class PriceLevelRepository {
 class WarehouseRepository {
   final ApiClient _client = ApiClient.instance;
 
-  Future<List<Warehouse>> getWarehouses() async {
-    final res = await _client.get(ApiEndpoints.warehouses);
+  /// [type]: STORE (default backend), CONSIGNMENT, atau ALL. Checkout/PO memakai
+  /// default (STORE); `ALL` hanya untuk layar konsinyasi bila perlu.
+  Future<List<Warehouse>> getWarehouses({String? type}) async {
+    final res = await _client.get(ApiEndpoints.warehouses, query: {
+      if (type != null) 'type': type,
+    });
     final list = res['data'] as List<dynamic>;
     return list.map((e) => Warehouse.fromJson(e as Map<String, dynamic>)).toList();
   }

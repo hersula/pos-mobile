@@ -113,6 +113,7 @@ lib/
 ├── features/
 │   ├── auth/                     # login, register, status pending/ditolak
 │   ├── common/                   # komponen dipakai lintas modul (scan barcode)
+│   ├── consignment/              # konsinyasi: daftar, form, detail, sisa stok outlet
 │   ├── dashboard/                # bottom navigation antar modul
 │   ├── inventory/                # daftar & form produk
 │   ├── pos/                      # kasir, keranjang, checkout, struk
@@ -209,6 +210,18 @@ Diakses lewat ikon truk (🚚) di AppBar tab **Inventori** (khusus role OWNER/MA
 - **Terima Barang** — dari halaman detail PO, tombol ini memanggil `POST /api/purchase-orders/:id/receive`: stok otomatis bertambah di gudang tujuan, dan harga modal (`costPrice`) tiap produk ter-update mengikuti harga beli terbaru. Aksi ini final (PO jadi `RECEIVED`, tidak bisa di-receive dua kali — sudah divalidasi juga di backend).
 - **Kelola Supplier** — ikon di AppBar halaman Pengadaan Barang, list & tambah supplier baru lewat dialog singkat.
 - **Cetak Nota** — tombol di halaman detail PO (AppBar & tombol utama), mencetak nota pengadaan barang ke printer thermal Bluetooth (`PurchaseOrderReceiptBuilder`, format ESC/POS sama dengan struk penjualan). Nota mencantumkan No. PO, tanggal, supplier, gudang tujuan, rincian item, metode bayar, dan status hutang + sisa tagihan kalau pembeliannya tempo (`CREDIT`) — plus kolom tanda tangan "Diserahkan oleh / Diterima oleh" untuk bukti serah terima fisik. Bisa dicetak kapan saja, termasuk saat PO masih `DRAFT` (nota otomatis menandai "barang belum diterima").
+
+### Konsinyasi (Barang Titip ke Outlet)
+Diakses lewat ikon jabat tangan (`handshake`) di AppBar tab **Inventori**. Semua role bisa melihat. Aksi tulis (buat, kirim, catat terjual, retur, batalkan, ubah draf) hanya untuk **OWNER/MANAGER**.
+- **Daftar** — chip filter status (Semua, Draf, Terkirim, Sebagian Selesai, Selesai, Dibatalkan), tarik untuk muat ulang, dan muat lebih banyak saat digulir.
+- **Konsinyasi Baru** — pilih customer/outlet (atau tambah customer baru), gudang asal (hanya gudang toko), jatuh tempo, catatan, lalu tambah produk. Tiap item memilih satuan (dasar atau satuan item, mis. Dus), qty, dan harga kesepakatan. Disimpan sebagai **Draf**; stok belum pindah.
+- **Kirim Barang** — stok gudang toko pindah ke gudang konsinyasi outlet. Status menjadi **Terkirim**.
+- **Catat Terjual** — isi qty terjual per item (default satuan dasar). Sistem membuat penjualan piutang ke outlet, dan status berubah menjadi Sebagian Selesai atau Selesai.
+- **Retur Barang** — kembalikan sisa barang dari outlet ke gudang toko.
+- **Batalkan** — hanya bila belum ada barang terjual atau diretur. Stok kembali penuh ke gudang asal.
+- **Sisa Stok di Outlet** — ikon di AppBar daftar, menampilkan sisa barang per outlet.
+
+Panduan langkah demi langkah per peran: [`docs/manual/konsinyasi-user-guide.md`](docs/manual/konsinyasi-user-guide.md).
 
 ### Laporan (Tutup Kasir, Laba Rugi, Pembelian)
 - **Auto-refresh saat pindah tab** — `DashboardScreen` memakai `IndexedStack` supaya state tiap tab (termasuk filter tanggal di Laporan) tidak hilang saat pindah-pindah menu. Konsekuensinya, `ReportsScreen` normalnya *tidak* otomatis reload data saat dibuka ulang. Untuk mengatasi ini, `DashboardScreen` menyimpan `GlobalKey<ReportsScreenState>` dan memanggil method publik `refreshActiveTab()` setiap kali bottom nav pindah ke tab **Laporan** — jadi kasir selalu lihat angka terbaru tanpa perlu tarik-refresh manual. Tab "Tutup Kasir" selalu di-refresh (murah, tab default); tab Laba Rugi/Pembelian cuma ikut di-refresh kalau sebelumnya sudah pernah dibuka (hemat request).
