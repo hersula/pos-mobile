@@ -111,6 +111,10 @@ class ApiClient {
     return _handle(() => _dio.put(path, data: data));
   }
 
+  Future<Map<String, dynamic>> patch(String path, {Map<String, dynamic>? data}) async {
+    return _handle(() => _dio.patch(path, data: data));
+  }
+
   Future<Map<String, dynamic>> delete(String path, {Map<String, dynamic>? data}) async {
     return _handle(() => _dio.delete(path, data: data));
   }

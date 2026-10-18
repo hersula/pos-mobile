@@ -1,4 +1,24 @@
-# Serah terima: frontend (modul Konsinyasi, Flutter)
+# Serah terima: frontend
+
+## Stock Opname (Flutter)
+
+- Status: SEBAGIAN. Kode lengkap, tetapi `flutter pub get/analyze/test` TIDAK dapat dijalankan: Flutter SDK tidak terpasang di mesin ini (hanya Dart 3.9.2). Verifikasi yang dilakukan: `dart format` pada semua file baru (sintaks valid), serta `dart analyze` + eksekusi parsing `StockOpname.fromJson` di sandbox Dart murni (0 issue, hasil sesuai). Widget belum pernah dikompilasi/dijalankan; jalankan `flutter analyze` dan `flutter test` sebelum merge.
+- Model `lib/data/models/stock_opname.dart`; repo `lib/data/repositories/stock_opname_repository.dart` (list, detail, create, saveCounts via PATCH, finalize dengan `clampToZero`, cancel; `StockConflictException` untuk 409 STOCK_CONFLICT); provider `lib/state/stock_opname_provider.dart` (didaftarkan di `main.dart`); endpoint di `api_endpoints.dart`; `ApiClient.patch` ditambah; `UserProfile.canManageStockOpname` (OWNER/MANAGER) dan `canCountStockOpname` (OWNER/MANAGER/GUDANG/KASIR).
+- Layar `lib/features/stock_opname/`: daftar (chip status, cari lokal, infinite scroll, skeleton/kosong/error, banner tanpa izin, FAB hanya OWNER/MANAGER), buat sesi (gudang STORE, kategori, catatan; 409 -> banner + "Buka Sesi Draft"), hitung (cari, scan via `scanBarcode`, progres, stepper, tag selisih, simpan draft, dialog simpan saat keluar), review selisih (+ bottom sheet finalisasi, dialog konflik STOCK_CONFLICT dengan opsi tahan di 0), detail (read-only, batalkan sesi). Titik masuk: ikon `fact_check_outlined` di AppBar `ProductListScreen`, setelah Konsinyasi.
+- Tes: `test/stock_opname_test.dart` (parsing model + `parseConflictItems`).
+- Keputusan/ketidaksesuaian kontrak vs spec:
+  - Kontrak tidak punya parameter `search`: pencarian daftar sesi hanya lokal pada data termuat.
+  - Kontrak tidak mengirim nama kategori maupun nama pembuat/pembatal: kartu menampilkan "Semua kategori"/"Satu kategori"; detail tanpa "dibuat oleh". Tanggal selesai memakai `completedAt` (pembatalan tidak punya `cancelledAt`, jadi tampil bila ada).
+  - qty integer (kontrak), jadi keyboard numerik bulat, bukan desimal.
+  - Alasan batal wajib 3..500 di backend, spec bilang opsional: bila kosong dikirim "Dibatalkan oleh pengguna".
+  - 409 saat buat sesi diasumsikan "Draft sudah ada" (kontrak tidak menyebut code-nya); tombol "Buka Sesi Draft" mencari Draft gudang itu lewat daftar.
+  - Baris Layar Hitung memakai tinggi tetap 148dp (untuk scroll ke produk hasil scan); bisa terpotong pada skala font sangat besar. Layar 2 kolom tablet dan menu overflow <360dp belum dibuat.
+  - Tidak ada beep saat scan (hanya getar haptic).
+- Permintaan ke agent lain: devops/pengguna sediakan Flutter SDK agar analyze/test dapat dijalankan; backend: pertimbangkan `categoryName`, `createdBy`, `cancelledAt` di objek sesi dan `code` khusus untuk 409 Draft ganda.
+
+---
+(Serah terima sebelumnya, Konsinyasi:)
+
 
 - Status: SELESAI (kode). Belum diuji manual terhadap backend/DB nyata.
 - Verifikasi: Flutter ada di `C:\src\flutter` (3.47.7, Dart 3.13.5; tidak di PATH). `flutter analyze`: 0 error; seluruh temuan adalah info/warning lama proyek plus 5 info gaya (`withOpacity`, `value` di dropdown, lint context) di file konsinyasi yang sama dengan pola kode lama. `flutter test`: 2 test lulus. `flutter pub get` mengeluh "Building with plugins requires symlink support" (Developer Mode Windows mati), tetapi `.dart_tool` sudah ada sehingga analyze/test tetap jalan.
@@ -45,3 +65,9 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000
 ## Permintaan ke agent lain
 - qc: skenario kirim 2 Dus -> terjual 30 Botol (`useBaseUnit`) -> retur 18 -> SETTLED; cancel dari SENT; KASIR tidak melihat aksi tulis; checkout hanya menampilkan gudang STORE; batalkan Sale hasil settle lalu cek detail (settlement void).
 - devops/pengguna: aktifkan Developer Mode Windows agar `flutter pub get` sukses.
+
+## Perbaikan QC (BUG-001, BUG-002, BUG-006) - lib/features/stock_opname/
+- BUG-001: `stock_opname_form_screen.dart` hanya menawarkan "Buka Sesi Draft" bila 409 dengan `code == DRAFT_EXISTS`; membuka `details.opnameId` langsung (fallback: cari di daftar Draft). 409 lain memakai pesan generik. Bergantung backend mengirim code ini.
+- BUG-002: `stock_opname_count_screen.dart` membatasi input dan stepper maks 2.000.000.000 (`kMaxOpnameQty`, formatter `_MaxQtyFormatter`).
+- BUG-006: 400 saat simpan menampilkan nama produk bermasalah bila respons memuat `details.items[].itemId` (atau `path` `items.N...`); jika tidak, pesan jelas tentang nilai tidak valid. Format `details` 400 belum ada di kontrak (asumsi, perlu konfirmasi backend).
+- Verifikasi: `dart format` dan `dart analyze lib/features/stock_opname` (hanya 6 info lint, tanpa error). Flutter SDK tidak ada, belum ada uji widget/build.

@@ -1,0 +1,77 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Buat Sesi Opname</title><style>:root{--ink:#16231C;--ink-soft:#3A4A3F;--paper:#EEF1EA;--surface:#FFFFFF;--line:#D7DCCF;--text:#1A241D;--muted:#68776B;
+--accent:#0E6B4A;--accent-soft:#E2F1E9;--pending:#B8862E;--pending-soft:#FAF1E1;--danger:#A23B32;--danger-soft:#F7E8E6;--info:#3454D1;--info-soft:#E7EAFB;
+--r-input:10px;--r-card:12px;--r-chip:20px;--sp1:4px;--sp2:8px;--sp3:12px;--sp4:16px;--sp5:24px;--dur:180ms}
+*{box-sizing:border-box}body{margin:0;background:#cfd5c8;font-family:Mulish,system-ui,sans-serif;color:var(--text);font-size:14px}
+h1.page{font-family:Archivo,system-ui,sans-serif;margin:16px;font-size:16px;color:var(--ink)}
+.stage{display:flex;flex-wrap:wrap;gap:24px;padding:0 16px 32px;align-items:flex-start}
+.cap{font-size:12px;color:var(--ink-soft);margin:0 0 6px;font-weight:700}
+.phone{width:375px;height:760px;background:var(--paper);border-radius:22px;border:6px solid var(--ink);overflow:hidden;position:relative;display:flex;flex-direction:column}
+.appbar{background:var(--surface);height:56px;display:flex;align-items:center;gap:4px;padding:0 4px 0 16px;box-shadow:0 1px 0 var(--line);flex:none}
+.appbar h2{font-family:Archivo,sans-serif;font-weight:800;font-size:19px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{width:48px;height:48px;border:0;background:none;border-radius:50%;font-size:20px;color:var(--text);cursor:pointer}
+.body{flex:1;overflow:auto;padding-bottom:90px}.pad{padding:12px 16px}
+input,select{width:100%;min-height:48px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-input);padding:0 14px;font:inherit;color:var(--text)}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+label.f{display:block;font-size:13.5px;color:var(--muted);margin:14px 0 6px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:6px 16px}
+.chip{flex:none;min-height:44px;display:inline-flex;align-items:center;padding:0 14px;border-radius:var(--r-chip);border:1px solid var(--line);background:var(--surface);font-size:12.5px;font-weight:700;color:var(--muted)}
+.chip.on{color:var(--accent);border-color:var(--accent);background:rgba(14,107,74,.12)}
+.chip.pending.on{color:var(--pending);border-color:var(--pending);background:rgba(184,134,46,.12)}
+.chip.danger.on{color:var(--danger);border-color:var(--danger);background:rgba(162,59,50,.12)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:12px 16px;margin:0 16px 8px;display:flex;gap:12px;align-items:center;min-height:72px}
+.card .t{font-weight:700}.card .s{font-size:12px;color:var(--muted);margin-top:2px}.grow{flex:1;min-width:0}.right{text-align:right}
+.st{font-size:10.5px;font-weight:700}.st.draft{color:var(--pending)}.st.done{color:var(--accent)}.st.cancel{color:var(--muted)}
+.plus{color:var(--info);font-weight:800}.minus{color:var(--danger);font-weight:800}.zero{color:var(--muted)}
+.btn{min-height:48px;border-radius:10px;border:0;background:var(--accent);color:#fff;font:600 15px Mulish,sans-serif;padding:0 20px;cursor:pointer}
+.btn.out{background:var(--surface);color:var(--ink);border:1.4px solid var(--line);font-size:14px}
+.btn.dng{background:var(--danger)}.btn[disabled]{background:var(--line);color:var(--muted);cursor:not-allowed}
+.fab{position:absolute;right:16px;bottom:16px;height:56px;border-radius:16px;background:var(--accent);color:#fff;font-weight:700;border:0;padding:0 20px;box-shadow:0 4px 12px rgba(22,35,28,.25)}
+.bar{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px;display:flex;gap:8px;align-items:center}
+.center{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 32px;color:var(--muted);gap:10px;height:100%}
+.center b{color:var(--text);font-size:16px}.big{font-size:40px}
+.skel{height:72px;margin:0 16px 8px;border-radius:12px;background:linear-gradient(90deg,#e4e8dd,#f3f5ee,#e4e8dd);background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}@media(prefers-reduced-motion:reduce){.skel{animation:none}}
+.banner{margin:8px 16px;padding:10px 12px;border-radius:10px;font-size:12.5px;display:flex;gap:8px}
+.banner.info{background:var(--info-soft);color:var(--info)}.banner.warn{background:var(--pending-soft);color:#6f5112}.banner.err{background:var(--danger-soft);color:var(--danger)}
+.sum{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 16px}.sum div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.sum small{display:block;font-size:11px;color:var(--muted)}.sum b{font-size:15px}
+.row{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:0 16px 8px;padding:12px 16px}
+.row .top{display:flex;justify-content:space-between;gap:8px}.row .n{font-weight:700}
+.qty{display:flex;align-items:center;gap:8px;margin-top:10px}.qty button{width:48px;height:48px;border-radius:10px;border:1.4px solid var(--line);background:var(--surface);font-size:20px}
+.qty input{text-align:center;font-weight:700;font-size:16px;width:96px}
+.tag{font-size:11px;font-weight:700;border-radius:6px;padding:2px 6px}.tag.p{background:var(--info-soft);color:var(--info)}.tag.m{background:var(--danger-soft);color:var(--danger)}.tag.n{background:var(--accent-soft);color:var(--accent)}.tag.u{background:var(--pending-soft);color:#6f5112}
+.scrim{position:absolute;inset:0;background:rgba(22,35,28,.5);display:flex;align-items:flex-end}
+.sheet{background:var(--surface);border-radius:16px 16px 0 0;padding:20px 16px 24px;width:100%}
+.sheet h3{font-family:Archivo,sans-serif;margin:0 0 8px;font-size:17px}.sheet .acts{display:flex;gap:8px;margin-top:16px}.sheet .acts .btn{flex:1}
+.dlg{margin:auto;background:var(--surface);border-radius:16px;padding:20px;width:calc(100% - 48px)}.scrim.c{align-items:center}
+.kv{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line)}.kv span:first-child{color:var(--muted)}
+.scan{position:absolute;inset:0;background:#0b130e;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.scan .fr{width:260px;height:160px;border:3px solid #fff;border-radius:12px}
+.opt{display:flex;gap:12px;align-items:center;min-height:56px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:8px}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+</style></head><body><h1 class="page">Buat Sesi Opname</h1><div class="stage"><div><p class="cap">Default: gudang terisi otomatis bila hanya 1 gudang; kategori default 'Semua kategori'</p><div class="phone"><div class="appbar"><button class="ib" aria-label="Kembali">&#8592;</button><h2>Buat Sesi Opname</h2></div><div class="body pad">
+<div class="banner info">Stok sistem dicatat (snapshot) saat sesi dibuat. Penjualan setelahnya tidak mengubah angka pembanding.</div>
+<label class="f">Gudang *</label><select aria-label="Gudang"><option>Gudang Utama</option><option>Gudang Cabang Dago</option></select>
+<label class="f">Kategori (opsional)</label><select aria-label="Kategori"><option>Semua kategori</option><option>Minuman</option><option>Snack</option></select>
+<label class="f">Catatan (opsional)</label><input placeholder="mis. Opname akhir bulan Oktober"></div>
+<div class="bar"><button class="btn out" style="flex:1">Batal</button><button class="btn" style="flex:2" >Buat &amp; Mulai Hitung</button></div></div></div><div><p class="cap">Gudang belum dipilih: tombol nonaktif; error inline di bawah field</p><div class="phone"><div class="appbar"><button class="ib" aria-label="Kembali">&#8592;</button><h2>Buat Sesi Opname</h2></div><div class="body pad">
+<div class="banner info">Stok sistem dicatat (snapshot) saat sesi dibuat. Penjualan setelahnya tidak mengubah angka pembanding.</div>
+<label class="f">Gudang *</label><select aria-label="Gudang"><option>Gudang Utama</option><option>Gudang Cabang Dago</option></select>
+<label class="f">Kategori (opsional)</label><select aria-label="Kategori"><option>Semua kategori</option><option>Minuman</option><option>Snack</option></select>
+<label class="f">Catatan (opsional)</label><input placeholder="mis. Opname akhir bulan Oktober"><p style="color:var(--danger);font-size:12px">Pilih gudang terlebih dahulu.</p></div>
+<div class="bar"><button class="btn out" style="flex:1">Batal</button><button class="btn" style="flex:2" disabled>Buat &amp; Mulai Hitung</button></div></div></div><div><p class="cap">Submitting (tombol 'Membuat...', form dikunci)</p><div class="phone"><div class="appbar"><button class="ib" aria-label="Kembali">&#8592;</button><h2>Buat Sesi Opname</h2></div><div class="body pad">
+<div class="banner info">Stok sistem dicatat (snapshot) saat sesi dibuat. Penjualan setelahnya tidak mengubah angka pembanding.</div>
+<label class="f">Gudang *</label><select aria-label="Gudang"><option>Gudang Utama</option><option>Gudang Cabang Dago</option></select>
+<label class="f">Kategori (opsional)</label><select aria-label="Kategori"><option>Semua kategori</option><option>Minuman</option><option>Snack</option></select>
+<label class="f">Catatan (opsional)</label><input placeholder="mis. Opname akhir bulan Oktober"></div>
+<div class="bar"><button class="btn out" style="flex:1">Batal</button><button class="btn" style="flex:2" disabled>Membuat...</button></div></div></div><div><p class="cap">Error: sudah ada sesi Draft untuk gudang yang sama (409)</p><div class="phone"><div class="appbar"><button class="ib" aria-label="Kembali">&#8592;</button><h2>Buat Sesi Opname</h2></div><div class="body pad">
+<div class="banner info">Stok sistem dicatat (snapshot) saat sesi dibuat. Penjualan setelahnya tidak mengubah angka pembanding.</div>
+<label class="f">Gudang *</label><select aria-label="Gudang"><option>Gudang Utama</option><option>Gudang Cabang Dago</option></select>
+<label class="f">Kategori (opsional)</label><select aria-label="Kategori"><option>Semua kategori</option><option>Minuman</option><option>Snack</option></select>
+<label class="f">Catatan (opsional)</label><input placeholder="mis. Opname akhir bulan Oktober"><div class="banner err">Gudang Utama masih punya sesi Draft (OPN-20261018-001). Selesaikan atau batalkan dulu.</div><button class="btn out" style="margin-top:4px">Buka Sesi Draft</button></div>
+<div class="bar"><button class="btn out" style="flex:1">Batal</button><button class="btn" style="flex:2" >Buat &amp; Mulai Hitung</button></div></div></div><div><p class="cap">Error: kategori tidak punya produk / gagal jaringan</p><div class="phone"><div class="appbar"><button class="ib" aria-label="Kembali">&#8592;</button><h2>Buat Sesi Opname</h2></div><div class="body pad">
+<div class="banner info">Stok sistem dicatat (snapshot) saat sesi dibuat. Penjualan setelahnya tidak mengubah angka pembanding.</div>
+<label class="f">Gudang *</label><select aria-label="Gudang"><option>Gudang Utama</option><option>Gudang Cabang Dago</option></select>
+<label class="f">Kategori (opsional)</label><select aria-label="Kategori"><option>Semua kategori</option><option>Minuman</option><option>Snack</option></select>
+<label class="f">Catatan (opsional)</label><input placeholder="mis. Opname akhir bulan Oktober"><div class="banner err">Tidak ada produk pada kategori ini di gudang terpilih.</div></div>
+<div class="bar"><button class="btn out" style="flex:1">Batal</button><button class="btn" style="flex:2" >Buat &amp; Mulai Hitung</button></div></div></div></div></body></html>

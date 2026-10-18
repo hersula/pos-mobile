@@ -58,5 +58,9 @@ class UserProfile {
   bool get canCancelSale => ['OWNER', 'MANAGER'].contains(role);
   /// Konsinyasi: tulis hanya OWNER/MANAGER (sesuai kontrak backend); role lain baca saja.
   bool get canWriteConsignment => ['OWNER', 'MANAGER'].contains(role);
+  /// Stock Opname: buat/finalisasi/batal hanya OWNER/MANAGER.
+  bool get canManageStockOpname => ['OWNER', 'MANAGER'].contains(role);
+  /// Mengisi hitungan: OWNER/MANAGER/GUDANG/KASIR.
+  bool get canCountStockOpname => ['OWNER', 'MANAGER', 'GUDANG', 'KASIR'].contains(role);
   bool get canViewAccounting => ['OWNER', 'MANAGER', 'AKUNTAN'].contains(role);
 }

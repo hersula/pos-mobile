@@ -10,6 +10,7 @@ import '../../data/models/product.dart';
 import '../../data/repositories/product_repository.dart';
 import '../../state/auth_provider.dart';
 import '../consignment/consignment_list_screen.dart';
+import '../stock_opname/stock_opname_list_screen.dart';
 import '../procurement/purchase_order_list_screen.dart';
 import 'category_management_screen.dart';
 import 'price_level_management_screen.dart';
@@ -110,6 +111,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
             icon: const Icon(Icons.handshake_outlined),
             tooltip: 'Konsinyasi',
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ConsignmentListScreen())),
+          ),
+          // Stock Opname: semua role bisa melihat; aksi tulis dibatasi di dalam layar.
+          IconButton(
+            icon: const Icon(Icons.fact_check_outlined),
+            tooltip: 'Stock Opname',
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StockOpnameListScreen())),
           ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),

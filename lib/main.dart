@@ -11,6 +11,7 @@ import 'services/bluetooth_printer_service.dart';
 import 'state/auth_provider.dart';
 import 'state/cart_provider.dart';
 import 'state/consignment_provider.dart';
+import 'state/stock_opname_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,6 +42,7 @@ class PosApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()..restoreSession()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => ConsignmentProvider()),
+        ChangeNotifierProvider(create: (_) => StockOpnameProvider()),
       ],
       child: MaterialApp(
         title: 'Q-Pos',

@@ -46,6 +46,13 @@ class ApiEndpoints {
   static String consignmentReturn(String id) => '/consignments/$id/return';
   static String consignmentCancel(String id) => '/consignments/$id/cancel';
 
+  // Stock Opname
+  static const stockOpnames = '/stock-opnames';
+  static String stockOpnameDetail(String id) => '/stock-opnames/$id';
+  static String stockOpnameItems(String id) => '/stock-opnames/$id/items';
+  static String stockOpnameFinalize(String id) => '/stock-opnames/$id/finalize';
+  static String stockOpnameCancel(String id) => '/stock-opnames/$id/cancel';
+
   // Akunting
   static const chartOfAccounts = '/accounting/chart-of-accounts';
   static const journal = '/accounting/journal';

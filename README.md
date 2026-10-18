@@ -116,6 +116,7 @@ lib/
 │   ├── consignment/              # konsinyasi: daftar, form, detail, sisa stok outlet
 │   ├── dashboard/                # bottom navigation antar modul
 │   ├── inventory/                # daftar & form produk
+│   ├── stock_opname/             # stock opname: daftar, buat sesi, hitung, review, detail
 │   ├── pos/                      # kasir, keranjang, checkout, struk
 │   ├── procurement/               # pengadaan barang (PO) & supplier
 │   ├── reports/                  # tutup kasir & laba rugi
@@ -222,6 +223,17 @@ Diakses lewat ikon jabat tangan (`handshake`) di AppBar tab **Inventori**. Semua
 - **Sisa Stok di Outlet** — ikon di AppBar daftar, menampilkan sisa barang per outlet.
 
 Panduan langkah demi langkah per peran: [`docs/manual/konsinyasi-user-guide.md`](docs/manual/konsinyasi-user-guide.md).
+
+### Stock Opname (Penghitungan Stok Fisik)
+Diakses lewat ikon `fact_check_outlined` di AppBar tab **Inventori** (setelah Konsinyasi). Semua role bisa melihat. **OWNER/MANAGER** membuat sesi, finalisasi, dan membatalkan. **OWNER/MANAGER/GUDANG/KASIR** boleh mengisi hitungan pada sesi Draft.
+- **Buat sesi** per gudang toko (semua produk atau satu kategori). Sistem mengambil snapshot stok sistem. Satu Draft per gudang.
+- **Hitung** manual atau scan barcode, simpan draft. Kolom kosong = belum dihitung.
+- **Review Selisih** lebih/kurang dengan nilai Rupiah, lalu **Finalisasi**: stok dikoreksi lewat `StockMovement` `ADJUSTMENT` (`STOCK_OPNAME`) dengan selisih relatif terhadap stok saat finalisasi.
+- Bila koreksi membuat stok negatif (`STOCK_CONFLICT`), aplikasi menawarkan **Finalisasi, Tahan di 0**.
+- **Batalkan** sesi Draft tanpa mengubah stok.
+- Kode: `lib/features/stock_opname/`, `lib/state/stock_opname_provider.dart`. Status: belum dikompilasi/diuji (Flutter SDK tidak ada saat dibuat).
+
+Panduan langkah demi langkah per peran: [`docs/manual/stock-opname-user-guide.md`](docs/manual/stock-opname-user-guide.md).
 
 ### Laporan (Tutup Kasir, Laba Rugi, Pembelian)
 - **Auto-refresh saat pindah tab** — `DashboardScreen` memakai `IndexedStack` supaya state tiap tab (termasuk filter tanggal di Laporan) tidak hilang saat pindah-pindah menu. Konsekuensinya, `ReportsScreen` normalnya *tidak* otomatis reload data saat dibuka ulang. Untuk mengatasi ini, `DashboardScreen` menyimpan `GlobalKey<ReportsScreenState>` dan memanggil method publik `refreshActiveTab()` setiap kali bottom nav pindah ke tab **Laporan** — jadi kasir selalu lihat angka terbaru tanpa perlu tarik-refresh manual. Tab "Tutup Kasir" selalu di-refresh (murah, tab default); tab Laba Rugi/Pembelian cuma ikut di-refresh kalau sebelumnya sudah pernah dibuka (hemat request).
