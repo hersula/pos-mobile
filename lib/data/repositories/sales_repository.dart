@@ -29,7 +29,8 @@ class SalesRepository {
     return Sale.fromJson(res['data'] as Map<String, dynamic>);
   }
 
-  Future<List<Sale>> getSales({String? status, String? dateFrom, String? dateTo}) async {
+  Future<List<Sale>> getSales(
+      {String? status, String? dateFrom, String? dateTo}) async {
     final res = await _client.get(ApiEndpoints.sales, query: {
       if (status != null) 'status': status,
       if (dateFrom != null) 'dateFrom': dateFrom,

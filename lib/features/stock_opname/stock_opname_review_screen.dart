@@ -16,7 +16,8 @@ class StockOpnameReviewScreen extends StatefulWidget {
   const StockOpnameReviewScreen({super.key, required this.opnameId});
 
   @override
-  State<StockOpnameReviewScreen> createState() => _StockOpnameReviewScreenState();
+  State<StockOpnameReviewScreen> createState() =>
+      _StockOpnameReviewScreenState();
 }
 
 class _StockOpnameReviewScreenState extends State<StockOpnameReviewScreen> {
@@ -61,7 +62,8 @@ class _StockOpnameReviewScreenState extends State<StockOpnameReviewScreen> {
     final ok = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -69,23 +71,33 @@ class _StockOpnameReviewScreenState extends State<StockOpnameReviewScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Finalisasi & Sesuaikan Stok', style: TextStyle(fontFamily: 'Archivo', fontSize: 17, fontWeight: FontWeight.w800)),
+              const Text('Finalisasi & Sesuaikan Stok',
+                  style: TextStyle(
+                      fontFamily: 'Archivo',
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800)),
               const SizedBox(height: 12),
               Text('$diffItems produk akan disesuaikan.'),
-              Text('Selisih bersih: ${signedRupiah(o.summary.netValue)}', style: const TextStyle(fontWeight: FontWeight.w700)),
+              Text('Selisih bersih: ${signedRupiah(o.summary.netValue)}',
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
               const OpnameBanner(
                 kind: BannerKind.danger,
-                text: 'Stok sistem akan dikoreksi dan dicatat sebagai penyesuaian. Sesi tidak dapat diubah lagi.',
+                text:
+                    'Stok sistem akan dikoreksi dan dicatat sebagai penyesuaian. Sesi tidak dapat diubah lagi.',
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Kembali'))),
+                  Expanded(
+                      child: OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Kembali'))),
                   const SizedBox(width: 12),
                   Expanded(
                     child: FilledButton(
-                      style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+                      style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.danger),
                       onPressed: () => Navigator.pop(ctx, true),
                       child: const Text('Ya, Finalisasi'),
                     ),
@@ -108,8 +120,11 @@ class _StockOpnameReviewScreenState extends State<StockOpnameReviewScreen> {
     try {
       final r = await _repo.finalize(widget.opnameId, clampToZero: clampToZero);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Opname selesai. Stok disesuaikan untuk ${r.adjustedItems} produk.')));
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => StockOpnameDetailScreen(opnameId: widget.opnameId)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              'Opname selesai. Stok disesuaikan untuk ${r.adjustedItems} produk.')));
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (_) => StockOpnameDetailScreen(opnameId: widget.opnameId)));
     } on StockConflictException catch (e) {
       if (!mounted) return;
       setState(() => _processing = false);
@@ -120,7 +135,8 @@ class _StockOpnameReviewScreenState extends State<StockOpnameReviewScreen> {
       setState(() {
         _processing = false;
         _error = switch (apiErrorCode(e)) {
-          'NO_COUNTED_ITEMS' => 'Belum ada produk yang dihitung. Isi minimal satu hitungan.',
+          'NO_COUNTED_ITEMS' =>
+            'Belum ada produk yang dihitung. Isi minimal satu hitungan.',
           'INVALID_STATUS' => 'Sesi sudah tidak berstatus Draft.',
           _ => 'Gagal finalisasi: ${e.message}. Sesi tetap Draft.',
         };
@@ -138,21 +154,26 @@ class _StockOpnameReviewScreenState extends State<StockOpnameReviewScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Penyesuaian membuat stok negatif untuk produk berikut. Tidak ada perubahan yang disimpan.'),
+              const Text(
+                  'Penyesuaian membuat stok negatif untuk produk berikut. Tidak ada perubahan yang disimpan.'),
               const SizedBox(height: 8),
               for (final it in e.items)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Text('${it.productName}: stok saat ini ${fmtQty(it.currentQty)}, selisih ${signedQty(it.diff)}',
+                  child: Text(
+                      '${it.productName}: stok saat ini ${fmtQty(it.currentQty)}, selisih ${signedQty(it.diff)}',
                       style: const TextStyle(fontSize: 12.5)),
                 ),
               const SizedBox(height: 8),
-              const Text('Lanjutkan dengan menahan stok produk tersebut di 0?', style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text('Lanjutkan dengan menahan stok produk tersebut di 0?',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Batal')),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(ctx, true),
@@ -165,7 +186,9 @@ class _StockOpnameReviewScreenState extends State<StockOpnameReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final canManage = context.watch<AuthProvider>().currentUser?.canManageStockOpname ?? false;
+    final canManage =
+        context.watch<AuthProvider>().currentUser?.canManageStockOpname ??
+            false;
     final o = _opname;
     return PopScope(
       canPop: !_processing,
@@ -179,14 +202,18 @@ class _StockOpnameReviewScreenState extends State<StockOpnameReviewScreen> {
                     Expanded(
                       child: FilledButton(
                         onPressed: _processing ? null : _confirmAndFinalize,
-                        child: Text(_processing ? 'Memproses...' : 'Finalisasi & Sesuaikan Stok'),
+                        child: Text(_processing
+                            ? 'Memproses...'
+                            : 'Finalisasi & Sesuaikan Stok'),
                       ),
                     ),
                   ])
                 : const BottomActionBar(children: [
                     Expanded(
-                      child: Text('Hanya Owner/Manager yang dapat melakukan finalisasi.',
-                          textAlign: TextAlign.center, style: TextStyle(color: AppColors.muted)),
+                      child: Text(
+                          'Hanya Owner/Manager yang dapat melakukan finalisasi.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: AppColors.muted)),
                     ),
                   ]),
       ),
@@ -196,7 +223,8 @@ class _StockOpnameReviewScreenState extends State<StockOpnameReviewScreen> {
   Widget _body(StockOpname? o) {
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_loadError != null || o == null) {
-      return OpnameErrorView(title: 'Gagal memuat review', message: _loadError, onRetry: _load);
+      return OpnameErrorView(
+          title: 'Gagal memuat review', message: _loadError, onRetry: _load);
     }
     final counted = o.items.where((i) => i.counted).toList();
     final matched = counted.where((i) => i.diff == 0).length;
@@ -220,25 +248,44 @@ class _StockOpnameReviewScreenState extends State<StockOpnameReviewScreen> {
         children: [
           Row(
             children: [
-              Expanded(child: SummaryBox(label: 'Lebih', value: signedRupiah(s.surplusValue), color: AppColors.info)),
+              Expanded(
+                  child: SummaryBox(
+                      label: 'Lebih',
+                      value: signedRupiah(s.surplusValue),
+                      color: AppColors.info)),
               const SizedBox(width: 8),
-              Expanded(child: SummaryBox(label: 'Kurang', value: signedRupiah(-s.shortageValue), color: AppColors.danger)),
+              Expanded(
+                  child: SummaryBox(
+                      label: 'Kurang',
+                      value: signedRupiah(-s.shortageValue),
+                      color: AppColors.danger)),
               const SizedBox(width: 8),
-              Expanded(child: SummaryBox(label: 'Selisih bersih', value: signedRupiah(net), color: diffColor(net))),
+              Expanded(
+                  child: SummaryBox(
+                      label: 'Selisih bersih',
+                      value: signedRupiah(net),
+                      color: diffColor(net))),
             ],
           ),
           if (uncounted > 0) ...[
             const SizedBox(height: 12),
-            OpnameBanner(kind: BannerKind.pending, text: '$uncounted produk belum dihitung dan tidak akan diubah saat finalisasi.'),
+            OpnameBanner(
+                kind: BannerKind.pending,
+                text:
+                    '$uncounted produk belum dihitung dan tidak akan diubah saat finalisasi.'),
           ],
           if (o.items.any((i) => i.stockChanged)) ...[
             const SizedBox(height: 12),
             const OpnameBanner(
               kind: BannerKind.info,
-              text: 'Stok sebagian produk berubah sejak snapshot (penjualan/pembelian). Finalisasi menerapkan selisih relatif ke stok saat ini.',
+              text:
+                  'Stok sebagian produk berubah sejak snapshot (penjualan/pembelian). Finalisasi menerapkan selisih relatif ke stok saat ini.',
             ),
           ],
-          if (_error != null) ...[const SizedBox(height: 12), OpnameBanner(kind: BannerKind.danger, text: _error!)],
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            OpnameBanner(kind: BannerKind.danger, text: _error!)
+          ],
           const SizedBox(height: 12),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -249,7 +296,11 @@ class _StockOpnameReviewScreenState extends State<StockOpnameReviewScreen> {
                   _ReviewFilter.surplus: 'Lebih',
                   _ReviewFilter.shortage: 'Kurang',
                 }.entries) ...[
-                  opnameChip(label: e.value, selected: _filter == e.key, color: AppColors.accent, onTap: () => setState(() => _filter = e.key)),
+                  opnameChip(
+                      label: e.value,
+                      selected: _filter == e.key,
+                      color: AppColors.accent,
+                      onTap: () => setState(() => _filter = e.key)),
                   const SizedBox(width: 8),
                 ],
               ],
@@ -259,19 +310,29 @@ class _StockOpnameReviewScreenState extends State<StockOpnameReviewScreen> {
           if (counted.isNotEmpty && counted.every((i) => i.diff == 0))
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: Text('Semua stok cocok', style: TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600))),
+              child: Center(
+                  child: Text('Semua stok cocok',
+                      style: TextStyle(
+                          color: AppColors.muted,
+                          fontWeight: FontWeight.w600))),
             )
           else if (counted.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: Text('Belum ada produk yang dihitung', style: TextStyle(color: AppColors.muted))),
+              child: Center(
+                  child: Text('Belum ada produk yang dihitung',
+                      style: TextStyle(color: AppColors.muted))),
             )
           else
-            for (final it in diffs) ...[DiffRow(item: it), const SizedBox(height: 8)],
+            for (final it in diffs) ...[
+              DiffRow(item: it),
+              const SizedBox(height: 8)
+            ],
           if (matched > 0)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text('$matched produk cocok tidak ditampilkan', style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+              child: Text('$matched produk cocok tidak ditampilkan',
+                  style: const TextStyle(fontSize: 12, color: AppColors.muted)),
             ),
         ],
       ),

@@ -25,7 +25,13 @@ void main() {
         {
           'id': 'i1',
           'productId': 'p1',
-          'product': {'id': 'p1', 'name': 'Kopi', 'sku': 'KP01', 'barcode': '899', 'unit': 'pcs'},
+          'product': {
+            'id': 'p1',
+            'name': 'Kopi',
+            'sku': 'KP01',
+            'barcode': '899',
+            'unit': 'pcs'
+          },
           'systemQty': 10,
           'countedQty': 8,
           'unitCost': '10000',
@@ -34,7 +40,13 @@ void main() {
         {
           'id': 'i2',
           'productId': 'p2',
-          'product': {'id': 'p2', 'name': 'Teh', 'sku': null, 'barcode': null, 'unit': 'pcs'},
+          'product': {
+            'id': 'p2',
+            'name': 'Teh',
+            'sku': null,
+            'barcode': null,
+            'unit': 'pcs'
+          },
           'systemQty': 5,
           'countedQty': null,
         },
@@ -56,7 +68,13 @@ void main() {
       'code': 'STOCK_CONFLICT',
       'details': {
         'items': [
-          {'itemId': 'i1', 'productId': 'p1', 'productName': 'Kopi', 'currentQty': 1, 'diff': -3},
+          {
+            'itemId': 'i1',
+            'productId': 'p1',
+            'productName': 'Kopi',
+            'currentQty': 1,
+            'diff': -3
+          },
         ],
       },
     });

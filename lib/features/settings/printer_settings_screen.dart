@@ -2,7 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:android_intent_plus/android_intent.dart';
-import 'package:permission_handler/permission_handler.dart' show openAppSettings;
+import 'package:permission_handler/permission_handler.dart'
+    show openAppSettings;
 
 import '../../core/constants/app_colors.dart';
 import '../../core/storage/local_storage.dart';
@@ -15,7 +16,8 @@ class PrinterSettingsScreen extends StatefulWidget {
   State<PrinterSettingsScreen> createState() => _PrinterSettingsScreenState();
 }
 
-class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with WidgetsBindingObserver {
+class _PrinterSettingsScreenState extends State<PrinterSettingsScreen>
+    with WidgetsBindingObserver {
   final _printerService = BluetoothPrinterService();
   List<PrinterDevice> _devices = [];
   String? _savedAddress;
@@ -61,7 +63,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
     });
     try {
       _savedAddress = await LocalStorage.instance.getPrinterAddress();
-      _speedPreset = await LocalStorage.instance.getPrintSpeedPreset() ?? 'normal';
+      _speedPreset =
+          await LocalStorage.instance.getPrintSpeedPreset() ?? 'normal';
       _paperSize = await LocalStorage.instance.getPrinterPaperSize() ?? 'mm58';
       _printMode = await LocalStorage.instance.getPrintMode() ?? 'single';
       BluetoothPrinterService.applySpeedPreset(_speedPreset);
@@ -109,14 +112,18 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
 
   Future<void> _openSystemBluetoothSettings() async {
     if (!Platform.isAndroid) {
-      _showSnack('Buka Pengaturan > Bluetooth di HP kamu secara manual untuk pairing printer.');
+      _showSnack(
+          'Buka Pengaturan > Bluetooth di HP kamu secara manual untuk pairing printer.');
       return;
     }
     try {
-      final intent = AndroidIntent(action: 'android.settings.BLUETOOTH_SETTINGS');
+      final intent =
+          AndroidIntent(action: 'android.settings.BLUETOOTH_SETTINGS');
       await intent.launch();
     } catch (_) {
-      _showSnack('Tidak bisa membuka pengaturan Bluetooth otomatis. Buka manual lewat Pengaturan HP.', isError: true);
+      _showSnack(
+          'Tidak bisa membuka pengaturan Bluetooth otomatis. Buka manual lewat Pengaturan HP.',
+          isError: true);
     }
   }
 
@@ -133,7 +140,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
       }
 
       if (ok) {
-        await LocalStorage.instance.savePrinter(address: device.address, name: device.name);
+        await LocalStorage.instance
+            .savePrinter(address: device.address, name: device.name);
         setState(() => _savedAddress = device.address);
         _showSnack('Berhasil terhubung ke ${device.name}');
       } else {
@@ -172,29 +180,36 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
               if (dialogError != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: Text(dialogError!, style: const TextStyle(color: AppColors.danger, fontSize: 12.5)),
+                  child: Text(dialogError!,
+                      style: const TextStyle(
+                          color: AppColors.danger, fontSize: 12.5)),
                 ),
               TextField(
                 controller: nameCtrl,
-                decoration: const InputDecoration(labelText: 'Nama Printer (bebas)'),
+                decoration:
+                    const InputDecoration(labelText: 'Nama Printer (bebas)'),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: macCtrl,
-                decoration: const InputDecoration(labelText: 'MAC Address', hintText: 'AA:BB:CC:DD:EE:FF'),
+                decoration: const InputDecoration(
+                    labelText: 'MAC Address', hintText: 'AA:BB:CC:DD:EE:FF'),
                 textCapitalization: TextCapitalization.characters,
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: submitting ? null : () => Navigator.pop(ctx), child: const Text('Batal')),
+            TextButton(
+                onPressed: submitting ? null : () => Navigator.pop(ctx),
+                child: const Text('Batal')),
             ElevatedButton(
               onPressed: submitting
                   ? null
                   : () async {
                       final mac = macCtrl.text.trim().toUpperCase();
                       if (!BluetoothPrinterService.isValidMacAddress(mac)) {
-                        setDialogState(() => dialogError = 'Format MAC address tidak valid. Contoh: AA:BB:CC:DD:EE:FF');
+                        setDialogState(() => dialogError =
+                            'Format MAC address tidak valid. Contoh: AA:BB:CC:DD:EE:FF');
                         return;
                       }
 
@@ -207,14 +222,18 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
                         final ok = await _printerService.connect(mac);
                         if (!ok) {
                           setDialogState(() {
-                            dialogError = 'Gagal terhubung. Pastikan printer menyala, dalam jangkauan, dan sudah di-pairing.';
+                            dialogError =
+                                'Gagal terhubung. Pastikan printer menyala, dalam jangkauan, dan sudah di-pairing.';
                             submitting = false;
                           });
                           return;
                         }
 
-                        final name = nameCtrl.text.trim().isEmpty ? 'PRJ-R58B' : nameCtrl.text.trim();
-                        await LocalStorage.instance.savePrinter(address: mac, name: name);
+                        final name = nameCtrl.text.trim().isEmpty
+                            ? 'PRJ-R58B'
+                            : nameCtrl.text.trim();
+                        await LocalStorage.instance
+                            .savePrinter(address: mac, name: name);
                         if (ctx.mounted) Navigator.pop(ctx);
                         setState(() => _savedAddress = mac);
                         _showSnack('Berhasil terhubung ke $name');
@@ -226,7 +245,11 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
                       }
                     },
               child: submitting
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white))
                   : const Text('Hubungkan'),
             ),
           ],
@@ -244,12 +267,14 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
   /// Bangun konten test print dengan label mode di bagian atas, supaya kalau
   /// dicetak berurutan (mode Sekaligus lalu Bertahap), gampang dibedakan
   /// bagian mana yang punya konten dari mode mana saat baca hasil di kertas.
-  Future<List<int>> _buildTestBytes(PaperSize paperSize, String modeLabel) async {
+  Future<List<int>> _buildTestBytes(
+      PaperSize paperSize, String modeLabel) async {
     final profile = await CapabilityProfile.load();
     final generator = Generator(paperSize, profile);
     final bytes = <int>[];
     bytes.addAll(generator.reset());
-    bytes.addAll(generator.text(modeLabel, styles: const PosStyles(align: PosAlign.center, bold: true)));
+    bytes.addAll(generator.text(modeLabel,
+        styles: const PosStyles(align: PosAlign.center, bold: true)));
     bytes.addAll(generator.text(
       paperSize == PaperSize.mm80 ? 'Kertas: 80mm' : 'Kertas: 58mm',
       styles: const PosStyles(align: PosAlign.center),
@@ -261,11 +286,15 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
     for (var i = 1; i <= 15; i++) {
       bytes.addAll(generator.row([
         PosColumn(text: 'Baris pengujian ke-$i', width: 8),
-        PosColumn(text: 'OK', width: 4, styles: const PosStyles(align: PosAlign.right)),
+        PosColumn(
+            text: 'OK',
+            width: 4,
+            styles: const PosStyles(align: PosAlign.right)),
       ]));
     }
     bytes.addAll(generator.hr());
-    bytes.addAll(generator.text('SELESAI ($modeLabel)', styles: const PosStyles(align: PosAlign.center, bold: true)));
+    bytes.addAll(generator.text('SELESAI ($modeLabel)',
+        styles: const PosStyles(align: PosAlign.center, bold: true)));
     bytes.addAll(generator.feed(2));
     bytes.addAll(generator.cut());
     return bytes;
@@ -277,7 +306,9 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
       var isConnected = await _printerService.isConnected();
       if (!isConnected) {
         if (_savedAddress == null) {
-          _showSnack('Belum ada printer dipilih. Pairing dulu di Pengaturan HP, lalu ketuk "Hubungkan" pada printer di daftar atas.', isError: true);
+          _showSnack(
+              'Belum ada printer dipilih. Pairing dulu di Pengaturan HP, lalu ketuk "Hubungkan" pada printer di daftar atas.',
+              isError: true);
           return;
         }
         // Koneksi Bluetooth SPP tidak bertahan lintas sesi app — device yang
@@ -286,7 +317,9 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
         // bilang "belum terhubung", coba sambungkan ulang otomatis dulu.
         isConnected = await _printerService.connect(_savedAddress!);
         if (!isConnected) {
-          _showSnack('Gagal terhubung ke printer yang tersimpan. Pastikan printer menyala & dalam jangkauan, lalu coba lagi.', isError: true);
+          _showSnack(
+              'Gagal terhubung ke printer yang tersimpan. Pastikan printer menyala & dalam jangkauan, lalu coba lagi.',
+              isError: true);
           return;
         }
       }
@@ -324,13 +357,17 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
                   style: TextStyle(fontSize: 13),
                 ),
                 const SizedBox(height: 14),
-                Text('• Sekaligus: ${resultSingle.summary}', style: const TextStyle(fontSize: 12.5)),
+                Text('• Sekaligus: ${resultSingle.summary}',
+                    style: const TextStyle(fontSize: 12.5)),
                 const SizedBox(height: 4),
-                Text('• Bertahap: ${resultChunked.summary}', style: const TextStyle(fontSize: 12.5)),
+                Text('• Bertahap: ${resultChunked.summary}',
+                    style: const TextStyle(fontSize: 12.5)),
               ],
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Tutup')),
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Tutup')),
             ],
           ),
         );
@@ -344,7 +381,9 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
 
   void _showSnack(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: isError ? AppColors.danger : AppColors.accent),
+      SnackBar(
+          content: Text(message),
+          backgroundColor: isError ? AppColors.danger : AppColors.accent),
     );
   }
 
@@ -353,7 +392,9 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
     return Scaffold(
       appBar: AppBar(
         title: const Text('Printer Bluetooth'),
-        actions: [IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _init)],
+        actions: [
+          IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _init)
+        ],
       ),
       body: SafeArea(
         child: _loading
@@ -365,17 +406,24 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
                     Container(
                       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: AppColors.dangerSoft, borderRadius: BorderRadius.circular(10)),
+                      decoration: BoxDecoration(
+                          color: AppColors.dangerSoft,
+                          borderRadius: BorderRadius.circular(10)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
+                          Text(_error!,
+                              style: const TextStyle(
+                                  color: AppColors.danger, fontSize: 13)),
                           if (_permissionDenied) ...[
                             const SizedBox(height: 8),
                             TextButton(
                               onPressed: openAppSettings,
-                              style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
-                              child: const Text('Buka Pengaturan Aplikasi untuk Izinkan Bluetooth'),
+                              style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  alignment: Alignment.centerLeft),
+                              child: const Text(
+                                  'Buka Pengaturan Aplikasi untuk Izinkan Bluetooth'),
                             ),
                           ],
                         ],
@@ -385,14 +433,16 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                     child: Text(
                       'Printer harus sudah di-pairing lewat Pengaturan Bluetooth HP dulu, baru bisa muncul & dipilih di sini.',
-                      style: const TextStyle(color: AppColors.muted, fontSize: 12.5),
+                      style: const TextStyle(
+                          color: AppColors.muted, fontSize: 12.5),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: OutlinedButton.icon(
                       onPressed: _openSystemBluetoothSettings,
-                      icon: const Icon(Icons.settings_bluetooth_rounded, size: 17),
+                      icon: const Icon(Icons.settings_bluetooth_rounded,
+                          size: 17),
                       label: const Text('Pairing di Pengaturan HP'),
                     ),
                   ),
@@ -403,25 +453,32 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
-                        children: _devices
-                            .map((d) {
-                              final isSaved = d.address == _savedAddress;
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                child: ListTile(
-                                  leading: Icon(Icons.print_rounded, color: isSaved ? AppColors.accent : AppColors.muted),
-                                  title: Text(d.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                                  subtitle: Text(d.address, style: const TextStyle(fontSize: 11.5)),
-                                  trailing: isSaved
-                                      ? const Icon(Icons.check_circle_rounded, color: AppColors.accent)
-                                      : TextButton(
-                                          onPressed: _connecting ? null : () => _connect(d),
-                                          child: const Text('Hubungkan'),
-                                        ),
-                                ),
-                              );
-                            })
-                            .toList(),
+                        children: _devices.map((d) {
+                          final isSaved = d.address == _savedAddress;
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            child: ListTile(
+                              leading: Icon(Icons.print_rounded,
+                                  color: isSaved
+                                      ? AppColors.accent
+                                      : AppColors.muted),
+                              title: Text(d.name,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600)),
+                              subtitle: Text(d.address,
+                                  style: const TextStyle(fontSize: 11.5)),
+                              trailing: isSaved
+                                  ? const Icon(Icons.check_circle_rounded,
+                                      color: AppColors.accent)
+                                  : TextButton(
+                                      onPressed: _connecting
+                                          ? null
+                                          : () => _connect(d),
+                                      child: const Text('Hubungkan'),
+                                    ),
+                            ),
+                          );
+                        }).toList(),
                       ),
                     ),
                   const SizedBox(height: 8),
@@ -430,11 +487,14 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text('Lebar Kertas', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                        const Text('Lebar Kertas',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 13.5)),
                         const SizedBox(height: 4),
                         const Text(
                           'Kalau hasil cetak kelihatan tidak pas dengan lebar kertas fisik (kepenuhan/kesempitan), coba ganti opsi ini — beberapa printer generik tidak konsisten dengan label resminya.',
-                          style: TextStyle(color: AppColors.muted, fontSize: 12),
+                          style:
+                              TextStyle(color: AppColors.muted, fontSize: 12),
                         ),
                         const SizedBox(height: 10),
                         SegmentedButton<String>(
@@ -446,34 +506,45 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
                           onSelectionChanged: (s) => _setPaperSize(s.first),
                         ),
                         const SizedBox(height: 20),
-                        const Text('Mode Kirim Data', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                        const Text('Mode Kirim Data',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 13.5)),
                         const SizedBox(height: 4),
                         const Text(
                           'Kalau struk/nota cuma keluar bagian header lalu berhenti, coba ganti mode ini — printer beda merek/firmware bisa butuh cara kirim yang beda. Jalankan Test Print di bawah untuk membandingkan kedua mode langsung.',
-                          style: TextStyle(color: AppColors.muted, fontSize: 12),
+                          style:
+                              TextStyle(color: AppColors.muted, fontSize: 12),
                         ),
                         const SizedBox(height: 10),
                         SegmentedButton<String>(
                           segments: const [
-                            ButtonSegment(value: 'single', label: Text('Sekaligus')),
-                            ButtonSegment(value: 'chunked', label: Text('Bertahap')),
+                            ButtonSegment(
+                                value: 'single', label: Text('Sekaligus')),
+                            ButtonSegment(
+                                value: 'chunked', label: Text('Bertahap')),
                           ],
                           selected: {_printMode},
                           onSelectionChanged: (s) => _setPrintMode(s.first),
                         ),
                         const SizedBox(height: 20),
-                        const Text('Kecepatan Cetak', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                        const Text('Kecepatan Cetak',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 13.5)),
                         const SizedBox(height: 4),
                         const Text(
                           'Cuma berlaku kalau Mode Kirim Data di atas "Bertahap". Kalau struk masih terpotong, turunkan kecepatan ini bertahap.',
-                          style: TextStyle(color: AppColors.muted, fontSize: 12),
+                          style:
+                              TextStyle(color: AppColors.muted, fontSize: 12),
                         ),
                         const SizedBox(height: 10),
                         SegmentedButton<String>(
                           segments: const [
-                            ButtonSegment(value: 'normal', label: Text('Normal')),
+                            ButtonSegment(
+                                value: 'normal', label: Text('Normal')),
                             ButtonSegment(value: 'slow', label: Text('Lambat')),
-                            ButtonSegment(value: 'very_slow', label: Text('Sangat Lambat')),
+                            ButtonSegment(
+                                value: 'very_slow',
+                                label: Text('Sangat Lambat')),
                           ],
                           selected: {_speedPreset},
                           onSelectionChanged: (s) => _setSpeedPreset(s.first),
@@ -488,9 +559,16 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
                         ElevatedButton.icon(
                           onPressed: _connecting ? null : _testPrint,
                           icon: _connecting
-                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                              : const Icon(Icons.receipt_long_rounded, size: 18),
-                          label: Text(_savedAddress == null ? 'Test Print (pilih printer dulu)' : 'Test Print'),
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.white))
+                              : const Icon(Icons.receipt_long_rounded,
+                                  size: 18),
+                          label: Text(_savedAddress == null
+                              ? 'Test Print (pilih printer dulu)'
+                              : 'Test Print'),
                         ),
                       ],
                     ),
@@ -506,7 +584,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          const Icon(Icons.print_disabled_rounded, size: 40, color: AppColors.muted),
+          const Icon(Icons.print_disabled_rounded,
+              size: 40, color: AppColors.muted),
           const SizedBox(height: 12),
           const Text(
             'Belum ada printer yang di-pairing',
@@ -521,7 +600,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Widg
             '3. Kembali ke halaman ini dan ketuk ikon refresh di kanan atas\n'
             '4. Kalau masih belum muncul, coba "Hubungkan Manual via MAC Address" di bawah — cek MAC address di stiker printer atau di daftar Bluetooth HP',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.muted, fontSize: 12.5, height: 1.5),
+            style:
+                TextStyle(color: AppColors.muted, fontSize: 12.5, height: 1.5),
           ),
         ],
       ),

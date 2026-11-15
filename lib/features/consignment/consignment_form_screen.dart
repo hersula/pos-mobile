@@ -114,12 +114,16 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
     });
     try {
       // Gudang asal wajib bertipe STORE (default backend); gudang konsinyasi tidak ditampilkan.
-      final results = await Future.wait([_warehouseRepo.getWarehouses(type: 'STORE'), _customerRepo.getCustomers()]);
+      final results = await Future.wait([
+        _warehouseRepo.getWarehouses(type: 'STORE'),
+        _customerRepo.getCustomers()
+      ]);
       if (!mounted) return;
       setState(() {
         _warehouses = results[0] as List<Warehouse>;
         _customers = results[1] as List<Customer>;
-        if (_warehouseId == null && _warehouses.isNotEmpty) _warehouseId = _warehouses.first.id;
+        if (_warehouseId == null && _warehouses.isNotEmpty)
+          _warehouseId = _warehouses.first.id;
       });
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
@@ -131,33 +135,14 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
   num get _total => _items.fold<num>(0, (sum, e) => sum + e.subtotal);
 
   Future<void> _addCustomer() async {
-    final nameCtrl = TextEditingController();
-    final phoneCtrl = TextEditingController();
-    final ok = await showDialog<bool>(
+    final data = await showDialog<({String name, String phone})>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Customer Baru'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Nama outlet/customer')),
-            const SizedBox(height: 10),
-            TextField(controller: phoneCtrl, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'No. HP (opsional)')),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Simpan')),
-        ],
-      ),
+      builder: (_) => const _NewCustomerDialog(),
     );
-    final name = nameCtrl.text.trim();
-    final phone = phoneCtrl.text.trim();
-    nameCtrl.dispose();
-    phoneCtrl.dispose();
-    if (ok != true || name.isEmpty) return;
+    if (data == null || data.name.isEmpty) return;
     try {
-      final c = await _customerRepo.createCustomer(name: name, phone: phone);
+      final c = await _customerRepo.createCustomer(
+          name: data.name, phone: data.phone);
       if (mounted) {
         setState(() {
           _customers = [..._customers, c];
@@ -181,86 +166,11 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
   }
 
   Future<void> _pickProduct() async {
-    final searchCtrl = TextEditingController();
-    List<Product> results = [];
-    String? searchError;
-
     final picked = await showModalBottomSheet<Product>(
       context: context,
       isScrollControlled: true,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setModalState) {
-            Future<void> search(String q) async {
-              try {
-                final res = await _productRepo.getProducts(search: q);
-                setModalState(() {
-                  results = res;
-                  searchError = null;
-                });
-              } on ApiException catch (e) {
-                setModalState(() => searchError = e.message);
-              }
-            }
-
-            Future<void> scan() async {
-              final code = await scanBarcode(ctx, title: 'Scan Barcode Produk');
-              if (code != null) {
-                searchCtrl.text = code;
-                await search(code);
-              }
-            }
-
-            return Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, left: 16, right: 16, top: 16),
-              child: SizedBox(
-                height: 460,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text('Pilih Produk', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: searchCtrl,
-                            decoration: const InputDecoration(hintText: 'Cari nama/SKU produk'),
-                            onChanged: search,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton.filledTonal(
-                          tooltip: 'Scan barcode',
-                          onPressed: scan,
-                          icon: const Icon(Icons.qr_code_scanner_rounded),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: searchError != null
-                          ? Center(child: Text(searchError!, style: const TextStyle(color: AppColors.danger)))
-                          : results.isEmpty
-                              ? const Center(child: Text('Ketik atau scan untuk mencari produk', style: TextStyle(color: AppColors.muted)))
-                              : ListView.builder(
-                                  itemCount: results.length,
-                                  itemBuilder: (_, i) => ListTile(
-                                    title: Text(results[i].name),
-                                    subtitle: Text('Stok: ${results[i].totalStock} ${results[i].unit} · Harga: ${CurrencyFormatter.format(results[i].sellPrice)}'),
-                                    onTap: () => Navigator.pop(ctx, results[i]),
-                                  ),
-                                ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
+      builder: (_) => _ProductPickerSheet(repo: _productRepo),
     );
-    searchCtrl.dispose();
     if (picked != null && mounted) _pickUnitAndAddItem(picked);
   }
 
@@ -280,12 +190,17 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text('Titip per Satuan Apa? — ${product.name}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+              child: Text('Titip per Satuan Apa? — ${product.name}',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 16)),
             ),
-            ListTile(title: Text(product.unit), onTap: () => Navigator.pop(ctx, _baseUnitChoice)),
+            ListTile(
+                title: Text(product.unit),
+                onTap: () => Navigator.pop(ctx, _baseUnitChoice)),
             ...product.units.map((u) => ListTile(
                   title: Text(u.name),
-                  subtitle: Text('1 ${u.name} = ${u.conversionQty} ${product.unit}'),
+                  subtitle:
+                      Text('1 ${u.name} = ${u.conversionQty} ${product.unit}'),
                   onTap: () => Navigator.pop(ctx, u),
                 )),
             const SizedBox(height: 8),
@@ -299,7 +214,8 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
 
   void _addItem(Product product, ProductUnit? unit) {
     setState(() {
-      final existing = _items.where((e) => e.productId == product.id && e.unitId == unit?.id);
+      final existing = _items
+          .where((e) => e.productId == product.id && e.unitId == unit?.id);
       if (existing.isNotEmpty) {
         existing.first.qty += 1;
         existing.first.qtyCtrl.text = existing.first.qty.toString();
@@ -317,10 +233,10 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
   }
 
   void _removeItem(int index) {
-    setState(() {
-      _items[index].dispose();
-      _items.removeAt(index);
-    });
+    final removed = _items[index];
+    setState(() => _items.removeAt(index));
+    // Dispose setelah frame selesai: TextField item masih terpasang sampai rebuild.
+    Future.delayed(const Duration(milliseconds: 100), removed.dispose);
   }
 
   Future<void> _submit() async {
@@ -346,15 +262,28 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
       _error = null;
     });
     final inputs = _items
-        .map((e) => ConsignmentItemInput(productId: e.productId, productUnitId: e.unitId, qty: e.qty, agreedUnitPrice: e.price))
+        .map((e) => ConsignmentItemInput(
+            productId: e.productId,
+            productUnitId: e.unitId,
+            qty: e.qty,
+            agreedUnitPrice: e.price))
         .toList();
     try {
       final note = _noteCtrl.text.trim();
       if (_isEdit) {
         await _repo.update(widget.existing!.id,
-            customerId: _customerId!, sourceWarehouseId: _warehouseId!, dueDate: _dueDate, note: note, items: inputs);
+            customerId: _customerId!,
+            sourceWarehouseId: _warehouseId!,
+            dueDate: _dueDate,
+            note: note,
+            items: inputs);
       } else {
-        await _repo.create(customerId: _customerId!, sourceWarehouseId: _warehouseId!, dueDate: _dueDate, note: note, items: inputs);
+        await _repo.create(
+            customerId: _customerId!,
+            sourceWarehouseId: _warehouseId!,
+            dueDate: _dueDate,
+            note: note,
+            items: inputs);
       }
       if (mounted) Navigator.of(context).pop(true);
     } on ApiException catch (e) {
@@ -367,7 +296,8 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_isEdit ? 'Ubah Konsinyasi' : 'Konsinyasi Baru')),
+      appBar:
+          AppBar(title: Text(_isEdit ? 'Ubah Konsinyasi' : 'Konsinyasi Baru')),
       body: _loadingRefData
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
@@ -378,12 +308,20 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
                     Container(
                       margin: const EdgeInsets.only(bottom: 14),
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: AppColors.dangerSoft, borderRadius: BorderRadius.circular(10)),
+                      decoration: BoxDecoration(
+                          color: AppColors.dangerSoft,
+                          borderRadius: BorderRadius.circular(10)),
                       child: Row(
                         children: [
-                          Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13.5))),
+                          Expanded(
+                              child: Text(_error!,
+                                  style: const TextStyle(
+                                      color: AppColors.danger,
+                                      fontSize: 13.5))),
                           if (_warehouses.isEmpty || _customers.isEmpty)
-                            TextButton(onPressed: _loadRefData, child: const Text('Muat Ulang')),
+                            TextButton(
+                                onPressed: _loadRefData,
+                                child: const Text('Muat Ulang')),
                         ],
                       ),
                     ),
@@ -392,10 +330,18 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _customers.any((c) => c.id == _customerId) ? _customerId : null,
+                          value: _customers.any((c) => c.id == _customerId)
+                              ? _customerId
+                              : null,
                           isExpanded: true,
-                          decoration: const InputDecoration(labelText: 'Customer / Outlet'),
-                          items: _customers.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, overflow: TextOverflow.ellipsis))).toList(),
+                          decoration: const InputDecoration(
+                              labelText: 'Customer / Outlet'),
+                          items: _customers
+                              .map((c) => DropdownMenuItem(
+                                  value: c.id,
+                                  child: Text(c.name,
+                                      overflow: TextOverflow.ellipsis)))
+                              .toList(),
                           onChanged: (v) => setState(() => _customerId = v),
                         ),
                       ),
@@ -409,10 +355,16 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: _warehouses.any((w) => w.id == _warehouseId) ? _warehouseId : null,
+                    value: _warehouses.any((w) => w.id == _warehouseId)
+                        ? _warehouseId
+                        : null,
                     isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Gudang Asal (toko)'),
-                    items: _warehouses.map((w) => DropdownMenuItem(value: w.id, child: Text(w.name))).toList(),
+                    decoration:
+                        const InputDecoration(labelText: 'Gudang Asal (toko)'),
+                    items: _warehouses
+                        .map((w) =>
+                            DropdownMenuItem(value: w.id, child: Text(w.name)))
+                        .toList(),
                     onChanged: (v) => setState(() => _warehouseId = v),
                   ),
                   const SizedBox(height: 12),
@@ -426,10 +378,13 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
                             : IconButton(
                                 tooltip: 'Hapus tanggal',
                                 icon: const Icon(Icons.close_rounded),
-                                onPressed: () => setState(() => _dueDate = null),
+                                onPressed: () =>
+                                    setState(() => _dueDate = null),
                               ),
                       ),
-                      child: Text(_dueDate == null ? 'Belum ditentukan' : DateFormatter.short(_dueDate!)),
+                      child: Text(_dueDate == null
+                          ? 'Belum ditentukan'
+                          : DateFormatter.short(_dueDate!)),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -437,13 +392,16 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
                     controller: _noteCtrl,
                     maxLength: 1000,
                     maxLines: 2,
-                    decoration: const InputDecoration(labelText: 'Catatan (opsional)'),
+                    decoration:
+                        const InputDecoration(labelText: 'Catatan (opsional)'),
                   ),
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Barang Dititipkan', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
+                      const Text('Barang Dititipkan',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 14.5)),
                       TextButton.icon(
                         onPressed: _pickProduct,
                         icon: const Icon(Icons.add_rounded, size: 18),
@@ -456,8 +414,12 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       alignment: Alignment.center,
-                      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.line)),
-                      child: const Text('Belum ada produk ditambahkan', style: TextStyle(color: AppColors.muted)),
+                      decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.line)),
+                      child: const Text('Belum ada produk ditambahkan',
+                          style: TextStyle(color: AppColors.muted)),
                     )
                   else
                     ...List.generate(_items.length, _buildItemCard),
@@ -468,8 +430,15 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Expanded(child: Text('Nilai Titipan', style: TextStyle(fontWeight: FontWeight.w700))),
-                          Text(CurrencyFormatter.format(_total), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: AppColors.ink)),
+                          const Expanded(
+                              child: Text('Nilai Titipan',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.w700))),
+                          Text(CurrencyFormatter.format(_total),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 17,
+                                  color: AppColors.ink)),
                         ],
                       ),
                     ),
@@ -488,7 +457,11 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
           child: ElevatedButton(
             onPressed: (_submitting || _loadingRefData) ? null : _submit,
             child: _submitting
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white))
                 : Text(_isEdit ? 'Simpan Perubahan' : 'Simpan Draf Konsinyasi'),
           ),
         ),
@@ -509,13 +482,17 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    item.unitLabel != null ? '${item.productName} (${item.unitLabel})' : item.productName,
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+                    item.unitLabel != null
+                        ? '${item.productName} (${item.unitLabel})'
+                        : item.productName,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13.5),
                   ),
                 ),
                 IconButton(
                   tooltip: 'Hapus item',
-                  icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.danger),
+                  icon: const Icon(Icons.close_rounded,
+                      size: 18, color: AppColors.danger),
                   onPressed: () => _removeItem(index),
                 ),
               ],
@@ -526,8 +503,10 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
                   child: TextField(
                     controller: item.qtyCtrl,
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(labelText: 'Qty (${item.displayUnit})', isDense: true),
-                    onChanged: (v) => setState(() => item.qty = int.tryParse(v) ?? 0),
+                    decoration: InputDecoration(
+                        labelText: 'Qty (${item.displayUnit})', isDense: true),
+                    onChanged: (v) =>
+                        setState(() => item.qty = int.tryParse(v) ?? 0),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -535,9 +514,13 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
                   flex: 2,
                   child: TextField(
                     controller: item.priceCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(labelText: 'Harga Kesepakatan/${item.displayUnit}', isDense: true),
-                    onChanged: (v) => setState(() => item.price = num.tryParse(v) ?? 0),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                        labelText: 'Harga Kesepakatan/${item.displayUnit}',
+                        isDense: true),
+                    onChanged: (v) =>
+                        setState(() => item.price = num.tryParse(v) ?? 0),
                   ),
                 ),
               ],
@@ -545,7 +528,166 @@ class _ConsignmentFormScreenState extends State<ConsignmentFormScreen> {
             const SizedBox(height: 6),
             Align(
               alignment: Alignment.centerRight,
-              child: Text('Subtotal: ${CurrencyFormatter.format(item.subtotal)}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+              child: Text(
+                  'Subtotal: ${CurrencyFormatter.format(item.subtotal)}',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 12.5)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NewCustomerDialog extends StatefulWidget {
+  const _NewCustomerDialog();
+
+  @override
+  State<_NewCustomerDialog> createState() => _NewCustomerDialogState();
+}
+
+class _NewCustomerDialogState extends State<_NewCustomerDialog> {
+  final _nameCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _phoneCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Customer Baru'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+              controller: _nameCtrl,
+              decoration:
+                  const InputDecoration(labelText: 'Nama outlet/customer')),
+          const SizedBox(height: 10),
+          TextField(
+              controller: _phoneCtrl,
+              keyboardType: TextInputType.phone,
+              decoration:
+                  const InputDecoration(labelText: 'No. HP (opsional)')),
+        ],
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal')),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context,
+              (name: _nameCtrl.text.trim(), phone: _phoneCtrl.text.trim())),
+          child: const Text('Simpan'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Bottom sheet cari/scan produk. Controller dimiliki State sendiri supaya
+/// tidak di-dispose saat animasi tutup sheet masih berjalan.
+class _ProductPickerSheet extends StatefulWidget {
+  final ProductRepository repo;
+  const _ProductPickerSheet({required this.repo});
+
+  @override
+  State<_ProductPickerSheet> createState() => _ProductPickerSheetState();
+}
+
+class _ProductPickerSheetState extends State<_ProductPickerSheet> {
+  final _searchCtrl = TextEditingController();
+  List<Product> _results = [];
+  String? _searchError;
+  int _seq = 0;
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _search(String q) async {
+    final seq = ++_seq;
+    try {
+      final res = await widget.repo.getProducts(search: q);
+      if (!mounted || seq != _seq) return;
+      setState(() {
+        _results = res;
+        _searchError = null;
+      });
+    } on ApiException catch (e) {
+      if (!mounted || seq != _seq) return;
+      setState(() => _searchError = e.message);
+    }
+  }
+
+  Future<void> _scan() async {
+    final code = await scanBarcode(context, title: 'Scan Barcode Produk');
+    if (!mounted || code == null) return;
+    _searchCtrl.text = code;
+    await _search(code);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 16,
+          right: 16,
+          top: 16),
+      child: SizedBox(
+        height: 460,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text('Pilih Produk',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchCtrl,
+                    decoration:
+                        const InputDecoration(hintText: 'Cari nama/SKU produk'),
+                    onChanged: _search,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
+                  tooltip: 'Scan barcode',
+                  onPressed: _scan,
+                  icon: const Icon(Icons.qr_code_scanner_rounded),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: _searchError != null
+                  ? Center(
+                      child: Text(_searchError!,
+                          style: const TextStyle(color: AppColors.danger)))
+                  : _results.isEmpty
+                      ? const Center(
+                          child: Text('Ketik atau scan untuk mencari produk',
+                              style: TextStyle(color: AppColors.muted)))
+                      : ListView.builder(
+                          itemCount: _results.length,
+                          itemBuilder: (_, i) => ListTile(
+                            title: Text(_results[i].name),
+                            subtitle: Text(
+                                'Stok: ${_results[i].totalStock} ${_results[i].unit} · Harga: ${CurrencyFormatter.format(_results[i].sellPrice)}'),
+                            onTap: () => Navigator.pop(context, _results[i]),
+                          ),
+                        ),
             ),
           ],
         ),

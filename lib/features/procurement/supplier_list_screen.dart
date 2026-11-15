@@ -56,17 +56,29 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
               if (error != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 12.5)),
+                  child: Text(error!,
+                      style: const TextStyle(
+                          color: AppColors.danger, fontSize: 12.5)),
                 ),
-              TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Nama Supplier')),
+              TextField(
+                  controller: nameCtrl,
+                  decoration:
+                      const InputDecoration(labelText: 'Nama Supplier')),
               const SizedBox(height: 10),
-              TextField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Telepon')),
+              TextField(
+                  controller: phoneCtrl,
+                  decoration: const InputDecoration(labelText: 'Telepon')),
               const SizedBox(height: 10),
-              TextField(controller: addressCtrl, decoration: const InputDecoration(labelText: 'Alamat'), maxLines: 2),
+              TextField(
+                  controller: addressCtrl,
+                  decoration: const InputDecoration(labelText: 'Alamat'),
+                  maxLines: 2),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Batal')),
             ElevatedButton(
               onPressed: () async {
                 if (nameCtrl.text.trim().length < 2) {
@@ -74,7 +86,10 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                   return;
                 }
                 try {
-                  await _repo.createSupplier(name: nameCtrl.text.trim(), phone: phoneCtrl.text.trim(), address: addressCtrl.text.trim());
+                  await _repo.createSupplier(
+                      name: nameCtrl.text.trim(),
+                      phone: phoneCtrl.text.trim(),
+                      address: addressCtrl.text.trim());
                   if (context.mounted) Navigator.pop(ctx, true);
                 } on ApiException catch (e) {
                   setDialogState(() => error = e.message);
@@ -107,28 +122,38 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(_error!, style: const TextStyle(color: AppColors.muted)),
+                        Text(_error!,
+                            style: const TextStyle(color: AppColors.muted)),
                         const SizedBox(height: 10),
-                        OutlinedButton(onPressed: _load, child: const Text('Coba Lagi')),
+                        OutlinedButton(
+                            onPressed: _load, child: const Text('Coba Lagi')),
                       ],
                     ),
                   )
                 : _suppliers.isEmpty
-                    ? const Center(child: Text('Belum ada supplier', style: TextStyle(color: AppColors.muted)))
+                    ? const Center(
+                        child: Text('Belum ada supplier',
+                            style: TextStyle(color: AppColors.muted)))
                     : RefreshIndicator(
                         onRefresh: _load,
                         child: ListView.separated(
                           padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
                           itemCount: _suppliers.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 8),
                           itemBuilder: (context, i) {
                             final s = _suppliers[i];
                             return Card(
                               margin: EdgeInsets.zero,
                               child: ListTile(
-                                leading: const Icon(Icons.local_shipping_outlined, color: AppColors.muted),
-                                title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                                subtitle: Text(s.phone ?? s.address ?? '-', style: const TextStyle(fontSize: 12)),
+                                leading: const Icon(
+                                    Icons.local_shipping_outlined,
+                                    color: AppColors.muted),
+                                title: Text(s.name,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600)),
+                                subtitle: Text(s.phone ?? s.address ?? '-',
+                                    style: const TextStyle(fontSize: 12)),
                               ),
                             );
                           },

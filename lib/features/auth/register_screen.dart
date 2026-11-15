@@ -58,7 +58,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => RegistrationSubmittedScreen(planType: _planType)),
+          MaterialPageRoute(
+              builder: (_) => RegistrationSubmittedScreen(planType: _planType)),
         );
       }
     } on ApiException catch (e) {
@@ -85,7 +86,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Center(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: Image.asset('assets/icon/app_icon.png', width: 56, height: 56),
+                    child: Image.asset('assets/icon/app_icon.png',
+                        width: 56, height: 56),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -93,44 +95,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Container(
                     margin: const EdgeInsets.only(bottom: 16),
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: AppColors.dangerSoft, borderRadius: BorderRadius.circular(10)),
-                    child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13.5)),
+                    decoration: BoxDecoration(
+                        color: AppColors.dangerSoft,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: Text(_error!,
+                        style: const TextStyle(
+                            color: AppColors.danger, fontSize: 13.5)),
                   ),
-                const Text('Pilih Paket', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                const Text('Pilih Paket',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                 const SizedBox(height: 10),
                 _PlanCard(
                   title: 'Gratis',
-                  subtitle: 'Mulai pakai langsung, cocok untuk usaha kecil yang baru mulai. Dibatasi 10 transaksi per hari.',
+                  subtitle:
+                      'Mulai pakai langsung, cocok untuk usaha kecil yang baru mulai. Dibatasi 10 transaksi per hari.',
                   selected: _planType == 'FREE',
                   onTap: () => setState(() => _planType = 'FREE'),
                 ),
                 const SizedBox(height: 10),
                 _PlanCard(
                   title: 'Berlangganan',
-                  subtitle: 'Transaksi tanpa batas + trial gratis 30 hari. Setelah trial, cukup ajukan pembayaran untuk lanjut.',
+                  subtitle:
+                      'Transaksi tanpa batas + trial gratis 30 hari. Setelah trial, cukup ajukan pembayaran untuk lanjut.',
                   selected: _planType == 'SUBSCRIBE',
                   onTap: () => setState(() => _planType = 'SUBSCRIBE'),
                 ),
                 const SizedBox(height: 24),
-                const Text('Data Usaha', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                const Text('Data Usaha',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                 const SizedBox(height: 10),
                 TextFormField(
                   controller: _businessNameCtrl,
-                  decoration: const InputDecoration(labelText: 'Nama Usaha / Toko'),
-                  validator: (v) => (v == null || v.trim().length < 3) ? 'Minimal 3 karakter' : null,
+                  decoration:
+                      const InputDecoration(labelText: 'Nama Usaha / Toko'),
+                  validator: (v) => (v == null || v.trim().length < 3)
+                      ? 'Minimal 3 karakter'
+                      : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _ownerNameCtrl,
                   decoration: const InputDecoration(labelText: 'Nama Pemilik'),
-                  validator: (v) => (v == null || v.trim().length < 3) ? 'Minimal 3 karakter' : null,
+                  validator: (v) => (v == null || v.trim().length < 3)
+                      ? 'Minimal 3 karakter'
+                      : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(labelText: 'Email'),
-                  validator: (v) => (v == null || !v.contains('@')) ? 'Email tidak valid' : null,
+                  validator: (v) => (v == null || !v.contains('@'))
+                      ? 'Email tidak valid'
+                      : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -149,7 +168,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _passwordCtrl,
                   obscureText: true,
                   decoration: const InputDecoration(labelText: 'Kata Sandi'),
-                  validator: (v) => (v == null || v.length < 6) ? 'Minimal 6 karakter' : null,
+                  validator: (v) =>
+                      (v == null || v.length < 6) ? 'Minimal 6 karakter' : null,
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
@@ -158,7 +178,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
                         )
                       : const Text('Daftar Sekarang'),
                 ),
@@ -184,7 +205,11 @@ class _PlanCard extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const _PlanCard({required this.title, required this.subtitle, required this.selected, required this.onTap});
+  const _PlanCard(
+      {required this.title,
+      required this.subtitle,
+      required this.selected,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -196,12 +221,16 @@ class _PlanCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? AppColors.accentSoft : AppColors.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? AppColors.accent : AppColors.line, width: selected ? 1.6 : 1),
+          border: Border.all(
+              color: selected ? AppColors.accent : AppColors.line,
+              width: selected ? 1.6 : 1),
         ),
         child: Row(
           children: [
             Icon(
-              selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+              selected
+                  ? Icons.radio_button_checked_rounded
+                  : Icons.radio_button_off_rounded,
               color: selected ? AppColors.accent : AppColors.muted,
             ),
             const SizedBox(width: 12),
@@ -209,9 +238,13 @@ class _PlanCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
+                  Text(title,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 14.5)),
                   const SizedBox(height: 3),
-                  Text(subtitle, style: const TextStyle(color: AppColors.muted, fontSize: 12.5)),
+                  Text(subtitle,
+                      style: const TextStyle(
+                          color: AppColors.muted, fontSize: 12.5)),
                 ],
               ),
             ),

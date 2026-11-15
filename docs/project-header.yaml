@@ -1,0 +1,36 @@
+# Project Header (portabel). Nilai null = belum dikonfigurasi. Jangan simpan rahasia di sini.
+project_header:
+  project_id: PRJ-POS-MOBILE
+  project_name: pos-mobile
+  description: ''
+  status: active
+  workspace:
+    root: null
+    path_strategy: environment-aware
+  locations:
+    windows:
+      root: D:\laragon\www\pos-mobile
+    linux:
+      root: null
+    wsl:
+      root: null
+    remote_linux:
+      root: null
+  repositories:
+  - id: pos-mobile
+    relative_path: .
+  technologies:
+  - Flutter
+  workflow: null
+  coordinator: null
+  agents:
+    mode: custom
+    enabled:
+    - manager
+    - analyst
+    - backend
+    - frontend
+    - qc
+    - devops
+    roles: {}
+    set_by: herma

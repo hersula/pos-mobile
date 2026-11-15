@@ -1,5 +1,4 @@
 import '../../core/utils/num_parser.dart';
-import 'category.dart';
 import 'price_level.dart';
 import 'product_unit.dart';
 
@@ -8,12 +7,16 @@ class ProductStock {
   final String warehouseName;
   final int quantity;
 
-  ProductStock({required this.warehouseId, required this.warehouseName, required this.quantity});
+  ProductStock(
+      {required this.warehouseId,
+      required this.warehouseName,
+      required this.quantity});
 
   factory ProductStock.fromJson(Map<String, dynamic> json) {
     final warehouse = json['warehouse'] as Map<String, dynamic>?;
     return ProductStock(
-      warehouseId: json['warehouseId'] as String? ?? warehouse?['id'] as String? ?? '',
+      warehouseId:
+          json['warehouseId'] as String? ?? warehouse?['id'] as String? ?? '',
       warehouseName: warehouse?['name'] as String? ?? '-',
       quantity: parseInt(json['quantity']),
     );
@@ -74,11 +77,17 @@ class Product {
   factory Product.fromJson(Map<String, dynamic> json) {
     final category = json['category'] as Map<String, dynamic>?;
     final stocksJson = (json['stocks'] as List<dynamic>?) ?? [];
-    final stocks = stocksJson.map((s) => ProductStock.fromJson(s as Map<String, dynamic>)).toList();
+    final stocks = stocksJson
+        .map((s) => ProductStock.fromJson(s as Map<String, dynamic>))
+        .toList();
     final unitsJson = (json['units'] as List<dynamic>?) ?? [];
-    final units = unitsJson.map((u) => ProductUnit.fromJson(u as Map<String, dynamic>)).toList();
+    final units = unitsJson
+        .map((u) => ProductUnit.fromJson(u as Map<String, dynamic>))
+        .toList();
     final pricesJson = (json['prices'] as List<dynamic>?) ?? [];
-    final prices = pricesJson.map((p) => ProductPrice.fromJson(p as Map<String, dynamic>)).toList();
+    final prices = pricesJson
+        .map((p) => ProductPrice.fromJson(p as Map<String, dynamic>))
+        .toList();
 
     final totalStockFromField = json['totalStock'];
     final computedTotal = stocks.fold<int>(0, (sum, s) => sum + s.quantity);
@@ -96,7 +105,9 @@ class Product {
       minStock: parseInt(json['minStock']),
       imageUrl: json['imageUrl'] as String?,
       isActive: json['isActive'] as bool? ?? true,
-      totalStock: totalStockFromField != null ? parseInt(totalStockFromField) : computedTotal,
+      totalStock: totalStockFromField != null
+          ? parseInt(totalStockFromField)
+          : computedTotal,
       stocks: stocks,
       units: units,
       prices: prices,

@@ -37,13 +37,17 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await context.read<AuthProvider>().login(email: _emailCtrl.text.trim(), password: _passwordCtrl.text);
+      await context
+          .read<AuthProvider>()
+          .login(email: _emailCtrl.text.trim(), password: _passwordCtrl.text);
       // Sukses -> _RootGate otomatis pindah ke Dashboard lewat Provider
     } on ApiException catch (e) {
       final tenantStatus = e.data?['tenantStatus'] as String?;
       if (tenantStatus != null && mounted) {
         Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => PendingStatusScreen(args: PendingStatusArgs(status: tenantStatus, message: e.message)),
+          builder: (_) => PendingStatusScreen(
+              args:
+                  PendingStatusArgs(status: tenantStatus, message: e.message)),
         ));
       } else {
         setState(() => _error = e.message);
@@ -71,29 +75,40 @@ class _LoginScreenState extends State<LoginScreen> {
                   Center(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(18),
-                      child: Image.asset('assets/icon/app_icon.png', width: 72, height: 72),
+                      child: Image.asset('assets/icon/app_icon.png',
+                          width: 72, height: 72),
                     ),
                   ),
                   const SizedBox(height: 20),
                   const Text(
                     'Masuk',
-                    style: TextStyle(fontFamily: 'Archivo', fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.ink),
+                    style: TextStyle(
+                        fontFamily: 'Archivo',
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.ink),
                   ),
                   const SizedBox(height: 4),
-                  const Text('Masuk ke akun kasir toko kamu', style: TextStyle(color: AppColors.muted, fontSize: 14)),
+                  const Text('Masuk ke akun kasir toko kamu',
+                      style: TextStyle(color: AppColors.muted, fontSize: 14)),
                   const SizedBox(height: 28),
                   if (_error != null)
                     Container(
                       margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: AppColors.dangerSoft, borderRadius: BorderRadius.circular(10)),
-                      child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13.5)),
+                      decoration: BoxDecoration(
+                          color: AppColors.dangerSoft,
+                          borderRadius: BorderRadius.circular(10)),
+                      child: Text(_error!,
+                          style: const TextStyle(
+                              color: AppColors.danger, fontSize: 13.5)),
                     ),
                   TextFormField(
                     controller: _emailCtrl,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(labelText: 'Email'),
-                    validator: (v) => (v == null || v.isEmpty) ? 'Email wajib diisi' : null,
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Email wajib diisi' : null,
                   ),
                   const SizedBox(height: 14),
                   TextFormField(
@@ -102,11 +117,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: InputDecoration(
                       labelText: 'Kata Sandi',
                       suffixIcon: IconButton(
-                        icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                        icon: Icon(_obscure
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined),
                         onPressed: () => setState(() => _obscure = !_obscure),
                       ),
                     ),
-                    validator: (v) => (v == null || v.isEmpty) ? 'Kata sandi wajib diisi' : null,
+                    validator: (v) => (v == null || v.isEmpty)
+                        ? 'Kata sandi wajib diisi'
+                        : null,
                     onFieldSubmitted: (_) => _submit(),
                   ),
                   const SizedBox(height: 22),
@@ -116,7 +135,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white),
                           )
                         : const Text('Masuk'),
                   ),
@@ -124,12 +144,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('Toko baru? ', style: TextStyle(color: AppColors.muted, fontSize: 13.5)),
+                      const Text('Toko baru? ',
+                          style: TextStyle(
+                              color: AppColors.muted, fontSize: 13.5)),
                       GestureDetector(
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RegisterScreen())),
+                        onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                                builder: (_) => const RegisterScreen())),
                         child: const Text(
                           'Daftar di sini',
-                          style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700, fontSize: 13.5),
+                          style: TextStyle(
+                              color: AppColors.accent,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13.5),
                         ),
                       ),
                     ],

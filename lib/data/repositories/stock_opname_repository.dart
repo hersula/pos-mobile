@@ -9,7 +9,11 @@ class StockOpnamePage {
   final int totalPages;
   final int total;
 
-  StockOpnamePage({required this.data, required this.page, required this.totalPages, required this.total});
+  StockOpnamePage(
+      {required this.data,
+      required this.page,
+      required this.totalPages,
+      required this.total});
 }
 
 /// Finalisasi ditolak 409 STOCK_CONFLICT: stok akan negatif untuk [items].
@@ -25,13 +29,16 @@ String? apiErrorCode(ApiException e) => e.data?['code'] as String?;
 class StockOpnameRepository {
   final ApiClient _client = ApiClient.instance;
 
-  Future<StockOpnamePage> getList({String? status, int page = 1, int pageSize = 20}) async {
+  Future<StockOpnamePage> getList(
+      {String? status, int page = 1, int pageSize = 20}) async {
     final res = await _client.get(ApiEndpoints.stockOpnames, query: {
       if (status != null) 'status': status,
       'page': page,
       'pageSize': pageSize,
     });
-    final list = (res['data'] as List<dynamic>).map((e) => StockOpname.fromJson(e as Map<String, dynamic>)).toList();
+    final list = (res['data'] as List<dynamic>)
+        .map((e) => StockOpname.fromJson(e as Map<String, dynamic>))
+        .toList();
     final pg = res['pagination'] as Map<String, dynamic>?;
     return StockOpnamePage(
       data: list,
@@ -46,7 +53,8 @@ class StockOpnameRepository {
     return StockOpname.fromJson(res['data'] as Map<String, dynamic>);
   }
 
-  Future<StockOpname> create({required String warehouseId, String? categoryId, String? note}) async {
+  Future<StockOpname> create(
+      {required String warehouseId, String? categoryId, String? note}) async {
     final res = await _client.post(ApiEndpoints.stockOpnames, data: {
       'warehouseId': warehouseId,
       if (categoryId != null) 'categoryId': categoryId,
@@ -60,7 +68,8 @@ class StockOpnameRepository {
   Future<StockOpname> saveCounts(String id, Map<String, num?> counts) async {
     final res = await _client.patch(ApiEndpoints.stockOpnameItems(id), data: {
       'items': [
-        for (final e in counts.entries) {'itemId': e.key, 'countedQty': e.value},
+        for (final e in counts.entries)
+          {'itemId': e.key, 'countedQty': e.value},
       ],
     });
     return StockOpname.fromJson(res['data'] as Map<String, dynamic>);
@@ -68,8 +77,10 @@ class StockOpnameRepository {
 
   Future<FinalizeResult> finalize(String id, {bool clampToZero = false}) async {
     try {
-      final res = await _client.post(ApiEndpoints.stockOpnameFinalize(id), data: {'clampToZero': clampToZero});
-      final r = (res['result'] as Map<String, dynamic>?) ?? const <String, dynamic>{};
+      final res = await _client.post(ApiEndpoints.stockOpnameFinalize(id),
+          data: {'clampToZero': clampToZero});
+      final r =
+          (res['result'] as Map<String, dynamic>?) ?? const <String, dynamic>{};
       int n(String k) => (r[k] as num?)?.toInt() ?? 0;
       return FinalizeResult(
         opname: StockOpname.fromJson(res['data'] as Map<String, dynamic>),
@@ -87,7 +98,8 @@ class StockOpnameRepository {
   }
 
   Future<StockOpname> cancel(String id, String reason) async {
-    final res = await _client.post(ApiEndpoints.stockOpnameCancel(id), data: {'reason': reason});
+    final res = await _client
+        .post(ApiEndpoints.stockOpnameCancel(id), data: {'reason': reason});
     return StockOpname.fromJson(res['data'] as Map<String, dynamic>);
   }
 }
@@ -96,5 +108,8 @@ List<StockConflictItem> parseConflictItems(Map<String, dynamic>? body) {
   final details = body?['details'];
   final list = details is Map ? details['items'] : null;
   if (list is! List) return const [];
-  return list.whereType<Map<String, dynamic>>().map(StockConflictItem.fromJson).toList();
+  return list
+      .whereType<Map<String, dynamic>>()
+      .map(StockConflictItem.fromJson)
+      .toList();
 }

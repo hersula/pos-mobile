@@ -56,11 +56,19 @@ class TenantSubscriptionStatus {
   factory TenantSubscriptionStatus.fromJson(Map<String, dynamic> json) {
     return TenantSubscriptionStatus(
       planType: json['planType'] as String,
-      dailyTransactionUsed: json['dailyTransactionUsed'] != null ? parseInt(json['dailyTransactionUsed']) : null,
-      dailyTransactionLimit: json['dailyTransactionLimit'] != null ? parseInt(json['dailyTransactionLimit']) : null,
-      dailyTransactionRemaining:
-          json['dailyTransactionRemaining'] != null ? parseInt(json['dailyTransactionRemaining']) : null,
-      subscription: json['subscription'] != null ? SubscriptionDetail.fromJson(json['subscription'] as Map<String, dynamic>) : null,
+      dailyTransactionUsed: json['dailyTransactionUsed'] != null
+          ? parseInt(json['dailyTransactionUsed'])
+          : null,
+      dailyTransactionLimit: json['dailyTransactionLimit'] != null
+          ? parseInt(json['dailyTransactionLimit'])
+          : null,
+      dailyTransactionRemaining: json['dailyTransactionRemaining'] != null
+          ? parseInt(json['dailyTransactionRemaining'])
+          : null,
+      subscription: json['subscription'] != null
+          ? SubscriptionDetail.fromJson(
+              json['subscription'] as Map<String, dynamic>)
+          : null,
     );
   }
 }

@@ -17,10 +17,15 @@ class SettingsScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Keluar dari Akun?'),
-        content: const Text('Kamu perlu login ulang untuk memakai aplikasi ini lagi.'),
+        content: const Text(
+            'Kamu perlu login ulang untuk memakai aplikasi ini lagi.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Keluar')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Batal')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Keluar')),
         ],
       ),
     );
@@ -47,24 +52,34 @@ class SettingsScreen extends StatelessWidget {
                     Container(
                       width: 48,
                       height: 48,
-                      decoration: const BoxDecoration(color: AppColors.accentSoft, shape: BoxShape.circle),
-                      child: const Icon(Icons.person_rounded, color: AppColors.accent),
+                      decoration: const BoxDecoration(
+                          color: AppColors.accentSoft, shape: BoxShape.circle),
+                      child: const Icon(Icons.person_rounded,
+                          color: AppColors.accent),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(user?.name ?? '-', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                          Text(user?.name ?? '-',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700, fontSize: 15)),
                           const SizedBox(height: 2),
-                          Text(user?.email ?? '-', style: const TextStyle(color: AppColors.muted, fontSize: 12.5)),
+                          Text(user?.email ?? '-',
+                              style: const TextStyle(
+                                  color: AppColors.muted, fontSize: 12.5)),
                           const SizedBox(height: 6),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(6)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                                color: AppColors.paper,
+                                borderRadius: BorderRadius.circular(6)),
                             child: Text(
                               roleLabels[user?.role] ?? user?.role ?? '-',
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                  fontSize: 11, fontWeight: FontWeight.w600),
                             ),
                           ),
                         ],
@@ -81,9 +96,11 @@ class SettingsScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     ListTile(
-                      leading: const Icon(Icons.storefront_rounded, color: AppColors.muted),
+                      leading: const Icon(Icons.storefront_rounded,
+                          color: AppColors.muted),
                       title: Text(user?.tenant.businessName ?? '-'),
-                      subtitle: Text('Paket ${user?.tenant.planType == 'FREE' ? 'Gratis' : 'Berlangganan'}'),
+                      subtitle: Text(
+                          'Paket ${user?.tenant.planType == 'FREE' ? 'Gratis' : 'Berlangganan'}'),
                     ),
                   ],
                 ),
@@ -97,19 +114,24 @@ class SettingsScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     ListTile(
-                      leading: const Icon(Icons.group_rounded, color: AppColors.muted),
+                      leading: const Icon(Icons.group_rounded,
+                          color: AppColors.muted),
                       title: const Text('Manajemen User'),
                       subtitle: const Text('Tambah user & atur level (role)'),
                       trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const UserManagementScreen())),
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => const UserManagementScreen())),
                     ),
                     const Divider(height: 1),
                     ListTile(
-                      leading: const Icon(Icons.lock_outline_rounded, color: AppColors.muted),
+                      leading: const Icon(Icons.lock_outline_rounded,
+                          color: AppColors.muted),
                       title: const Text('Otoritas Menu'),
-                      subtitle: const Text('Atur menu yang boleh diakses tiap level'),
+                      subtitle:
+                          const Text('Atur menu yang boleh diakses tiap level'),
                       trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MenuPermissionScreen())),
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => const MenuPermissionScreen())),
                     ),
                   ],
                 ),
@@ -119,11 +141,13 @@ class SettingsScreen extends StatelessWidget {
               child: Column(
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.print_rounded, color: AppColors.muted),
+                    leading:
+                        const Icon(Icons.print_rounded, color: AppColors.muted),
                     title: const Text('Printer Bluetooth'),
                     subtitle: const Text('Sambungkan printer struk thermal'),
                     trailing: const Icon(Icons.chevron_right_rounded),
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PrinterSettingsScreen())),
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const PrinterSettingsScreen())),
                   ),
                 ],
               ),
@@ -131,9 +155,12 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 24),
             OutlinedButton.icon(
               onPressed: () => _confirmLogout(context),
-              icon: const Icon(Icons.logout_rounded, size: 18, color: AppColors.danger),
-              label: const Text('Keluar', style: TextStyle(color: AppColors.danger)),
-              style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.danger)),
+              icon: const Icon(Icons.logout_rounded,
+                  size: 18, color: AppColors.danger),
+              label: const Text('Keluar',
+                  style: TextStyle(color: AppColors.danger)),
+              style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.danger)),
             ),
           ],
         ),

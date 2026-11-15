@@ -14,6 +14,11 @@ class ApiEndpoints {
   static const warehouses = '/warehouses';
   static const products = '/products';
   static const productScan = '/products/scan';
+  static String productUnits(String productId) => '/products/$productId/units';
+  static String productUnitDetail(String productId, String unitId) =>
+      '/products/$productId/units/$unitId';
+  static String productPrices(String productId) =>
+      '/products/$productId/prices';
   static const upload = '/upload';
   static const suppliers = '/suppliers';
   static const customers = '/customers';
@@ -28,8 +33,10 @@ class ApiEndpoints {
   static const stockMovements = '/stock-movements';
   static const purchaseOrders = '/purchase-orders';
   static String purchaseOrderDetail(String id) => '/purchase-orders/$id';
-  static String purchaseOrderReceive(String id) => '/purchase-orders/$id/receive';
-  static String purchaseOrderPayments(String id) => '/purchase-orders/$id/payments';
+  static String purchaseOrderReceive(String id) =>
+      '/purchase-orders/$id/receive';
+  static String purchaseOrderPayments(String id) =>
+      '/purchase-orders/$id/payments';
 
   // Penjualan
   static const sales = '/sales';
@@ -42,7 +49,8 @@ class ApiEndpoints {
   static const consignmentOutletStock = '/consignments/outlet-stock';
   static String consignmentDetail(String id) => '/consignments/$id';
   static String consignmentSend(String id) => '/consignments/$id/send';
-  static String consignmentSettleSale(String id) => '/consignments/$id/settle-sale';
+  static String consignmentSettleSale(String id) =>
+      '/consignments/$id/settle-sale';
   static String consignmentReturn(String id) => '/consignments/$id/return';
   static String consignmentCancel(String id) => '/consignments/$id/cancel';
 
@@ -67,5 +75,9 @@ class ApiEndpoints {
   // Langganan tenant
   static const tenantSubscription = '/tenant/subscription';
   static const tenantSubscriptionUpgrade = '/tenant/subscription/upgrade';
-  static const tenantSubscriptionRequestPayment = '/tenant/subscription/request-payment';
+  static const tenantSubscriptionRequestPayment =
+      '/tenant/subscription/request-payment';
+
+  // App update
+  static const appVersion = '/app/version';
 }

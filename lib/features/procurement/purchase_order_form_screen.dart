@@ -22,7 +22,8 @@ class _POItemDraft {
   late final TextEditingController unitCostCtrl;
 
   _POItemDraft({required this.product, this.unit, this.qty = 1, num? unitCost})
-      : unitCost = unitCost ?? (product.costPrice * (unit?.conversionQty ?? 1)) {
+      : unitCost =
+            unitCost ?? (product.costPrice * (unit?.conversionQty ?? 1)) {
     qtyCtrl = TextEditingController(text: qty.toString());
     unitCostCtrl = TextEditingController(text: this.unitCost.toString());
   }
@@ -41,7 +42,8 @@ class PurchaseOrderFormScreen extends StatefulWidget {
   const PurchaseOrderFormScreen({super.key});
 
   @override
-  State<PurchaseOrderFormScreen> createState() => _PurchaseOrderFormScreenState();
+  State<PurchaseOrderFormScreen> createState() =>
+      _PurchaseOrderFormScreenState();
 }
 
 class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
@@ -77,7 +79,8 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
 
   Future<void> _loadRefData() async {
     try {
-      final results = await Future.wait([_warehouseRepo.getWarehouses(), _supplierRepo.getSuppliers()]);
+      final results = await Future.wait(
+          [_warehouseRepo.getWarehouses(), _supplierRepo.getSuppliers()]);
       if (mounted) {
         setState(() {
           _warehouses = results[0] as List<Warehouse>;
@@ -118,20 +121,27 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
             }
 
             return Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, left: 16, right: 16, top: 16),
+              padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(ctx).viewInsets.bottom,
+                  left: 16,
+                  right: 16,
+                  top: 16),
               child: SizedBox(
                 height: 460,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text('Pilih Produk', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                    const Text('Pilih Produk',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 16)),
                     const SizedBox(height: 12),
                     Row(
                       children: [
                         Expanded(
                           child: TextField(
                             controller: searchCtrl,
-                            decoration: const InputDecoration(hintText: 'Cari nama/SKU produk'),
+                            decoration: const InputDecoration(
+                                hintText: 'Cari nama/SKU produk'),
                             onChanged: search,
                           ),
                         ),
@@ -145,12 +155,16 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
                     const SizedBox(height: 12),
                     Expanded(
                       child: results.isEmpty
-                          ? const Center(child: Text('Ketik atau scan untuk mencari produk', style: TextStyle(color: AppColors.muted)))
+                          ? const Center(
+                              child: Text(
+                                  'Ketik atau scan untuk mencari produk',
+                                  style: TextStyle(color: AppColors.muted)))
                           : ListView.builder(
                               itemCount: results.length,
                               itemBuilder: (_, i) => ListTile(
                                 title: Text(results[i].name),
-                                subtitle: Text('Stok: ${results[i].totalStock} ${results[i].unit} · Modal: ${CurrencyFormatter.format(results[i].costPrice)}'),
+                                subtitle: Text(
+                                    'Stok: ${results[i].totalStock} ${results[i].unit} · Modal: ${CurrencyFormatter.format(results[i].costPrice)}'),
                                 onTap: () {
                                   Navigator.pop(ctx);
                                   _pickUnitAndAddItem(results[i]);
@@ -187,7 +201,9 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Text('Beli per Satuan Apa? — ${product.name}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                child: Text('Beli per Satuan Apa? — ${product.name}',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 16)),
               ),
               ListTile(
                 title: Text(product.unit),
@@ -195,7 +211,8 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
               ),
               ...product.units.map((u) => ListTile(
                     title: Text(u.name),
-                    subtitle: Text('1 ${u.name} = ${u.conversionQty} ${product.unit}'),
+                    subtitle: Text(
+                        '1 ${u.name} = ${u.conversionQty} ${product.unit}'),
                     onTap: () => Navigator.pop(ctx, u),
                   )),
               const SizedBox(height: 8),
@@ -204,13 +221,16 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
         );
       },
     );
-    if (!mounted || choice == null) return; // sheet ditutup tanpa memilih -> batal
-    _addItem(product, unit: choice == _baseUnitChoice ? null : choice as ProductUnit);
+    if (!mounted || choice == null)
+      return; // sheet ditutup tanpa memilih -> batal
+    _addItem(product,
+        unit: choice == _baseUnitChoice ? null : choice as ProductUnit);
   }
 
   void _addItem(Product product, {ProductUnit? unit}) {
     setState(() {
-      final existing = _items.where((e) => e.product.id == product.id && e.unit?.id == unit?.id);
+      final existing = _items
+          .where((e) => e.product.id == product.id && e.unit?.id == unit?.id);
       if (existing.isNotEmpty) {
         existing.first.qty += 1;
         existing.first.qtyCtrl.text = existing.first.qty.toString();
@@ -283,35 +303,59 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
                     Container(
                       margin: const EdgeInsets.only(bottom: 14),
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: AppColors.dangerSoft, borderRadius: BorderRadius.circular(10)),
-                      child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13.5)),
+                      decoration: BoxDecoration(
+                          color: AppColors.dangerSoft,
+                          borderRadius: BorderRadius.circular(10)),
+                      child: Text(_error!,
+                          style: const TextStyle(
+                              color: AppColors.danger, fontSize: 13.5)),
                     ),
                   DropdownButtonFormField<String>(
                     value: _warehouseId,
                     isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Gudang/Toko Tujuan'),
-                    items: _warehouses.map((w) => DropdownMenuItem(value: w.id, child: Text(w.name))).toList(),
+                    decoration:
+                        const InputDecoration(labelText: 'Gudang/Toko Tujuan'),
+                    items: _warehouses
+                        .map((w) =>
+                            DropdownMenuItem(value: w.id, child: Text(w.name)))
+                        .toList(),
                     onChanged: (v) => setState(() => _warehouseId = v),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: _supplierId,
                     isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Supplier (opsional)'),
-                    items: _suppliers.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(),
+                    decoration:
+                        const InputDecoration(labelText: 'Supplier (opsional)'),
+                    items: _suppliers
+                        .map((s) =>
+                            DropdownMenuItem(value: s.id, child: Text(s.name)))
+                        .toList(),
                     onChanged: (v) => setState(() => _supplierId = v),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Metode Pembayaran', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                  const Text('Metode Pembayaran',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 13.5)),
                   const SizedBox(height: 8),
                   SegmentedButton<String>(
                     segments: const [
-                      ButtonSegment(value: 'CASH', label: Text('Tunai'), icon: Icon(Icons.payments_outlined, size: 16)),
-                      ButtonSegment(value: 'CREDIT', label: Text('Tempo'), icon: Icon(Icons.schedule_rounded, size: 16)),
-                      ButtonSegment(value: 'TRANSFER', label: Text('Transfer'), icon: Icon(Icons.account_balance_outlined, size: 16)),
+                      ButtonSegment(
+                          value: 'CASH',
+                          label: Text('Tunai'),
+                          icon: Icon(Icons.payments_outlined, size: 16)),
+                      ButtonSegment(
+                          value: 'CREDIT',
+                          label: Text('Tempo'),
+                          icon: Icon(Icons.schedule_rounded, size: 16)),
+                      ButtonSegment(
+                          value: 'TRANSFER',
+                          label: Text('Transfer'),
+                          icon: Icon(Icons.account_balance_outlined, size: 16)),
                     ],
                     selected: {_paymentMethod},
-                    onSelectionChanged: (s) => setState(() => _paymentMethod = s.first),
+                    onSelectionChanged: (s) =>
+                        setState(() => _paymentMethod = s.first),
                   ),
                   if (_paymentMethod == 'CREDIT')
                     Padding(
@@ -325,7 +369,9 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Item Pembelian', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
+                      const Text('Item Pembelian',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 14.5)),
                       TextButton.icon(
                         onPressed: _pickProduct,
                         icon: const Icon(Icons.add_rounded, size: 18),
@@ -338,8 +384,12 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       alignment: Alignment.center,
-                      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.line)),
-                      child: const Text('Belum ada produk ditambahkan', style: TextStyle(color: AppColors.muted)),
+                      decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.line)),
+                      child: const Text('Belum ada produk ditambahkan',
+                          style: TextStyle(color: AppColors.muted)),
                     )
                   else
                     ...List.generate(_items.length, (i) => _buildItemCard(i)),
@@ -350,8 +400,15 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Expanded(child: Text('Total Pembelian', style: TextStyle(fontWeight: FontWeight.w700))),
-                          Text(CurrencyFormatter.format(_total), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: AppColors.ink)),
+                          const Expanded(
+                              child: Text('Total Pembelian',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.w700))),
+                          Text(CurrencyFormatter.format(_total),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 17,
+                                  color: AppColors.ink)),
                         ],
                       ),
                     ),
@@ -365,7 +422,11 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
           child: ElevatedButton(
             onPressed: _submitting ? null : _submit,
             child: _submitting
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white))
                 : const Text('Simpan Pengadaan Barang'),
           ),
         ),
@@ -387,12 +448,16 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    item.unit != null ? '${item.product.name} (${item.unitLabel})' : item.product.name,
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+                    item.unit != null
+                        ? '${item.product.name} (${item.unitLabel})'
+                        : item.product.name,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13.5),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.danger),
+                  icon: const Icon(Icons.close_rounded,
+                      size: 18, color: AppColors.danger),
                   onPressed: () => _removeItem(index),
                 ),
               ],
@@ -403,8 +468,10 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
                   child: TextField(
                     controller: item.qtyCtrl,
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(labelText: 'Qty (${item.unitLabel})', isDense: true),
-                    onChanged: (v) => setState(() => item.qty = int.tryParse(v) ?? item.qty),
+                    decoration: InputDecoration(
+                        labelText: 'Qty (${item.unitLabel})', isDense: true),
+                    onChanged: (v) =>
+                        setState(() => item.qty = int.tryParse(v) ?? item.qty),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -412,9 +479,12 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
                   flex: 2,
                   child: TextField(
                     controller: item.unitCostCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Harga Beli/Satuan', isDense: true),
-                    onChanged: (v) => setState(() => item.unitCost = num.tryParse(v) ?? item.unitCost),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                        labelText: 'Harga Beli/Satuan', isDense: true),
+                    onChanged: (v) => setState(
+                        () => item.unitCost = num.tryParse(v) ?? item.unitCost),
                   ),
                 ),
               ],
@@ -422,7 +492,10 @@ class _PurchaseOrderFormScreenState extends State<PurchaseOrderFormScreen> {
             const SizedBox(height: 6),
             Align(
               alignment: Alignment.centerRight,
-              child: Text('Subtotal: ${CurrencyFormatter.format(item.subtotal)}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+              child: Text(
+                  'Subtotal: ${CurrencyFormatter.format(item.subtotal)}',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 12.5)),
             ),
           ],
         ),

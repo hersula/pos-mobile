@@ -36,7 +36,8 @@ class ConsignmentLinesSheet extends StatefulWidget {
   final ConsignmentOrder order;
   final bool isSettle; // true = catat terjual (ada harga), false = retur
 
-  const ConsignmentLinesSheet({super.key, required this.order, required this.isSettle});
+  const ConsignmentLinesSheet(
+      {super.key, required this.order, required this.isSettle});
 
   @override
   State<ConsignmentLinesSheet> createState() => _ConsignmentLinesSheetState();
@@ -50,7 +51,10 @@ class _ConsignmentLinesSheetState extends State<ConsignmentLinesSheet> {
   @override
   void initState() {
     super.initState();
-    _lines = widget.order.items.where((e) => e.baseQtyRemaining > 0).map(_LineState.new).toList();
+    _lines = widget.order.items
+        .where((e) => e.baseQtyRemaining > 0)
+        .map(_LineState.new)
+        .toList();
   }
 
   @override
@@ -71,7 +75,8 @@ class _ConsignmentLinesSheetState extends State<ConsignmentLinesSheet> {
         return;
       }
       if (l.baseQty > l.item.baseQtyRemaining) {
-        setState(() => _error = 'Qty ${l.item.productName} melebihi sisa (${l.item.baseQtyRemaining} ${l.item.baseUnit})');
+        setState(() => _error =
+            'Qty ${l.item.productName} melebihi sisa (${l.item.baseQtyRemaining} ${l.item.baseUnit})');
         return;
       }
       num? price;
@@ -83,31 +88,41 @@ class _ConsignmentLinesSheetState extends State<ConsignmentLinesSheet> {
           return;
         }
       }
-      result.add(ConsignmentLineInput(consignmentItemId: l.item.id, qty: l.qty, useBaseUnit: l.useBaseUnit, unitPrice: price));
+      result.add(ConsignmentLineInput(
+          consignmentItemId: l.item.id,
+          qty: l.qty,
+          useBaseUnit: l.useBaseUnit,
+          unitPrice: price));
     }
     if (result.isEmpty) {
       setState(() => _error = 'Isi qty minimal untuk 1 produk');
       return;
     }
     final note = _noteCtrl.text.trim();
-    Navigator.of(context).pop(ConsignmentLinesResult(result, note.isEmpty ? null : note));
+    Navigator.of(context)
+        .pop(ConsignmentLinesResult(result, note.isEmpty ? null : note));
   }
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.isSettle ? 'Catat Barang Terjual' : 'Retur Barang dari Outlet';
+    final title =
+        widget.isSettle ? 'Catat Barang Terjual' : 'Retur Barang dari Outlet';
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SafeArea(
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.88),
+          constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.88),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                child: Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                child: Text(title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 16)),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -122,8 +137,12 @@ class _ConsignmentLinesSheetState extends State<ConsignmentLinesSheet> {
                 Container(
                   margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: AppColors.dangerSoft, borderRadius: BorderRadius.circular(10)),
-                  child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
+                  decoration: BoxDecoration(
+                      color: AppColors.dangerSoft,
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Text(_error!,
+                      style: const TextStyle(
+                          color: AppColors.danger, fontSize: 13)),
                 ),
               Flexible(
                 child: ListView(
@@ -133,11 +152,16 @@ class _ConsignmentLinesSheetState extends State<ConsignmentLinesSheet> {
                     if (_lines.isEmpty)
                       const Padding(
                         padding: EdgeInsets.all(16),
-                        child: Center(child: Text('Tidak ada sisa barang', style: TextStyle(color: AppColors.muted))),
+                        child: Center(
+                            child: Text('Tidak ada sisa barang',
+                                style: TextStyle(color: AppColors.muted))),
                       ),
                     for (final l in _lines) _buildLine(l),
                     const SizedBox(height: 4),
-                    TextField(controller: _noteCtrl, decoration: const InputDecoration(labelText: 'Catatan (opsional)')),
+                    TextField(
+                        controller: _noteCtrl,
+                        decoration: const InputDecoration(
+                            labelText: 'Catatan (opsional)')),
                   ],
                 ),
               ),
@@ -145,12 +169,16 @@ class _ConsignmentLinesSheetState extends State<ConsignmentLinesSheet> {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 child: Row(
                   children: [
-                    Expanded(child: OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Batal'))),
+                    Expanded(
+                        child: OutlinedButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Batal'))),
                     const SizedBox(width: 10),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: _lines.isEmpty ? null : _submit,
-                        child: Text(widget.isSettle ? 'Catat Terjual' : 'Retur Barang'),
+                        child: Text(
+                            widget.isSettle ? 'Catat Terjual' : 'Retur Barang'),
                       ),
                     ),
                   ],
@@ -173,7 +201,9 @@ class _ConsignmentLinesSheetState extends State<ConsignmentLinesSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(it.productName, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+            Text(it.productName,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w700, fontSize: 13.5)),
             Text(
               'Sisa di outlet: ${it.baseQtyRemaining} ${it.baseUnit}'
               '${hasUnit ? ' (1 ${it.unitLabel} = ${it.conversionQty} ${it.baseUnit})' : ''}',
@@ -188,7 +218,8 @@ class _ConsignmentLinesSheetState extends State<ConsignmentLinesSheet> {
                   ButtonSegment(value: false, label: Text(it.unitLabel!)),
                 ],
                 selected: {l.useBaseUnit},
-                onSelectionChanged: (s) => setState(() => l.useBaseUnit = s.first),
+                onSelectionChanged: (s) =>
+                    setState(() => l.useBaseUnit = s.first),
               ),
             ],
             const SizedBox(height: 8),
@@ -198,7 +229,10 @@ class _ConsignmentLinesSheetState extends State<ConsignmentLinesSheet> {
                   child: TextField(
                     controller: l.qtyCtrl,
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(labelText: 'Qty (${l.useBaseUnit ? it.baseUnit : it.displayUnit})', isDense: true),
+                    decoration: InputDecoration(
+                        labelText:
+                            'Qty (${l.useBaseUnit ? it.baseUnit : it.displayUnit})',
+                        isDense: true),
                     onChanged: (_) => setState(() => _error = null),
                   ),
                 ),
@@ -208,10 +242,13 @@ class _ConsignmentLinesSheetState extends State<ConsignmentLinesSheet> {
                     flex: 2,
                     child: TextField(
                       controller: l.priceCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       decoration: InputDecoration(
-                        labelText: 'Harga/${l.useBaseUnit ? it.baseUnit : it.displayUnit} (opsional)',
-                        hintText: CurrencyFormatter.format(l.useBaseUnit ? it.basePrice : it.agreedUnitPrice),
+                        labelText:
+                            'Harga/${l.useBaseUnit ? it.baseUnit : it.displayUnit} (opsional)',
+                        hintText: CurrencyFormatter.format(
+                            l.useBaseUnit ? it.basePrice : it.agreedUnitPrice),
                         isDense: true,
                       ),
                     ),

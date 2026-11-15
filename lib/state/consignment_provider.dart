@@ -7,7 +7,8 @@ import '../data/repositories/consignment_repository.dart';
 /// State daftar konsinyasi (filter status) dan sisa stok di outlet.
 /// Aksi tulis dilakukan layar lewat [repo]; setelah itu [load] dipanggil ulang.
 class ConsignmentProvider extends ChangeNotifier {
-  ConsignmentProvider({ConsignmentRepository? repo}) : repo = repo ?? ConsignmentRepository();
+  ConsignmentProvider({ConsignmentRepository? repo})
+      : repo = repo ?? ConsignmentRepository();
 
   final ConsignmentRepository repo;
 
@@ -35,7 +36,8 @@ class ConsignmentProvider extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      final page = await repo.getConsignments(status: statusFilter, page: 1, pageSize: pageSize);
+      final page = await repo.getConsignments(
+          status: statusFilter, page: 1, pageSize: pageSize);
       if (gen != _gen) return;
       orders = page.data;
       _page = page.page;
@@ -58,7 +60,8 @@ class ConsignmentProvider extends ChangeNotifier {
     loadingMore = true;
     notifyListeners();
     try {
-      final page = await repo.getConsignments(status: statusFilter, page: _page + 1, pageSize: pageSize);
+      final page = await repo.getConsignments(
+          status: statusFilter, page: _page + 1, pageSize: pageSize);
       if (gen != _gen) return;
       orders = [...orders, ...page.data];
       _page = page.page;

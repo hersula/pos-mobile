@@ -4,7 +4,8 @@ import 'supplier.dart';
 
 class PurchaseOrderItem {
   final String productId;
-  final String productUnitId; // satuan tambahan yang dipilih saat beli (mis. "Dus"), null = satuan dasar
+  final String
+      productUnitId; // satuan tambahan yang dipilih saat beli (mis. "Dus"), null = satuan dasar
   final String productName;
   final String unit;
   final String? unitLabel;
@@ -54,7 +55,12 @@ class PurchasePayment {
   final String? referenceNo;
   final DateTime createdAt;
 
-  PurchasePayment({required this.id, required this.method, required this.amount, this.referenceNo, required this.createdAt});
+  PurchasePayment(
+      {required this.id,
+      required this.method,
+      required this.amount,
+      this.referenceNo,
+      required this.createdAt});
 
   factory PurchasePayment.fromJson(Map<String, dynamic> json) {
     return PurchasePayment(
@@ -124,10 +130,18 @@ class PurchaseOrder {
       paymentStatus: json['paymentStatus'] as String? ?? 'UNPAID',
       paidAmount: parseNum(json['paidAmount']),
       createdAt: DateTime.parse(json['createdAt'] as String),
-      supplier: json['supplier'] != null ? Supplier.fromJson(json['supplier'] as Map<String, dynamic>) : null,
-      warehouse: json['warehouse'] != null ? Warehouse.fromJson(json['warehouse'] as Map<String, dynamic>) : null,
-      items: itemsJson.map((e) => PurchaseOrderItem.fromJson(e as Map<String, dynamic>)).toList(),
-      payments: paymentsJson.map((e) => PurchasePayment.fromJson(e as Map<String, dynamic>)).toList(),
+      supplier: json['supplier'] != null
+          ? Supplier.fromJson(json['supplier'] as Map<String, dynamic>)
+          : null,
+      warehouse: json['warehouse'] != null
+          ? Warehouse.fromJson(json['warehouse'] as Map<String, dynamic>)
+          : null,
+      items: itemsJson
+          .map((e) => PurchaseOrderItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      payments: paymentsJson
+          .map((e) => PurchasePayment.fromJson(e as Map<String, dynamic>))
+          .toList(),
       businessName: tenant?['businessName'] as String?,
       businessAddress: tenant?['address'] as String?,
       businessPhone: tenant?['phone'] as String?,

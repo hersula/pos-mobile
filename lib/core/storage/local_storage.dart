@@ -15,6 +15,7 @@ class LocalStorage {
   static const _kPrintSpeedPreset = 'print_speed_preset';
   static const _kPrinterPaperSize = 'printer_paper_size';
   static const _kPrintMode = 'print_mode';
+  static const _kSkippedUpdateVersions = 'skipped_update_versions';
 
   Future<void> saveSession({
     required String accessToken,
@@ -57,7 +58,8 @@ class LocalStorage {
   }
 
   // ---------- Printer ----------
-  Future<void> savePrinter({required String address, required String name}) async {
+  Future<void> savePrinter(
+      {required String address, required String name}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kPrinterAddress, address);
     await prefs.setString(_kPrinterName, name);
@@ -110,5 +112,19 @@ class LocalStorage {
   Future<String?> getPrintMode() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kPrintMode);
+  }
+
+  // ---------- App Update ----------
+  /// Simpan daftar versi opsional yang user skip untuk tidak ditampilkan lagi di sesi berikutnya.
+  Future<void> setSkippedUpdateVersions(Set<String> versions) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_kSkippedUpdateVersions, versions.toList());
+  }
+
+  /// Ambil daftar versi opsional yang pernah di-skip.
+  Future<Set<String>> getSkippedUpdateVersions() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_kSkippedUpdateVersions) ?? [];
+    return list.toSet();
   }
 }

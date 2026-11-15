@@ -7,7 +7,8 @@ import '../data/repositories/stock_opname_repository.dart';
 /// Daftar sesi opname (filter status, infinite scroll). Pencarian nomor/gudang
 /// dilakukan lokal pada data yang sudah dimuat (kontrak tidak punya parameter search).
 class StockOpnameProvider extends ChangeNotifier {
-  StockOpnameProvider({StockOpnameRepository? repo}) : repo = repo ?? StockOpnameRepository();
+  StockOpnameProvider({StockOpnameRepository? repo})
+      : repo = repo ?? StockOpnameRepository();
 
   final StockOpnameRepository repo;
 
@@ -28,7 +29,11 @@ class StockOpnameProvider extends ChangeNotifier {
   List<StockOpname> get filtered {
     final q = search.trim().toLowerCase();
     if (q.isEmpty) return sessions;
-    return sessions.where((s) => s.opnameNo.toLowerCase().contains(q) || s.warehouseName.toLowerCase().contains(q)).toList();
+    return sessions
+        .where((s) =>
+            s.opnameNo.toLowerCase().contains(q) ||
+            s.warehouseName.toLowerCase().contains(q))
+        .toList();
   }
 
   void setSearch(String v) {
@@ -49,7 +54,8 @@ class StockOpnameProvider extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      final page = await repo.getList(status: statusFilter, page: 1, pageSize: pageSize);
+      final page =
+          await repo.getList(status: statusFilter, page: 1, pageSize: pageSize);
       if (gen != _gen) return;
       sessions = page.data;
       _page = page.page;
@@ -71,7 +77,8 @@ class StockOpnameProvider extends ChangeNotifier {
     loadingMore = true;
     notifyListeners();
     try {
-      final page = await repo.getList(status: statusFilter, page: _page + 1, pageSize: pageSize);
+      final page = await repo.getList(
+          status: statusFilter, page: _page + 1, pageSize: pageSize);
       if (gen != _gen) return;
       sessions = [...sessions, ...page.data];
       _page = page.page;

@@ -35,27 +35,46 @@ class OpnameBanner extends StatelessWidget {
   final String text;
   final Widget? action;
 
-  const OpnameBanner({super.key, required this.kind, required this.text, this.action});
+  const OpnameBanner(
+      {super.key, required this.kind, required this.text, this.action});
 
   @override
   Widget build(BuildContext context) {
     final (bg, fg, icon) = switch (kind) {
-      BannerKind.info => (AppColors.infoSoft, AppColors.info, Icons.info_outline_rounded),
-      BannerKind.pending => (AppColors.pendingSoft, AppColors.pending, Icons.hourglass_empty_rounded),
-      BannerKind.danger => (AppColors.dangerSoft, AppColors.danger, Icons.error_outline_rounded),
+      BannerKind.info => (
+          AppColors.infoSoft,
+          AppColors.info,
+          Icons.info_outline_rounded
+        ),
+      BannerKind.pending => (
+          AppColors.pendingSoft,
+          AppColors.pending,
+          Icons.hourglass_empty_rounded
+        ),
+      BannerKind.danger => (
+          AppColors.dangerSoft,
+          AppColors.danger,
+          Icons.error_outline_rounded
+        ),
     };
     return Semantics(
       liveRegion: kind == BannerKind.danger,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10)),
+        decoration:
+            BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10)),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(icon, size: 18, color: fg),
             const SizedBox(width: 8),
-            Expanded(child: Text(text, style: TextStyle(fontSize: 12.5, color: fg, fontWeight: FontWeight.w600))),
+            Expanded(
+                child: Text(text,
+                    style: TextStyle(
+                        fontSize: 12.5,
+                        color: fg,
+                        fontWeight: FontWeight.w600))),
             if (action != null) action!,
           ],
         ),
@@ -94,8 +113,11 @@ class DiffTag extends StatelessWidget {
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(6)),
-      child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: fg)),
+      decoration:
+          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(6)),
+      child: Text(label,
+          style:
+              TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: fg)),
     );
   }
 }
@@ -105,7 +127,11 @@ class SummaryBox extends StatelessWidget {
   final String value;
   final Color color;
 
-  const SummaryBox({super.key, required this.label, required this.value, required this.color});
+  const SummaryBox(
+      {super.key,
+      required this.label,
+      required this.value,
+      required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -119,11 +145,14 @@ class SummaryBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 11, color: AppColors.muted)),
+          Text(label,
+              style: const TextStyle(fontSize: 11, color: AppColors.muted)),
           const SizedBox(height: 2),
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: color)),
+            child: Text(value,
+                style: TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w800, color: color)),
           ),
         ],
       ),
@@ -153,20 +182,28 @@ class DiffRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(item.name,
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 2),
                   Text(
                     'Sistem ${fmtQty(item.systemQty)} · Fisik $fisik · ${signedRupiah(item.diffValue)}',
-                    style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                    style:
+                        const TextStyle(fontSize: 12, color: AppColors.muted),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 8),
             Semantics(
-              label: d == 0 ? 'Cocok' : (d > 0 ? 'Lebih ${fmtQty(d)}' : 'Kurang ${fmtQty(d.abs())}'),
+              label: d == 0
+                  ? 'Cocok'
+                  : (d > 0
+                      ? 'Lebih ${fmtQty(d)}'
+                      : 'Kurang ${fmtQty(d.abs())}'),
               excludeSemantics: true,
-              child: Text(signedQty(d), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: color)),
+              child: Text(signedQty(d),
+                  style: TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.w800, color: color)),
             ),
           ],
         ),
@@ -194,12 +231,16 @@ Widget opnameChip({
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: selected ? color.withValues(alpha: 0.12) : AppColors.surface,
+              color:
+                  selected ? color.withValues(alpha: 0.12) : AppColors.surface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: selected ? color : AppColors.line),
             ),
             child: Text(label,
-                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: selected ? color : AppColors.muted)),
+                style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: selected ? color : AppColors.muted)),
           ),
         ),
       ),
@@ -213,7 +254,8 @@ class OpnameErrorView extends StatelessWidget {
   final String? message;
   final VoidCallback onRetry;
 
-  const OpnameErrorView({super.key, required this.title, this.message, required this.onRetry});
+  const OpnameErrorView(
+      {super.key, required this.title, this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -223,10 +265,13 @@ class OpnameErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+            Text(title,
+                style:
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
             const SizedBox(height: 4),
             Text(message ?? 'Periksa koneksi internet Anda, lalu coba lagi.',
-                textAlign: TextAlign.center, style: const TextStyle(color: AppColors.muted)),
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.muted)),
             const SizedBox(height: 12),
             OutlinedButton(onPressed: onRetry, child: const Text('Coba Lagi')),
           ],
@@ -242,8 +287,10 @@ class CenteredColumn extends StatelessWidget {
   const CenteredColumn({super.key, required this.child});
 
   @override
-  Widget build(BuildContext context) =>
-      Align(alignment: Alignment.topCenter, child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 640), child: child));
+  Widget build(BuildContext context) => Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640), child: child));
 }
 
 /// Bar aksi bawah putih dengan border atas.
@@ -255,7 +302,9 @@ class BottomActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-      decoration: const BoxDecoration(color: AppColors.surface, border: Border(top: BorderSide(color: AppColors.line))),
+      decoration: const BoxDecoration(
+          color: AppColors.surface,
+          border: Border(top: BorderSide(color: AppColors.line))),
       child: SafeArea(
         top: false,
         child: CenteredColumn(child: Row(children: children)),

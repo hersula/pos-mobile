@@ -51,7 +51,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Manajemen User'),
-        actions: [IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _loadUsers)],
+        actions: [
+          IconButton(
+              icon: const Icon(Icons.refresh_rounded), onPressed: _loadUsers)
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
@@ -76,16 +79,21 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.muted)),
+              Text(_error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.muted)),
               const SizedBox(height: 12),
-              OutlinedButton(onPressed: _loadUsers, child: const Text('Coba Lagi')),
+              OutlinedButton(
+                  onPressed: _loadUsers, child: const Text('Coba Lagi')),
             ],
           ),
         ),
       );
     }
     if (_users.isEmpty) {
-      return const Center(child: Text('Belum ada user', style: TextStyle(color: AppColors.muted)));
+      return const Center(
+          child:
+              Text('Belum ada user', style: TextStyle(color: AppColors.muted)));
     }
 
     return RefreshIndicator(
@@ -105,13 +113,22 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 );
                 if (updated == true) _loadUsers();
               },
-              title: Text(u.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text('${u.email} · ${roleLabels[u.role] ?? u.role}', style: const TextStyle(fontSize: 12.5)),
+              title: Text(u.name,
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: Text('${u.email} · ${roleLabels[u.role] ?? u.role}',
+                  style: const TextStyle(fontSize: 12.5)),
               trailing: !u.isActive
                   ? Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(color: AppColors.dangerSoft, borderRadius: BorderRadius.circular(6)),
-                      child: const Text('Nonaktif', style: TextStyle(color: AppColors.danger, fontSize: 11, fontWeight: FontWeight.w600)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                          color: AppColors.dangerSoft,
+                          borderRadius: BorderRadius.circular(6)),
+                      child: const Text('Nonaktif',
+                          style: TextStyle(
+                              color: AppColors.danger,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600)),
                     )
                   : null,
             ),

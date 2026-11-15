@@ -53,7 +53,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.initState();
     final cart = context.read<CartProvider>();
     // Default: asumsikan dibayar penuh tunai, kasir tinggal ubah kalau mau split/metode lain
-    _payments.add(_PaymentEntry(amount: cart.grandTotal > 0 ? cart.grandTotal.toStringAsFixed(0) : ''));
+    _payments.add(_PaymentEntry(
+        amount: cart.grandTotal > 0 ? cart.grandTotal.toStringAsFixed(0) : ''));
     _loadWarehouses();
   }
 
@@ -73,13 +74,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
-  num get _totalPaid => _payments.fold<num>(0, (sum, p) => sum + (num.tryParse(p.amountCtrl.text) ?? 0));
+  num get _totalPaid => _payments.fold<num>(
+      0, (sum, p) => sum + (num.tryParse(p.amountCtrl.text) ?? 0));
 
   void _addPaymentRow() {
     final cart = context.read<CartProvider>();
     final remaining = cart.grandTotal - _totalPaid;
     setState(() {
-      _payments.add(_PaymentEntry(amount: remaining > 0 ? remaining.toStringAsFixed(0) : ''));
+      _payments.add(_PaymentEntry(
+          amount: remaining > 0 ? remaining.toStringAsFixed(0) : ''));
     });
   }
 
@@ -95,7 +98,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
 
-    final validPayments = _payments.where((p) => (num.tryParse(p.amountCtrl.text) ?? 0) > 0).toList();
+    final validPayments = _payments
+        .where((p) => (num.tryParse(p.amountCtrl.text) ?? 0) > 0)
+        .toList();
     if (validPayments.isEmpty) {
       setState(() => _error = 'Minimal isi 1 metode pembayaran');
       return;
@@ -119,7 +124,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             .map((p) => SalePayment(
                   method: p.method,
                   amount: num.parse(p.amountCtrl.text),
-                  referenceNo: p.refCtrl.text.trim().isEmpty ? null : p.refCtrl.text.trim(),
+                  referenceNo: p.refCtrl.text.trim().isEmpty
+                      ? null
+                      : p.refCtrl.text.trim(),
                 ))
             .toList(),
       );
@@ -151,13 +158,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         title: const Text('Batas Transaksi Harian Tercapai'),
         content: Text(message),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Nanti Saja')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Nanti Saja')),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
               Navigator.of(context).popUntil((route) => route.isFirst);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Buka tab "Pengaturan" untuk upgrade ke Berlangganan')),
+                const SnackBar(
+                    content: Text(
+                        'Buka tab "Pengaturan" untuk upgrade ke Berlangganan')),
               );
             },
             child: const Text('Lihat Opsi Upgrade'),
@@ -185,8 +196,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     Container(
                       margin: const EdgeInsets.only(bottom: 14),
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: AppColors.dangerSoft, borderRadius: BorderRadius.circular(10)),
-                      child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13.5)),
+                      decoration: BoxDecoration(
+                          color: AppColors.dangerSoft,
+                          borderRadius: BorderRadius.circular(10)),
+                      child: Text(_error!,
+                          style: const TextStyle(
+                              color: AppColors.danger, fontSize: 13.5)),
                     ),
                   Card(
                     child: Padding(
@@ -194,11 +209,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Total Tagihan', style: TextStyle(color: AppColors.muted, fontSize: 12.5)),
+                          const Text('Total Tagihan',
+                              style: TextStyle(
+                                  color: AppColors.muted, fontSize: 12.5)),
                           const SizedBox(height: 4),
                           Text(
                             CurrencyFormatter.format(cart.grandTotal),
-                            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.ink),
+                            style: const TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.ink),
                           ),
                         ],
                       ),
@@ -209,8 +229,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     DropdownButtonFormField<String>(
                       value: _warehouseId,
                       isExpanded: true,
-                      decoration: const InputDecoration(labelText: 'Gudang/Toko'),
-                      items: _warehouses.map((w) => DropdownMenuItem(value: w.id, child: Text(w.name))).toList(),
+                      decoration:
+                          const InputDecoration(labelText: 'Gudang/Toko'),
+                      items: _warehouses
+                          .map((w) => DropdownMenuItem(
+                              value: w.id, child: Text(w.name)))
+                          .toList(),
                       onChanged: (v) => setState(() => _warehouseId = v),
                     ),
                     const SizedBox(height: 14),
@@ -218,7 +242,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Metode Pembayaran', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
+                      const Text('Metode Pembayaran',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 14.5)),
                       TextButton.icon(
                         onPressed: _addPaymentRow,
                         icon: const Icon(Icons.add_rounded, size: 18),
@@ -227,7 +253,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  ...List.generate(_payments.length, (i) => _buildPaymentRow(i)),
+                  ...List.generate(
+                      _payments.length, (i) => _buildPaymentRow(i)),
                   const SizedBox(height: 16),
                   Card(
                     child: Padding(
@@ -237,7 +264,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           _row('Total Dibayar', _totalPaid),
                           const SizedBox(height: 6),
                           if (remaining > 0)
-                            _row('Sisa Belum Dibayar', remaining, color: AppColors.pending)
+                            _row('Sisa Belum Dibayar', remaining,
+                                color: AppColors.pending)
                           else
                             _row('Kembalian', change, color: AppColors.accent),
                         ],
@@ -262,8 +290,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             onPressed: _submitting ? null : _submit,
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.ember),
             child: _submitting
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : Text(remaining > 0 ? 'Simpan sebagai Piutang' : 'Selesaikan Transaksi'),
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white))
+                : Text(remaining > 0
+                    ? 'Simpan sebagai Piutang'
+                    : 'Selesaikan Transaksi'),
           ),
         ),
       ),
@@ -287,7 +321,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Metode'),
                     items: _paymentMethods.entries
-                        .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
+                        .map((e) => DropdownMenuItem(
+                            value: e.key, child: Text(e.value)))
                         .toList(),
                     onChanged: (v) {
                       setState(() {
@@ -296,7 +331,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         if (entry.amountCtrl.text.trim().isEmpty) {
                           final cart = context.read<CartProvider>();
                           final remaining = cart.grandTotal - _totalPaid;
-                          if (remaining > 0) entry.amountCtrl.text = remaining.toStringAsFixed(0);
+                          if (remaining > 0)
+                            entry.amountCtrl.text =
+                                remaining.toStringAsFixed(0);
                         }
                       });
                     },
@@ -306,14 +343,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Expanded(
                   child: TextField(
                     controller: entry.amountCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(labelText: 'Jumlah'),
                     onChanged: (_) => setState(() {}),
                   ),
                 ),
                 if (_payments.length > 1)
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.danger),
+                    icon: const Icon(Icons.close_rounded,
+                        size: 18, color: AppColors.danger),
                     onPressed: () => _removePaymentRow(index),
                   ),
               ],
@@ -322,7 +361,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               const SizedBox(height: 8),
               TextField(
                 controller: entry.refCtrl,
-                decoration: const InputDecoration(labelText: 'No. Referensi (opsional)'),
+                decoration: const InputDecoration(
+                    labelText: 'No. Referensi (opsional)'),
               ),
             ],
           ],
@@ -336,11 +376,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
-          child: Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 13.5)),
+          child: Text(label,
+              style: const TextStyle(color: AppColors.muted, fontSize: 13.5)),
         ),
         Text(
           CurrencyFormatter.format(amount),
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: color ?? AppColors.ink),
+          style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 15,
+              color: color ?? AppColors.ink),
         ),
       ],
     );

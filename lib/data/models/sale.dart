@@ -4,7 +4,8 @@ class SaleItem {
   final String productId;
   final String productName;
   final String unit;
-  final String? unitLabel; // satuan tambahan yang dipilih saat jual (mis. "Dus"), null = satuan dasar
+  final String?
+      unitLabel; // satuan tambahan yang dipilih saat jual (mis. "Dus"), null = satuan dasar
   final int qty;
   final num unitPrice;
   final num discountAmount;
@@ -57,7 +58,8 @@ class SalePayment {
   Map<String, dynamic> toJson() => {
         'method': method,
         'amount': amount,
-        if (referenceNo != null && referenceNo!.isNotEmpty) 'referenceNo': referenceNo,
+        if (referenceNo != null && referenceNo!.isNotEmpty)
+          'referenceNo': referenceNo,
       };
 }
 
@@ -108,7 +110,8 @@ class Sale {
     this.businessPhone,
   });
 
-  num get outstanding => grandTotal - paidTotal > 0 ? grandTotal - paidTotal : 0;
+  num get outstanding =>
+      grandTotal - paidTotal > 0 ? grandTotal - paidTotal : 0;
 
   factory Sale.fromJson(Map<String, dynamic> json) {
     final cashier = json['cashier'] as Map<String, dynamic>?;
@@ -132,8 +135,12 @@ class Sale {
       status: json['status'] as String,
       note: json['note'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      items: itemsJson.map((e) => SaleItem.fromJson(e as Map<String, dynamic>)).toList(),
-      payments: paymentsJson.map((e) => SalePayment.fromJson(e as Map<String, dynamic>)).toList(),
+      items: itemsJson
+          .map((e) => SaleItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      payments: paymentsJson
+          .map((e) => SalePayment.fromJson(e as Map<String, dynamic>))
+          .toList(),
       cashierName: cashier?['name'] as String?,
       customerName: customer?['name'] as String?,
       businessName: tenant?['businessName'] as String?,

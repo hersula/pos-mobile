@@ -5,14 +5,17 @@ import 'package:pos_mobile/data/models/consignment.dart';
 import 'package:pos_mobile/main.dart';
 
 void main() {
-  testWidgets('PosApp tanpa sesi menampilkan layar login', (WidgetTester tester) async {
+  testWidgets('PosApp tanpa sesi menampilkan layar login',
+      (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const PosApp());
     await tester.pumpAndSettle();
     expect(find.byType(PosApp), findsOneWidget);
   });
 
-  test('ConsignmentOrder.fromJson memetakan item satuan, summary, dan settlement', () {
+  test(
+      'ConsignmentOrder.fromJson memetakan item satuan, summary, dan settlement',
+      () {
     final o = ConsignmentOrder.fromJson({
       'id': 'c1',
       'consignmentNo': 'KNS-20261017-0001',
@@ -21,7 +24,13 @@ void main() {
       'customer': {'id': 'cu1', 'name': 'Toko Maju'},
       'sourceWarehouseId': 'w1',
       'sourceWarehouse': {'id': 'w1', 'name': 'Gudang Utama'},
-      'summary': {'itemCount': 1, 'totalValueSent': '480000', 'totalValueSold': 300000, 'totalValueReturned': 0, 'totalValueRemaining': 180000},
+      'summary': {
+        'itemCount': 1,
+        'totalValueSent': '480000',
+        'totalValueSold': 300000,
+        'totalValueReturned': 0,
+        'totalValueRemaining': 180000
+      },
       'items': [
         {
           'id': 'i1',

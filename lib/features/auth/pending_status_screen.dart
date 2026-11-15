@@ -61,16 +61,22 @@ class PendingStatusScreen extends StatelessWidget {
                 Container(
                   width: 72,
                   height: 72,
-                  decoration: BoxDecoration(color: v.bg, shape: BoxShape.circle),
+                  decoration:
+                      BoxDecoration(color: v.bg, shape: BoxShape.circle),
                   child: Icon(v.icon, color: v.color, size: 34),
                 ),
                 const SizedBox(height: 24),
-                Text(v.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                Text(v.title,
+                    style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.ink)),
                 const SizedBox(height: 10),
                 Text(
                   args.message,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 14, height: 1.5),
+                  style: const TextStyle(
+                      color: AppColors.muted, fontSize: 14, height: 1.5),
                 ),
                 const SizedBox(height: 32),
                 SizedBox(

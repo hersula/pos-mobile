@@ -22,7 +22,8 @@ String? validatePaymentAmount(String input, num outstanding) {
   final cleaned = input.trim().replaceAll(',', '.');
   final v = num.tryParse(cleaned);
   if (v == null || v <= 0) return 'Nominal harus lebih dari 0';
-  if (v > outstanding) return 'Melebihi sisa piutang (${CurrencyFormatter.format(outstanding)})';
+  if (v > outstanding)
+    return 'Melebihi sisa piutang (${CurrencyFormatter.format(outstanding)})';
   return null;
 }
 
@@ -42,7 +43,8 @@ class ConsignmentReceivables extends StatefulWidget {
   /// Dipanggil setelah pembayaran sukses agar induk menyegarkan data.
   final VoidCallback? onPaid;
 
-  const ConsignmentReceivables({super.key, required this.order, required this.canWrite, this.onPaid});
+  const ConsignmentReceivables(
+      {super.key, required this.order, required this.canWrite, this.onPaid});
 
   @override
   State<ConsignmentReceivables> createState() => _ConsignmentReceivablesState();
@@ -99,7 +101,9 @@ class _ConsignmentReceivablesState extends State<ConsignmentReceivables> {
     if (done == true) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pembayaran dicatat'), backgroundColor: AppColors.accent),
+        const SnackBar(
+            content: Text('Pembayaran dicatat'),
+            backgroundColor: AppColors.accent),
       );
       await _load();
       widget.onPaid?.call();
@@ -109,26 +113,37 @@ class _ConsignmentReceivablesState extends State<ConsignmentReceivables> {
   @override
   Widget build(BuildContext context) {
     if (_saleIds.isEmpty) return const SizedBox.shrink();
-    final totalOutstanding = _sales.where((s) => s.status == 'PARTIAL').fold<num>(0, (a, s) => a + s.outstanding);
+    final totalOutstanding = _sales
+        .where((s) => s.status == 'PARTIAL')
+        .fold<num>(0, (a, s) => a + s.outstanding);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 16),
         Row(
           children: [
-            const Expanded(child: Text('Piutang Penjualan', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5))),
+            const Expanded(
+                child: Text('Piutang Penjualan',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 14.5))),
             if (!_loading && _error == null)
               Text('Sisa ${CurrencyFormatter.format(totalOutstanding)}',
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w800, fontSize: 12.5)),
           ],
         ),
         const SizedBox(height: 8),
         if (_loading)
-          const Padding(padding: EdgeInsets.all(12), child: Center(child: CircularProgressIndicator()))
+          const Padding(
+              padding: EdgeInsets.all(12),
+              child: Center(child: CircularProgressIndicator()))
         else if (_error != null)
           Row(
             children: [
-              Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12.5))),
+              Expanded(
+                  child: Text(_error!,
+                      style: const TextStyle(
+                          color: AppColors.danger, fontSize: 12.5))),
               TextButton(onPressed: _load, child: const Text('Coba Lagi')),
             ],
           )
@@ -141,7 +156,9 @@ class _ConsignmentReceivablesState extends State<ConsignmentReceivables> {
   Widget _saleCard(Sale s) {
     final isPartial = s.status == 'PARTIAL';
     final paid = s.status == 'PAID';
-    final color = paid ? AppColors.accent : (isPartial ? AppColors.danger : AppColors.muted);
+    final color = paid
+        ? AppColors.accent
+        : (isPartial ? AppColors.danger : AppColors.muted);
     final label = paid ? 'Lunas' : (isPartial ? 'Belum Lunas' : s.status);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -152,18 +169,29 @@ class _ConsignmentReceivablesState extends State<ConsignmentReceivables> {
           children: [
             Row(
               children: [
-                Expanded(child: Text(s.invoiceNo, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5))),
+                Expanded(
+                    child: Text(s.invoiceNo,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 13.5))),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                  decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(20)),
-                  child: Text(label, style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: color)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20)),
+                  child: Text(label,
+                      style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: color)),
                 ),
               ],
             ),
             const SizedBox(height: 6),
             _row('Total', CurrencyFormatter.format(s.grandTotal)),
             _row('Dibayar', CurrencyFormatter.format(s.paidTotal)),
-            _row('Sisa piutang', CurrencyFormatter.format(s.outstanding), bold: true),
+            _row('Sisa piutang', CurrencyFormatter.format(s.outstanding),
+                bold: true),
             if (widget.canWrite && isPartial)
               Align(
                 alignment: Alignment.centerRight,
@@ -183,8 +211,14 @@ class _ConsignmentReceivablesState extends State<ConsignmentReceivables> {
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Row(
           children: [
-            Expanded(child: Text(k, style: const TextStyle(color: AppColors.muted, fontSize: 12.5))),
-            Text(v, style: TextStyle(fontSize: 13, fontWeight: bold ? FontWeight.w800 : FontWeight.w600)),
+            Expanded(
+                child: Text(k,
+                    style: const TextStyle(
+                        color: AppColors.muted, fontSize: 12.5))),
+            Text(v,
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: bold ? FontWeight.w800 : FontWeight.w600)),
           ],
         ),
       );
@@ -211,7 +245,8 @@ class _PaymentDialogState extends State<_PaymentDialog> {
   void initState() {
     super.initState();
     final o = widget.sale.outstanding;
-    _amountCtrl.text = o == o.roundToDouble() ? o.toStringAsFixed(0) : o.toStringAsFixed(2);
+    _amountCtrl.text =
+        o == o.roundToDouble() ? o.toStringAsFixed(0) : o.toStringAsFixed(2);
   }
 
   @override
@@ -222,7 +257,8 @@ class _PaymentDialogState extends State<_PaymentDialog> {
   }
 
   Future<void> _submit() async {
-    final err = validatePaymentAmount(_amountCtrl.text, widget.sale.outstanding);
+    final err =
+        validatePaymentAmount(_amountCtrl.text, widget.sale.outstanding);
     setState(() {
       _amountError = err;
       _serverError = null;
@@ -259,45 +295,64 @@ class _PaymentDialogState extends State<_PaymentDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${s.invoiceNo} · Sisa ${CurrencyFormatter.format(s.outstanding)}',
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            Text(
+                '${s.invoiceNo} · Sisa ${CurrencyFormatter.format(s.outstanding)}',
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             const SizedBox(height: 12),
             TextField(
               controller: _amountCtrl,
               enabled: !_saving,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(labelText: 'Nominal', prefixText: 'Rp ', errorText: _amountError),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                  labelText: 'Nominal',
+                  prefixText: 'Rp ',
+                  errorText: _amountError),
             ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: _method,
               isExpanded: true,
               decoration: const InputDecoration(labelText: 'Metode bayar'),
-              items: kSalePaymentMethods.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))).toList(),
-              onChanged: _saving ? null : (v) => setState(() => _method = v ?? 'CASH'),
+              items: kSalePaymentMethods.entries
+                  .map((e) =>
+                      DropdownMenuItem(value: e.key, child: Text(e.value)))
+                  .toList(),
+              onChanged:
+                  _saving ? null : (v) => setState(() => _method = v ?? 'CASH'),
             ),
             if (_method != 'CASH') ...[
               const SizedBox(height: 10),
               TextField(
                 controller: _refCtrl,
                 enabled: !_saving,
-                decoration: const InputDecoration(labelText: 'No. referensi (opsional)'),
+                decoration: const InputDecoration(
+                    labelText: 'No. referensi (opsional)'),
               ),
             ],
             if (_serverError != null)
               Padding(
                 padding: const EdgeInsets.only(top: 10),
-                child: Text(_serverError!, style: const TextStyle(color: AppColors.danger, fontSize: 12.5)),
+                child: Text(_serverError!,
+                    style: const TextStyle(
+                        color: AppColors.danger, fontSize: 12.5)),
               ),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: _saving ? null : () => Navigator.pop(context), child: const Text('Batal')),
+        TextButton(
+            onPressed: _saving ? null : () => Navigator.pop(context),
+            child: const Text('Batal')),
         ElevatedButton(
           onPressed: _saving ? null : _submit,
           child: _saving
-              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white))
               : Text(_serverError != null ? 'Coba Lagi' : 'Simpan'),
         ),
       ],

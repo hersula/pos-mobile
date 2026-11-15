@@ -8,7 +8,11 @@ class TopProduct {
   final int qtySold;
   final num revenue;
 
-  TopProduct({required this.productId, required this.productName, required this.qtySold, required this.revenue});
+  TopProduct(
+      {required this.productId,
+      required this.productName,
+      required this.qtySold,
+      required this.revenue});
 
   factory TopProduct.fromJson(Map<String, dynamic> json) {
     return TopProduct(
@@ -44,7 +48,8 @@ class SalesSummary {
   });
 
   factory SalesSummary.fromJson(Map<String, dynamic> json) {
-    final byMethodJson = (json['byPaymentMethod'] as Map<String, dynamic>?) ?? {};
+    final byMethodJson =
+        (json['byPaymentMethod'] as Map<String, dynamic>?) ?? {};
     final topProductsJson = (json['topProducts'] as List<dynamic>?) ?? [];
     return SalesSummary(
       totalTransactions: parseInt(json['totalTransactions']),
@@ -55,7 +60,9 @@ class SalesSummary {
       totalNetSales: parseNum(json['totalNetSales']),
       totalOutstanding: parseNum(json['totalOutstanding']),
       byPaymentMethod: byMethodJson.map((k, v) => MapEntry(k, parseNum(v))),
-      topProducts: topProductsJson.map((e) => TopProduct.fromJson(e as Map<String, dynamic>)).toList(),
+      topProducts: topProductsJson
+          .map((e) => TopProduct.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
@@ -65,10 +72,14 @@ class ProfitLossAccount {
   final String name;
   final num amount;
 
-  ProfitLossAccount({required this.code, required this.name, required this.amount});
+  ProfitLossAccount(
+      {required this.code, required this.name, required this.amount});
 
   factory ProfitLossAccount.fromJson(Map<String, dynamic> json) {
-    return ProfitLossAccount(code: json['code'] as String, name: json['name'] as String, amount: parseNum(json['amount']));
+    return ProfitLossAccount(
+        code: json['code'] as String,
+        name: json['name'] as String,
+        amount: parseNum(json['amount']));
   }
 }
 
@@ -107,12 +118,15 @@ class ProfitLossReport {
       totalRevenue: parseNum(revenue['total']),
       costOfGoodsSold: parseNum(json['costOfGoodsSold']),
       grossProfit: parseNum(json['grossProfit']),
-      expenseAccounts:
-          (opex['accounts'] as List<dynamic>).map((e) => ProfitLossAccount.fromJson(e as Map<String, dynamic>)).toList(),
+      expenseAccounts: (opex['accounts'] as List<dynamic>)
+          .map((e) => ProfitLossAccount.fromJson(e as Map<String, dynamic>))
+          .toList(),
       totalOperatingExpenses: parseNum(opex['total']),
       netProfit: parseNum(json['netProfit']),
-      totalPurchasesInPeriod: parseNum(additionalInfo?['totalPurchasesInPeriod']),
-      accountsPayableBalance: parseNum(additionalInfo?['accountsPayableBalance']),
+      totalPurchasesInPeriod:
+          parseNum(additionalInfo?['totalPurchasesInPeriod']),
+      accountsPayableBalance:
+          parseNum(additionalInfo?['accountsPayableBalance']),
     );
   }
 }
@@ -165,14 +179,17 @@ class PurchasesSummary {
   });
 
   factory PurchasesSummary.fromJson(Map<String, dynamic> json) {
-    final byMethodJson = (json['byPaymentMethod'] as Map<String, dynamic>?) ?? {};
+    final byMethodJson =
+        (json['byPaymentMethod'] as Map<String, dynamic>?) ?? {};
     final debtsJson = (json['outstandingDebts'] as List<dynamic>?) ?? [];
     return PurchasesSummary(
       totalTransactions: parseInt(json['totalTransactions']),
       totalPurchases: parseNum(json['totalPurchases']),
       byPaymentMethod: byMethodJson.map((k, v) => MapEntry(k, parseNum(v))),
       totalOutstandingDebt: parseNum(json['totalOutstandingDebt']),
-      outstandingDebts: debtsJson.map((e) => OutstandingDebt.fromJson(e as Map<String, dynamic>)).toList(),
+      outstandingDebts: debtsJson
+          .map((e) => OutstandingDebt.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
@@ -180,7 +197,8 @@ class PurchasesSummary {
 class ReportRepository {
   final ApiClient _client = ApiClient.instance;
 
-  Future<SalesSummary> getSalesSummary({String? dateFrom, String? dateTo}) async {
+  Future<SalesSummary> getSalesSummary(
+      {String? dateFrom, String? dateTo}) async {
     final res = await _client.get(ApiEndpoints.reportSalesSummary, query: {
       if (dateFrom != null) 'dateFrom': dateFrom,
       if (dateTo != null) 'dateTo': dateTo,
@@ -188,7 +206,8 @@ class ReportRepository {
     return SalesSummary.fromJson(res);
   }
 
-  Future<ProfitLossReport> getProfitLoss({String? dateFrom, String? dateTo}) async {
+  Future<ProfitLossReport> getProfitLoss(
+      {String? dateFrom, String? dateTo}) async {
     final res = await _client.get(ApiEndpoints.reportProfitLoss, query: {
       if (dateFrom != null) 'dateFrom': dateFrom,
       if (dateTo != null) 'dateTo': dateTo,
@@ -196,7 +215,8 @@ class ReportRepository {
     return ProfitLossReport.fromJson(res);
   }
 
-  Future<PurchasesSummary> getPurchasesSummary({String? dateFrom, String? dateTo}) async {
+  Future<PurchasesSummary> getPurchasesSummary(
+      {String? dateFrom, String? dateTo}) async {
     final res = await _client.get(ApiEndpoints.reportPurchasesSummary, query: {
       if (dateFrom != null) 'dateFrom': dateFrom,
       if (dateTo != null) 'dateTo': dateTo,

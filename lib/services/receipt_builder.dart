@@ -17,7 +17,8 @@ const _paymentMethodLabels = {
 /// pembayaran (split payment) — kalau transaksi `PARTIAL`, sisa tagihan juga
 /// dicetak supaya pelanggan tahu berapa piutangnya.
 class ReceiptBuilder {
-  static Future<List<int>> build(Sale sale, {PaperSize paperSize = PaperSize.mm58}) async {
+  static Future<List<int>> build(Sale sale,
+      {PaperSize paperSize = PaperSize.mm58}) async {
     final profile = await CapabilityProfile.load();
     final generator = Generator(paperSize, profile);
     final bytes = <int>[];
@@ -31,23 +32,31 @@ class ReceiptBuilder {
     ));
 
     if (sale.businessAddress != null && sale.businessAddress!.isNotEmpty) {
-      bytes.addAll(generator.text(sale.businessAddress!, styles: const PosStyles(align: PosAlign.center)));
+      bytes.addAll(generator.text(sale.businessAddress!,
+          styles: const PosStyles(align: PosAlign.center)));
     }
     if (sale.businessPhone != null && sale.businessPhone!.isNotEmpty) {
-      bytes.addAll(generator.text(sale.businessPhone!, styles: const PosStyles(align: PosAlign.center)));
+      bytes.addAll(generator.text(sale.businessPhone!,
+          styles: const PosStyles(align: PosAlign.center)));
     }
 
     bytes.addAll(generator.hr());
     bytes.addAll(generator.text('No: ${sale.invoiceNo}'));
     bytes.addAll(generator.text(DateFormatter.dateTime(sale.createdAt)));
-    if (sale.cashierName != null) bytes.addAll(generator.text('Kasir: ${sale.cashierName}'));
-    if (sale.customerName != null) bytes.addAll(generator.text('Pelanggan: ${sale.customerName}'));
+    if (sale.cashierName != null)
+      bytes.addAll(generator.text('Kasir: ${sale.cashierName}'));
+    if (sale.customerName != null)
+      bytes.addAll(generator.text('Pelanggan: ${sale.customerName}'));
     bytes.addAll(generator.hr());
 
     for (final item in sale.items) {
-      bytes.addAll(generator.text(item.productName, styles: const PosStyles(bold: true)));
+      bytes.addAll(generator.text(item.productName,
+          styles: const PosStyles(bold: true)));
       bytes.addAll(generator.row([
-        PosColumn(text: '${item.qty} ${item.displayUnit} x ${CurrencyFormatter.formatPlain(item.unitPrice)}', width: 8),
+        PosColumn(
+            text:
+                '${item.qty} ${item.displayUnit} x ${CurrencyFormatter.formatPlain(item.unitPrice)}',
+            width: 8),
         PosColumn(
           text: CurrencyFormatter.formatPlain(item.subtotal),
           width: 4,
@@ -56,7 +65,10 @@ class ReceiptBuilder {
       ]));
       if (item.discountAmount > 0) {
         bytes.addAll(generator.row([
-          PosColumn(text: '  Diskon item', width: 8, styles: const PosStyles(align: PosAlign.left)),
+          PosColumn(
+              text: '  Diskon item',
+              width: 8,
+              styles: const PosStyles(align: PosAlign.left)),
           PosColumn(
             text: '-${CurrencyFormatter.formatPlain(item.discountAmount)}',
             width: 4,
@@ -69,11 +81,14 @@ class ReceiptBuilder {
     bytes.addAll(generator.hr());
     bytes.addAll(_totalRow(generator, 'Subtotal', sale.subtotal));
     if (sale.discountAmount > 0) {
-      final label = sale.discountType == 'PERCENT' ? 'Diskon (${sale.discountValue}%)' : 'Diskon';
+      final label = sale.discountType == 'PERCENT'
+          ? 'Diskon (${sale.discountValue}%)'
+          : 'Diskon';
       bytes.addAll(_totalRow(generator, label, -sale.discountAmount));
     }
     if (sale.taxAmount > 0) {
-      bytes.addAll(_totalRow(generator, 'PPN (${sale.taxPercent}%)', sale.taxAmount));
+      bytes.addAll(
+          _totalRow(generator, 'PPN (${sale.taxPercent}%)', sale.taxAmount));
     }
     bytes.addAll(generator.hr());
     bytes.addAll(_totalRow(generator, 'TOTAL', sale.grandTotal, bold: true));
@@ -90,13 +105,16 @@ class ReceiptBuilder {
 
     if (sale.status == 'PARTIAL' && sale.outstanding > 0) {
       bytes.addAll(generator.hr());
-      bytes.addAll(_totalRow(generator, 'SISA TAGIHAN', sale.outstanding, bold: true));
+      bytes.addAll(
+          _totalRow(generator, 'SISA TAGIHAN', sale.outstanding, bold: true));
     }
 
     bytes.addAll(generator.feed(1));
-    bytes.addAll(generator.text('Terima kasih telah berbelanja', styles: const PosStyles(align: PosAlign.center)));
+    bytes.addAll(generator.text('Terima kasih telah berbelanja',
+        styles: const PosStyles(align: PosAlign.center)));
     if (sale.status == 'PARTIAL') {
-      bytes.addAll(generator.text('Mohon simpan struk ini untuk pelunasan', styles: const PosStyles(align: PosAlign.center)));
+      bytes.addAll(generator.text('Mohon simpan struk ini untuk pelunasan',
+          styles: const PosStyles(align: PosAlign.center)));
     }
 
     bytes.addAll(generator.feed(2));
@@ -105,7 +123,8 @@ class ReceiptBuilder {
     return bytes;
   }
 
-  static List<int> _totalRow(Generator generator, String label, num amount, {bool bold = false}) {
+  static List<int> _totalRow(Generator generator, String label, num amount,
+      {bool bold = false}) {
     return generator.row([
       PosColumn(text: label, width: 7, styles: PosStyles(bold: bold)),
       PosColumn(

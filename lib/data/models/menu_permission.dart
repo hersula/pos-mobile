@@ -3,7 +3,8 @@ class MenuAccessEntry {
   final bool canAccess;
   final bool locked; // true = tidak bisa diubah (OWNER, atau menu "pengaturan")
 
-  MenuAccessEntry({required this.menuKey, required this.canAccess, required this.locked});
+  MenuAccessEntry(
+      {required this.menuKey, required this.canAccess, required this.locked});
 
   factory MenuAccessEntry.fromJson(Map<String, dynamic> json) {
     return MenuAccessEntry(

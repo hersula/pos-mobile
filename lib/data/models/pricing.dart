@@ -52,7 +52,11 @@ class ProductPrice {
   final String priceLevelId;
   final num price;
 
-  ProductPrice({required this.id, this.productUnitId, required this.priceLevelId, required this.price});
+  ProductPrice(
+      {required this.id,
+      this.productUnitId,
+      required this.priceLevelId,
+      required this.price});
 
   factory ProductPrice.fromJson(Map<String, dynamic> json) {
     return ProductPrice(

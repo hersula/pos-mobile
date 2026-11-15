@@ -26,7 +26,8 @@ class PurchaseOrderListScreen extends StatefulWidget {
   const PurchaseOrderListScreen({super.key});
 
   @override
-  State<PurchaseOrderListScreen> createState() => _PurchaseOrderListScreenState();
+  State<PurchaseOrderListScreen> createState() =>
+      _PurchaseOrderListScreenState();
 }
 
 class _PurchaseOrderListScreenState extends State<PurchaseOrderListScreen> {
@@ -66,7 +67,8 @@ class _PurchaseOrderListScreenState extends State<PurchaseOrderListScreen> {
           IconButton(
             icon: const Icon(Icons.local_shipping_outlined),
             tooltip: 'Kelola Supplier',
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SupplierListScreen())),
+            onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SupplierListScreen())),
           ),
         ],
       ),
@@ -87,7 +89,8 @@ class _PurchaseOrderListScreenState extends State<PurchaseOrderListScreen> {
               height: 44,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 children: [
                   _chip('Semua', null),
                   const SizedBox(width: 8),
@@ -108,7 +111,9 @@ class _PurchaseOrderListScreenState extends State<PurchaseOrderListScreen> {
 
   Widget _chip(String label, String? value) {
     final selected = _statusFilter == value;
-    final color = value != null ? (_statusColors[value] ?? AppColors.accent) : AppColors.accent;
+    final color = value != null
+        ? (_statusColors[value] ?? AppColors.accent)
+        : AppColors.accent;
     return GestureDetector(
       onTap: () {
         setState(() => _statusFilter = value);
@@ -117,11 +122,15 @@ class _PurchaseOrderListScreenState extends State<PurchaseOrderListScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? color.withOpacity(0.12) : AppColors.surface,
+          color: selected ? color.withValues(alpha: 0.12) : AppColors.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: selected ? color : AppColors.line),
         ),
-        child: Text(label, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: selected ? color : AppColors.muted)),
+        child: Text(label,
+            style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: selected ? color : AppColors.muted)),
       ),
     );
   }
@@ -141,7 +150,9 @@ class _PurchaseOrderListScreenState extends State<PurchaseOrderListScreen> {
       );
     }
     if (_orders.isEmpty) {
-      return const Center(child: Text('Belum ada pengadaan barang', style: TextStyle(color: AppColors.muted)));
+      return const Center(
+          child: Text('Belum ada pengadaan barang',
+              style: TextStyle(color: AppColors.muted)));
     }
 
     return RefreshIndicator(
@@ -157,11 +168,14 @@ class _PurchaseOrderListScreenState extends State<PurchaseOrderListScreen> {
             child: ListTile(
               onTap: () async {
                 final changed = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(builder: (_) => PurchaseOrderDetailScreen(purchaseOrderId: po.id)),
+                  MaterialPageRoute(
+                      builder: (_) =>
+                          PurchaseOrderDetailScreen(purchaseOrderId: po.id)),
                 );
                 if (changed == true) _load();
               },
-              title: Text(po.poNumber, style: const TextStyle(fontWeight: FontWeight.w700)),
+              title: Text(po.poNumber,
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
               subtitle: Text(
                 '${po.supplier?.name ?? "Tanpa supplier"} · ${DateFormatter.short(po.createdAt)}',
                 style: const TextStyle(fontSize: 12),
@@ -170,16 +184,27 @@ class _PurchaseOrderListScreenState extends State<PurchaseOrderListScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(CurrencyFormatter.format(po.total), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                  Text(CurrencyFormatter.format(po.total),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 13)),
                   const SizedBox(height: 3),
                   Text(
                     _statusLabels[po.status] ?? po.status,
-                    style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: _statusColors[po.status] ?? AppColors.muted),
+                    style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: _statusColors[po.status] ?? AppColors.muted),
                   ),
-                  if (po.status == 'RECEIVED' && po.isCreditPurchase && !po.isDebtSettled)
+                  if (po.status == 'RECEIVED' &&
+                      po.isCreditPurchase &&
+                      !po.isDebtSettled)
                     const Padding(
                       padding: EdgeInsets.only(top: 2),
-                      child: Text('Ada Hutang', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.danger)),
+                      child: Text('Ada Hutang',
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.danger)),
                     ),
                 ],
               ),

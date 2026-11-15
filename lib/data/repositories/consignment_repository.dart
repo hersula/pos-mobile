@@ -9,7 +9,11 @@ class ConsignmentItemInput {
   final int qty;
   final num agreedUnitPrice;
 
-  ConsignmentItemInput({required this.productId, this.productUnitId, required this.qty, required this.agreedUnitPrice});
+  ConsignmentItemInput(
+      {required this.productId,
+      this.productUnitId,
+      required this.qty,
+      required this.agreedUnitPrice});
 
   Map<String, dynamic> toJson() => {
         'productId': productId,
@@ -26,7 +30,11 @@ class ConsignmentLineInput {
   final bool useBaseUnit;
   final num? unitPrice; // hanya settle-sale; null = harga default backend
 
-  ConsignmentLineInput({required this.consignmentItemId, required this.qty, this.useBaseUnit = false, this.unitPrice});
+  ConsignmentLineInput(
+      {required this.consignmentItemId,
+      required this.qty,
+      this.useBaseUnit = false,
+      this.unitPrice});
 
   Map<String, dynamic> toJson({bool withPrice = false}) => {
         'consignmentItemId': consignmentItemId,
@@ -42,20 +50,30 @@ class ConsignmentPage {
   final int totalPages;
   final int total;
 
-  ConsignmentPage({required this.data, required this.page, required this.totalPages, required this.total});
+  ConsignmentPage(
+      {required this.data,
+      required this.page,
+      required this.totalPages,
+      required this.total});
 }
 
 class ConsignmentRepository {
   final ApiClient _client = ApiClient.instance;
 
-  Future<ConsignmentPage> getConsignments({String? status, String? customerId, int page = 1, int pageSize = 50}) async {
+  Future<ConsignmentPage> getConsignments(
+      {String? status,
+      String? customerId,
+      int page = 1,
+      int pageSize = 50}) async {
     final res = await _client.get(ApiEndpoints.consignments, query: {
       if (status != null) 'status': status,
       if (customerId != null) 'customerId': customerId,
       'page': page,
       'pageSize': pageSize,
     });
-    final list = (res['data'] as List<dynamic>).map((e) => ConsignmentOrder.fromJson(e as Map<String, dynamic>)).toList();
+    final list = (res['data'] as List<dynamic>)
+        .map((e) => ConsignmentOrder.fromJson(e as Map<String, dynamic>))
+        .toList();
     final pg = res['pagination'] as Map<String, dynamic>?;
     return ConsignmentPage(
       data: list,
@@ -80,7 +98,8 @@ class ConsignmentRepository {
       {
         'customerId': customerId,
         'sourceWarehouseId': sourceWarehouseId,
-        if (dueDate != null) 'dueDate': dueDate.toIso8601String().substring(0, 10),
+        if (dueDate != null)
+          'dueDate': dueDate.toIso8601String().substring(0, 10),
         if (note != null && note.isNotEmpty) 'note': note,
         'items': items.map((e) => e.toJson()).toList(),
       };
@@ -94,7 +113,12 @@ class ConsignmentRepository {
   }) async {
     final res = await _client.post(
       ApiEndpoints.consignments,
-      data: _body(customerId: customerId, sourceWarehouseId: sourceWarehouseId, dueDate: dueDate, note: note, items: items),
+      data: _body(
+          customerId: customerId,
+          sourceWarehouseId: sourceWarehouseId,
+          dueDate: dueDate,
+          note: note,
+          items: items),
     );
     return ConsignmentOrder.fromJson(res['data'] as Map<String, dynamic>);
   }
@@ -110,7 +134,12 @@ class ConsignmentRepository {
   }) async {
     final res = await _client.put(
       ApiEndpoints.consignmentDetail(id),
-      data: _body(customerId: customerId, sourceWarehouseId: sourceWarehouseId, dueDate: dueDate, note: note, items: items),
+      data: _body(
+          customerId: customerId,
+          sourceWarehouseId: sourceWarehouseId,
+          dueDate: dueDate,
+          note: note,
+          items: items),
     );
     return ConsignmentOrder.fromJson(res['data'] as Map<String, dynamic>);
   }
@@ -120,15 +149,19 @@ class ConsignmentRepository {
     return ConsignmentOrder.fromJson(res['data'] as Map<String, dynamic>);
   }
 
-  Future<ConsignmentSettleResult> settleSale(String id, {required List<ConsignmentLineInput> lines, String? note}) async {
-    final res = await _client.post(ApiEndpoints.consignmentSettleSale(id), data: {
+  Future<ConsignmentSettleResult> settleSale(String id,
+      {required List<ConsignmentLineInput> lines, String? note}) async {
+    final res =
+        await _client.post(ApiEndpoints.consignmentSettleSale(id), data: {
       'lines': lines.map((e) => e.toJson(withPrice: true)).toList(),
       if (note != null && note.isNotEmpty) 'note': note,
     });
-    return ConsignmentSettleResult.fromJson(res['data'] as Map<String, dynamic>);
+    return ConsignmentSettleResult.fromJson(
+        res['data'] as Map<String, dynamic>);
   }
 
-  Future<ConsignmentOrder> returnItems(String id, {required List<ConsignmentLineInput> lines, String? note}) async {
+  Future<ConsignmentOrder> returnItems(String id,
+      {required List<ConsignmentLineInput> lines, String? note}) async {
     final res = await _client.post(ApiEndpoints.consignmentReturn(id), data: {
       'lines': lines.map((e) => e.toJson()).toList(),
       if (note != null && note.isNotEmpty) 'note': note,
@@ -137,7 +170,8 @@ class ConsignmentRepository {
   }
 
   Future<ConsignmentOrder> cancel(String id, {required String reason}) async {
-    final res = await _client.post(ApiEndpoints.consignmentCancel(id), data: {'reason': reason});
+    final res = await _client
+        .post(ApiEndpoints.consignmentCancel(id), data: {'reason': reason});
     return ConsignmentOrder.fromJson(res['data'] as Map<String, dynamic>);
   }
 
@@ -146,6 +180,8 @@ class ConsignmentRepository {
       if (customerId != null) 'customerId': customerId,
     });
     final list = res['data'] as List<dynamic>;
-    return list.map((e) => OutletStock.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => OutletStock.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }

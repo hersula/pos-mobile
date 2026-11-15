@@ -8,7 +8,9 @@ class UserRepository {
   Future<List<AppUser>> getUsers() async {
     final res = await _client.get(ApiEndpoints.users);
     final list = res['data'] as List<dynamic>;
-    return list.map((e) => AppUser.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => AppUser.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> createUser({

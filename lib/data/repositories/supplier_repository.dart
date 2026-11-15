@@ -8,10 +8,13 @@ class SupplierRepository {
   Future<List<Supplier>> getSuppliers() async {
     final res = await _client.get(ApiEndpoints.suppliers);
     final list = res['data'] as List<dynamic>;
-    return list.map((e) => Supplier.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => Supplier.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
-  Future<Supplier> createSupplier({required String name, String? phone, String? address}) async {
+  Future<Supplier> createSupplier(
+      {required String name, String? phone, String? address}) async {
     final res = await _client.post(ApiEndpoints.suppliers, data: {
       'name': name,
       if (phone != null && phone.isNotEmpty) 'phone': phone,

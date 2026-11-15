@@ -90,7 +90,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
               icon: const Icon(Icons.category_outlined),
               tooltip: 'Kelola Kategori/Jasa',
               onPressed: () async {
-                await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CategoryManagementScreen()));
+                await Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const CategoryManagementScreen()));
                 _loadCategories();
               },
             ),
@@ -98,25 +99,29 @@ class _ProductListScreenState extends State<ProductListScreen> {
             IconButton(
               icon: const Icon(Icons.sell_outlined),
               tooltip: 'Kelola Level Harga',
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PriceLevelManagementScreen())),
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const PriceLevelManagementScreen())),
             ),
           if (canManage)
             IconButton(
               icon: const Icon(Icons.local_shipping_outlined),
               tooltip: 'Pengadaan Barang',
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PurchaseOrderListScreen())),
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const PurchaseOrderListScreen())),
             ),
           // Konsinyasi: semua role bisa melihat; aksi tulis dibatasi di dalam layar (OWNER/MANAGER).
           IconButton(
             icon: const Icon(Icons.handshake_outlined),
             tooltip: 'Konsinyasi',
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ConsignmentListScreen())),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const ConsignmentListScreen())),
           ),
           // Stock Opname: semua role bisa melihat; aksi tulis dibatasi di dalam layar.
           IconButton(
             icon: const Icon(Icons.fact_check_outlined),
             tooltip: 'Stock Opname',
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StockOpnameListScreen())),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const StockOpnameListScreen())),
           ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -186,7 +191,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         label: c.name,
                         selected: _selectedCategoryId == c.id,
                         onTap: () {
-                          setState(() => _selectedCategoryId = _selectedCategoryId == c.id ? null : c.id);
+                          setState(() => _selectedCategoryId =
+                              _selectedCategoryId == c.id ? null : c.id);
                           _loadProducts();
                         },
                       ),
@@ -212,16 +218,21 @@ class _ProductListScreenState extends State<ProductListScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.muted)),
+              Text(_error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.muted)),
               const SizedBox(height: 12),
-              OutlinedButton(onPressed: _loadProducts, child: const Text('Coba Lagi')),
+              OutlinedButton(
+                  onPressed: _loadProducts, child: const Text('Coba Lagi')),
             ],
           ),
         ),
       );
     }
     if (_products.isEmpty) {
-      return const Center(child: Text('Tidak ada produk ditemukan', style: TextStyle(color: AppColors.muted)));
+      return const Center(
+          child: Text('Tidak ada produk ditemukan',
+              style: TextStyle(color: AppColors.muted)));
     }
 
     return RefreshIndicator(
@@ -237,7 +248,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
             onTap: canManage
                 ? () async {
                     final updated = await Navigator.of(context).push<bool>(
-                      MaterialPageRoute(builder: (_) => ProductFormScreen(product: p)),
+                      MaterialPageRoute(
+                          builder: (_) => ProductFormScreen(product: p)),
                     );
                     if (updated == true) _loadProducts();
                   }
@@ -262,7 +274,8 @@ class _ProductTile extends StatelessWidget {
       child: ListTile(
         onTap: onTap,
         leading: _Thumbnail(imageUrl: product.imageUrl),
-        title: Text(product.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(product.name,
+            style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(
           '${product.categoryName ?? "Tanpa kategori"} · ${CurrencyFormatter.format(product.sellPrice)}',
           style: const TextStyle(fontSize: 12.5),
@@ -280,7 +293,8 @@ class _ProductTile extends StatelessWidget {
               ),
             ),
             if (product.isLowStock)
-              const Text('Stok menipis', style: TextStyle(color: AppColors.danger, fontSize: 10.5)),
+              const Text('Stok menipis',
+                  style: TextStyle(color: AppColors.danger, fontSize: 10.5)),
           ],
         ),
       ),
@@ -307,12 +321,15 @@ class _Thumbnail extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: url == null
-          ? const Icon(Icons.inventory_2_outlined, size: 20, color: AppColors.muted)
+          ? const Icon(Icons.inventory_2_outlined,
+              size: 20, color: AppColors.muted)
           : Image.network(
               url,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
-                  const Icon(Icons.broken_image_outlined, size: 20, color: AppColors.muted),
+              errorBuilder: (_, __, ___) => const Icon(
+                  Icons.broken_image_outlined,
+                  size: 20,
+                  color: AppColors.muted),
             ),
     );
   }
@@ -324,7 +341,11 @@ class _FilterChip extends StatelessWidget {
   final VoidCallback onTap;
   final Color? color;
 
-  const _FilterChip({required this.label, required this.selected, required this.onTap, this.color});
+  const _FilterChip(
+      {required this.label,
+      required this.selected,
+      required this.onTap,
+      this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -334,13 +355,16 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? c.withOpacity(0.12) : AppColors.surface,
+          color: selected ? c.withValues(alpha: 0.12) : AppColors.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: selected ? c : AppColors.line),
         ),
         child: Text(
           label,
-          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: selected ? c : AppColors.muted),
+          style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: selected ? c : AppColors.muted),
         ),
       ),
     );

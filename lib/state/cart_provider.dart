@@ -44,14 +44,18 @@ class CartProvider extends ChangeNotifier {
 
   // Produk yang sama tapi beda satuan (mis. Aqua per Botol vs per Dus) dianggap
   // baris keranjang yang BERBEDA, jadi pencarian baris selalu cocokkan productId + unitId.
-  bool _matches(CartItem e, String productId, String? unitId) => e.product.id == productId && e.unit?.id == unitId;
+  bool _matches(CartItem e, String productId, String? unitId) =>
+      e.product.id == productId && e.unit?.id == unitId;
 
-  void addProduct(Product product, {ProductUnit? unit, num? unitPriceOverride}) {
-    final existingIndex = _items.indexWhere((e) => _matches(e, product.id, unit?.id));
+  void addProduct(Product product,
+      {ProductUnit? unit, num? unitPriceOverride}) {
+    final existingIndex =
+        _items.indexWhere((e) => _matches(e, product.id, unit?.id));
     if (existingIndex >= 0) {
       _items[existingIndex].qty += 1;
     } else {
-      _items.add(CartItem(product: product, unit: unit, unitPrice: unitPriceOverride));
+      _items.add(
+          CartItem(product: product, unit: unit, unitPrice: unitPriceOverride));
     }
     notifyListeners();
   }

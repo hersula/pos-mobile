@@ -10,7 +10,9 @@ class PurchaseOrderRepository {
       if (status != null) 'status': status,
     });
     final list = res['data'] as List<dynamic>;
-    return list.map((e) => PurchaseOrder.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => PurchaseOrder.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<PurchaseOrder> getPurchaseOrderDetail(String id) async {
@@ -38,11 +40,16 @@ class PurchaseOrderRepository {
   }
 
   /// Catat pelunasan/cicilan hutang usaha untuk PO bermetode CREDIT (tempo).
-  Future<PurchaseOrder> payDebt(String id, {required String method, required num amount, String? referenceNo}) async {
-    final res = await _client.post(ApiEndpoints.purchaseOrderPayments(id), data: {
+  Future<PurchaseOrder> payDebt(String id,
+      {required String method,
+      required num amount,
+      String? referenceNo}) async {
+    final res =
+        await _client.post(ApiEndpoints.purchaseOrderPayments(id), data: {
       'method': method,
       'amount': amount,
-      if (referenceNo != null && referenceNo.isNotEmpty) 'referenceNo': referenceNo,
+      if (referenceNo != null && referenceNo.isNotEmpty)
+        'referenceNo': referenceNo,
     });
     return PurchaseOrder.fromJson(res['data'] as Map<String, dynamic>);
   }

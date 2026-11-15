@@ -13,13 +13,17 @@ void main() {
     expect(validatePaymentAmount('250,5', 1000), isNull);
   });
 
-  test('paymentErrorMessage memberi pesan coba lagi untuk CONCURRENT_UPDATE', () {
-    final e = ApiException('x', statusCode: 409, data: {'code': 'CONCURRENT_UPDATE'});
+  test('paymentErrorMessage memberi pesan coba lagi untuk CONCURRENT_UPDATE',
+      () {
+    final e =
+        ApiException('x', statusCode: 409, data: {'code': 'CONCURRENT_UPDATE'});
     expect(paymentErrorMessage(e), contains('coba lagi'));
-    expect(paymentErrorMessage(ApiException('Gagal', statusCode: 500)), 'Gagal');
+    expect(
+        paymentErrorMessage(ApiException('Gagal', statusCode: 500)), 'Gagal');
   });
 
   test('metode bayar sesuai enum kontrak', () {
-    expect(kSalePaymentMethods.keys.toSet(), {'CASH', 'DEBIT', 'CREDIT', 'QRIS', 'TRANSFER', 'EWALLET'});
+    expect(kSalePaymentMethods.keys.toSet(),
+        {'CASH', 'DEBIT', 'CREDIT', 'QRIS', 'TRANSFER', 'EWALLET'});
   });
 }

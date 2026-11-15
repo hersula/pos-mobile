@@ -29,25 +29,35 @@ class _StockOpnameListScreenState extends State<StockOpnameListScreen> {
 
   Future<void> _open(StockOpname s) async {
     await Navigator.of(context).push<bool>(MaterialPageRoute(
-      builder: (_) => s.isDraft ? StockOpnameCountScreen(opnameId: s.id) : StockOpnameDetailScreen(opnameId: s.id),
+      builder: (_) => s.isDraft
+          ? StockOpnameCountScreen(opnameId: s.id)
+          : StockOpnameDetailScreen(opnameId: s.id),
     ));
     if (mounted) context.read<StockOpnameProvider>().load();
   }
 
   Future<void> _create() async {
-    await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const StockOpnameFormScreen()));
+    await Navigator.of(context).push<bool>(
+        MaterialPageRoute(builder: (_) => const StockOpnameFormScreen()));
     if (mounted) context.read<StockOpnameProvider>().load();
   }
 
   @override
   Widget build(BuildContext context) {
-    final canWrite = context.watch<AuthProvider>().currentUser?.canManageStockOpname ?? false;
+    final canWrite =
+        context.watch<AuthProvider>().currentUser?.canManageStockOpname ??
+            false;
     final prov = context.watch<StockOpnameProvider>();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Stock Opname'),
-        actions: [IconButton(icon: const Icon(Icons.refresh_rounded), tooltip: 'Muat ulang', onPressed: prov.load)],
+        actions: [
+          IconButton(
+              icon: const Icon(Icons.refresh_rounded),
+              tooltip: 'Muat ulang',
+              onPressed: prov.load)
+        ],
       ),
       floatingActionButton: canWrite
           ? FloatingActionButton.extended(
@@ -76,7 +86,8 @@ class _StockOpnameListScreenState extends State<StockOpnameListScreen> {
                   padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
                   child: OpnameBanner(
                     kind: BannerKind.info,
-                    text: 'Anda dapat melihat sesi dan mengisi hitungan. Membuat, finalisasi, dan pembatalan hanya untuk Owner/Manager.',
+                    text:
+                        'Anda dapat melihat sesi dan mengisi hitungan. Membuat, finalisasi, dan pembatalan hanya untuk Owner/Manager.',
                   ),
                 ),
               SizedBox(
@@ -86,7 +97,10 @@ class _StockOpnameListScreenState extends State<StockOpnameListScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   children: [
                     opnameChip(
-                        label: 'Semua', selected: prov.statusFilter == null, color: AppColors.accent, onTap: () => prov.setStatusFilter(null)),
+                        label: 'Semua',
+                        selected: prov.statusFilter == null,
+                        color: AppColors.accent,
+                        onTap: () => prov.setStatusFilter(null)),
                     for (final e in kOpnameStatusLabels.entries) ...[
                       const SizedBox(width: 8),
                       opnameChip(
@@ -115,24 +129,34 @@ class _StockOpnameListScreenState extends State<StockOpnameListScreen> {
         separatorBuilder: (_, __) => const SizedBox(height: 8),
         itemBuilder: (_, __) => Container(
           height: 72,
-          decoration: BoxDecoration(color: AppColors.line.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(
+              color: AppColors.line.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
     if (prov.error != null && prov.sessions.isEmpty) {
-      return OpnameErrorView(title: 'Gagal memuat sesi opname', message: prov.error, onRetry: prov.load);
+      return OpnameErrorView(
+          title: 'Gagal memuat sesi opname',
+          message: prov.error,
+          onRetry: prov.load);
     }
     final items = prov.filtered;
     if (items.isEmpty) {
-      final filtering = prov.statusFilter != null || prov.search.trim().isNotEmpty;
+      final filtering =
+          prov.statusFilter != null || prov.search.trim().isNotEmpty;
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(filtering ? 'Tidak ada sesi yang cocok' : 'Belum ada sesi opname',
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+              Text(
+                  filtering
+                      ? 'Tidak ada sesi yang cocok'
+                      : 'Belum ada sesi opname',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 15)),
               const SizedBox(height: 4),
               Text(
                 filtering
@@ -161,9 +185,15 @@ class _StockOpnameListScreenState extends State<StockOpnameListScreen> {
           itemBuilder: (_, i) {
             if (i >= items.length) {
               return const Center(
-                  child: Padding(padding: EdgeInsets.all(8), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))));
+                  child: Padding(
+                      padding: EdgeInsets.all(8),
+                      child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2))));
             }
-            return _SessionCard(session: items[i], onTap: () => _open(items[i]));
+            return _SessionCard(
+                session: items[i], onTap: () => _open(items[i]));
           },
         ),
       ),
@@ -185,7 +215,9 @@ class _SessionCard extends StatelessWidget {
     final String right;
     switch (s.status) {
       case 'DRAFT':
-        right = s.summary.countedItems == 0 ? 'Belum dihitung' : '${s.summary.countedItems}/${s.summary.totalItems} dihitung';
+        right = s.summary.countedItems == 0
+            ? 'Belum dihitung'
+            : '${s.summary.countedItems}/${s.summary.totalItems} dihitung';
         break;
       case 'COMPLETED':
         right = signedRupiah(s.summary.netValue);
@@ -216,9 +248,13 @@ class _SessionCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(s.opnameNo, style: const TextStyle(fontWeight: FontWeight.w700)),
+                        Text(s.opnameNo,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w700)),
                         const SizedBox(height: 2),
-                        Text(parts, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+                        Text(parts,
+                            style: const TextStyle(
+                                fontSize: 12, color: AppColors.muted)),
                       ],
                     ),
                   ),
@@ -231,9 +267,15 @@ class _SessionCard extends StatelessWidget {
                           style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
-                              color: s.status == 'COMPLETED' && diffItems ? diffColor(s.summary.netValue) : AppColors.text)),
+                              color: s.status == 'COMPLETED' && diffItems
+                                  ? diffColor(s.summary.netValue)
+                                  : AppColors.text)),
                       const SizedBox(height: 2),
-                      Text(s.statusLabel, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: color)),
+                      Text(s.statusLabel,
+                          style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: color)),
                     ],
                   ),
                 ],

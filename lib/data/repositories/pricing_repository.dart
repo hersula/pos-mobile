@@ -8,14 +8,18 @@ class PriceLevelRepository {
   Future<List<PriceLevel>> getPriceLevels() async {
     final res = await _client.get(ApiEndpoints.priceLevels);
     final list = res['data'] as List<dynamic>;
-    return list.map((e) => PriceLevel.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => PriceLevel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> createPriceLevel(String name, {int sortOrder = 0}) async {
-    await _client.post(ApiEndpoints.priceLevels, data: {'name': name, 'sortOrder': sortOrder});
+    await _client.post(ApiEndpoints.priceLevels,
+        data: {'name': name, 'sortOrder': sortOrder});
   }
 
-  Future<void> updatePriceLevel(String id, {String? name, int? sortOrder}) async {
+  Future<void> updatePriceLevel(String id,
+      {String? name, int? sortOrder}) async {
     await _client.put(ApiEndpoints.priceLevelDetail(id), data: {
       if (name != null) 'name': name,
       if (sortOrder != null) 'sortOrder': sortOrder,
@@ -34,10 +38,15 @@ class ProductUnitRepository {
     final res = await _client.get(ApiEndpoints.productUnits(productId));
     final data = res['data'] as Map<String, dynamic>;
     final list = data['units'] as List<dynamic>;
-    return list.map((e) => ProductUnit.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => ProductUnit.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
-  Future<void> createUnit(String productId, {required String name, required num conversionQty, String? barcode}) async {
+  Future<void> createUnit(String productId,
+      {required String name,
+      required num conversionQty,
+      String? barcode}) async {
     await _client.post(ApiEndpoints.productUnits(productId), data: {
       'name': name,
       'conversionQty': conversionQty,
@@ -75,7 +84,9 @@ class ProductPriceRepository {
 
   /// Simpan sekaligus beberapa entri harga (satu per kombinasi satuan+level).
   /// entries: [{ productUnitId: String?, priceLevelId: String, price: num }]
-  Future<void> savePrices(String productId, List<Map<String, dynamic>> entries) async {
-    await _client.put(ApiEndpoints.productPrices(productId), data: {'prices': entries});
+  Future<void> savePrices(
+      String productId, List<Map<String, dynamic>> entries) async {
+    await _client
+        .put(ApiEndpoints.productPrices(productId), data: {'prices': entries});
   }
 }

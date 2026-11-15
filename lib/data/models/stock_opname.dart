@@ -78,7 +78,8 @@ class OpnameItem {
   num? get diff => countedQty == null ? null : countedQty! - systemQty;
 
   factory OpnameItem.fromJson(Map<String, dynamic> j) {
-    final p = (j['product'] as Map<String, dynamic>?) ?? const <String, dynamic>{};
+    final p =
+        (j['product'] as Map<String, dynamic>?) ?? const <String, dynamic>{};
     return OpnameItem(
       id: j['id'] as String,
       productId: (j['productId'] ?? p['id'] ?? '') as String,
@@ -145,9 +146,11 @@ class StockOpname {
   bool get isDraft => status == 'DRAFT';
   String get statusLabel => kOpnameStatusLabels[status] ?? status;
 
-  factory StockOpname.fromJson(Map<String, dynamic> j, {List<dynamic>? itemsOverride}) {
+  factory StockOpname.fromJson(Map<String, dynamic> j,
+      {List<dynamic>? itemsOverride}) {
     final wh = j['warehouse'] as Map<String, dynamic>?;
-    final rawItems = itemsOverride ?? (j['items'] as List<dynamic>?) ?? const [];
+    final rawItems =
+        itemsOverride ?? (j['items'] as List<dynamic>?) ?? const [];
     return StockOpname(
       id: j['id'] as String,
       opnameNo: (j['opnameNo'] ?? '') as String,
@@ -160,7 +163,9 @@ class StockOpname {
       completedAt: _date(j['completedAt']),
       createdAt: _date(j['createdAt']),
       summary: OpnameSummary.fromJson(j['summary'] as Map<String, dynamic>?),
-      items: rawItems.map((e) => OpnameItem.fromJson(e as Map<String, dynamic>)).toList(),
+      items: rawItems
+          .map((e) => OpnameItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
@@ -171,9 +176,13 @@ class StockConflictItem {
   final num currentQty;
   final num diff;
 
-  const StockConflictItem({required this.productName, required this.currentQty, required this.diff});
+  const StockConflictItem(
+      {required this.productName,
+      required this.currentQty,
+      required this.diff});
 
-  factory StockConflictItem.fromJson(Map<String, dynamic> j) => StockConflictItem(
+  factory StockConflictItem.fromJson(Map<String, dynamic> j) =>
+      StockConflictItem(
         productName: (j['productName'] ?? '') as String,
         currentQty: parseNum(j['currentQty']),
         diff: parseNum(j['diff']),
@@ -197,4 +206,5 @@ class FinalizeResult {
 }
 
 /// Format qty tanpa ".0" untuk bilangan bulat.
-String fmtQty(num v) => v == v.truncate() ? v.truncate().toString() : v.toString();
+String fmtQty(num v) =>
+    v == v.truncate() ? v.truncate().toString() : v.toString();

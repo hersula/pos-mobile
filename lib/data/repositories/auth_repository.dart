@@ -7,7 +7,10 @@ class LoginResult {
   final String refreshToken;
   final UserProfile user;
 
-  LoginResult({required this.accessToken, required this.refreshToken, required this.user});
+  LoginResult(
+      {required this.accessToken,
+      required this.refreshToken,
+      required this.user});
 }
 
 class AuthRepository {
@@ -35,8 +38,10 @@ class AuthRepository {
 
   /// Melempar [ApiException] dengan pesan status PENDING/REJECTED/SUSPENDED
   /// kalau tenant belum boleh login (lihat backend `/api/auth/login`).
-  Future<LoginResult> login({required String email, required String password}) async {
-    final res = await _client.post(ApiEndpoints.login, data: {'email': email, 'password': password});
+  Future<LoginResult> login(
+      {required String email, required String password}) async {
+    final res = await _client
+        .post(ApiEndpoints.login, data: {'email': email, 'password': password});
 
     return LoginResult(
       accessToken: res['accessToken'] as String,

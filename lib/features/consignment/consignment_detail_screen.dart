@@ -18,7 +18,8 @@ class ConsignmentDetailScreen extends StatefulWidget {
   const ConsignmentDetailScreen({super.key, required this.consignmentId});
 
   @override
-  State<ConsignmentDetailScreen> createState() => _ConsignmentDetailScreenState();
+  State<ConsignmentDetailScreen> createState() =>
+      _ConsignmentDetailScreenState();
 }
 
 class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
@@ -51,12 +52,15 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
 
   void _toast(String msg, {bool error = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: error ? AppColors.danger : AppColors.accent),
+      SnackBar(
+          content: Text(msg),
+          backgroundColor: error ? AppColors.danger : AppColors.accent),
     );
   }
 
   /// Jalankan aksi tulis; hasilnya (dokumen terbaru) menggantikan state.
-  Future<void> _run(Future<ConsignmentOrder> Function() action, String successMsg) async {
+  Future<void> _run(
+      Future<ConsignmentOrder> Function() action, String successMsg) async {
     setState(() => _busy = true);
     try {
       final o = await action();
@@ -85,8 +89,12 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
           'Stok ${o.items.length} produk akan dipindahkan dari gudang "${o.sourceWarehouseName}" ke outlet ${o.customerName}. Dokumen tidak bisa diubah lagi setelah dikirim.',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Kirim')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Batal')),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Kirim')),
         ],
       ),
     );
@@ -99,15 +107,22 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
     if (res == null) return;
     setState(() => _busy = true);
     try {
-      final r = await _repo.settleSale(_order!.id, lines: res.lines, note: res.note);
+      final r =
+          await _repo.settleSale(_order!.id, lines: res.lines, note: res.note);
       if (mounted) {
         setState(() => _order = r.consignment);
-        _toast('Penjualan dicatat${r.invoiceNo != null ? ' (${r.invoiceNo})' : ''}');
+        _toast(
+            'Penjualan dicatat${r.invoiceNo != null ? ' (${r.invoiceNo})' : ''}');
       }
     } on ApiException catch (e) {
       if (mounted) {
-        final freeLimit = e.statusCode == 403 && (e.data?['code'] == 'FREE_LIMIT_REACHED');
-        _toast(freeLimit ? 'Kuota transaksi paket FREE hari ini habis. ${e.message}' : e.message, error: true);
+        final freeLimit =
+            e.statusCode == 403 && (e.data?['code'] == 'FREE_LIMIT_REACHED');
+        _toast(
+            freeLimit
+                ? 'Kuota transaksi paket FREE hari ini habis. ${e.message}'
+                : e.message,
+            error: true);
         if (e.statusCode == 409) _load();
       }
     } finally {
@@ -118,7 +133,9 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
   Future<void> _return() async {
     final res = await _showLines(false);
     if (res == null) return;
-    await _run(() => _repo.returnItems(_order!.id, lines: res.lines, note: res.note), 'Retur konsinyasi dicatat');
+    await _run(
+        () => _repo.returnItems(_order!.id, lines: res.lines, note: res.note),
+        'Retur konsinyasi dicatat');
   }
 
   Future<ConsignmentLinesResult?> _showLines(bool isSettle) {
@@ -144,19 +161,24 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
               if (_order?.status == 'SENT')
                 const Padding(
                   padding: EdgeInsets.only(bottom: 10),
-                  child: Text('Seluruh stok akan dikembalikan ke gudang asal.', style: TextStyle(fontSize: 13)),
+                  child: Text('Seluruh stok akan dikembalikan ke gudang asal.',
+                      style: TextStyle(fontSize: 13)),
                 ),
               TextField(
                 controller: ctrl,
                 autofocus: true,
-                decoration: InputDecoration(labelText: 'Alasan (min. 3 karakter)', errorText: err),
+                decoration: InputDecoration(
+                    labelText: 'Alasan (min. 3 karakter)', errorText: err),
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Kembali')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Kembali')),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
               onPressed: () {
                 if (ctrl.text.trim().length < 3) {
                   setD(() => err = 'Alasan minimal 3 karakter');
@@ -170,21 +192,25 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
         ),
       ),
     );
-    ctrl.dispose();
+    Future.delayed(const Duration(milliseconds: 500),
+        ctrl.dispose); // tunggu animasi tutup dialog selesai
     if (reason == null) return;
-    await _run(() => _repo.cancel(_order!.id, reason: reason), 'Konsinyasi dibatalkan');
+    await _run(() => _repo.cancel(_order!.id, reason: reason),
+        'Konsinyasi dibatalkan');
   }
 
   Future<void> _edit() async {
     final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => ConsignmentFormScreen(existing: _order)),
+      MaterialPageRoute(
+          builder: (_) => ConsignmentFormScreen(existing: _order)),
     );
     if (changed == true) _load();
   }
 
   @override
   Widget build(BuildContext context) {
-    final canWrite = context.watch<AuthProvider>().currentUser?.canWriteConsignment ?? false;
+    final canWrite =
+        context.watch<AuthProvider>().currentUser?.canWriteConsignment ?? false;
     return Scaffold(
       appBar: AppBar(title: Text(_order?.consignmentNo ?? 'Detail Konsinyasi')),
       body: SafeArea(child: _buildBody(canWrite)),
@@ -192,7 +218,8 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
   }
 
   Widget _buildBody(bool canWrite) {
-    if (_loading && _order == null) return const Center(child: CircularProgressIndicator());
+    if (_loading && _order == null)
+      return const Center(child: CircularProgressIndicator());
     if (_error != null && _order == null) {
       return Center(
         child: Padding(
@@ -200,7 +227,9 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.muted)),
+              Text(_error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.muted)),
               const SizedBox(height: 10),
               OutlinedButton(onPressed: _load, child: const Text('Coba Lagi')),
             ],
@@ -227,21 +256,36 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: Text(o.customerName, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16))),
+                      Expanded(
+                          child: Text(o.customerName,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w800, fontSize: 16))),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(20)),
-                        child: Text(o.statusLabel, style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: color)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20)),
+                        child: Text(o.statusLabel,
+                            style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: color)),
                       ),
                     ],
                   ),
                   const SizedBox(height: 6),
                   _kv('Gudang asal', o.sourceWarehouseName),
-                  if (o.customerPhone != null && o.customerPhone!.isNotEmpty) _kv('Telepon', o.customerPhone!),
-                  if (o.sentAt != null) _kv('Dikirim', DateFormatter.dateTime(o.sentAt!)),
-                  if (o.dueDate != null) _kv('Jatuh tempo', DateFormatter.short(o.dueDate!)),
-                  if (o.note != null && o.note!.isNotEmpty) _kv('Catatan', o.note!),
-                  if (o.cancelReason != null && o.cancelReason!.isNotEmpty) _kv('Alasan batal', o.cancelReason!),
+                  if (o.customerPhone != null && o.customerPhone!.isNotEmpty)
+                    _kv('Telepon', o.customerPhone!),
+                  if (o.sentAt != null)
+                    _kv('Dikirim', DateFormatter.dateTime(o.sentAt!)),
+                  if (o.dueDate != null)
+                    _kv('Jatuh tempo', DateFormatter.short(o.dueDate!)),
+                  if (o.note != null && o.note!.isNotEmpty)
+                    _kv('Catatan', o.note!),
+                  if (o.cancelReason != null && o.cancelReason!.isNotEmpty)
+                    _kv('Alasan batal', o.cancelReason!),
                 ],
               ),
             ),
@@ -253,24 +297,32 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
               padding: const EdgeInsets.all(14),
               child: Column(
                 children: [
-                  _kv('Nilai dikirim', CurrencyFormatter.format(o.summary.totalValueSent)),
-                  _kv('Terjual', CurrencyFormatter.format(o.summary.totalValueSold)),
-                  _kv('Diretur', CurrencyFormatter.format(o.summary.totalValueReturned)),
-                  _kv('Sisa di outlet', CurrencyFormatter.format(o.summary.totalValueRemaining), bold: true),
+                  _kv('Nilai dikirim',
+                      CurrencyFormatter.format(o.summary.totalValueSent)),
+                  _kv('Terjual',
+                      CurrencyFormatter.format(o.summary.totalValueSold)),
+                  _kv('Diretur',
+                      CurrencyFormatter.format(o.summary.totalValueReturned)),
+                  _kv('Sisa di outlet',
+                      CurrencyFormatter.format(o.summary.totalValueRemaining),
+                      bold: true),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 16),
-          const Text('Barang', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
+          const Text('Barang',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
           const SizedBox(height: 8),
           if (o.items.isEmpty)
-            const Text('Tidak ada item', style: TextStyle(color: AppColors.muted))
+            const Text('Tidak ada item',
+                style: TextStyle(color: AppColors.muted))
           else
             ...o.items.map(_itemCard),
           if (o.settlements.isNotEmpty) ...[
             const SizedBox(height: 16),
-            const Text('Riwayat Penjualan & Retur', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
+            const Text('Riwayat Penjualan & Retur',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
             const SizedBox(height: 8),
             ...o.settlements.map((s) => _settlementCard(s, itemName)),
           ],
@@ -280,7 +332,8 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
             ..._actions(o),
           ] else ...[
             const SizedBox(height: 16),
-            const Text('Anda hanya dapat melihat data konsinyasi.', style: TextStyle(color: AppColors.muted, fontSize: 12)),
+            const Text('Anda hanya dapat melihat data konsinyasi.',
+                style: TextStyle(color: AppColors.muted, fontSize: 12)),
           ],
         ],
       ),
@@ -288,7 +341,10 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
   }
 
   List<Widget> _actions(ConsignmentOrder o) {
-    Widget spinner() => const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white));
+    Widget spinner() => const SizedBox(
+        width: 18,
+        height: 18,
+        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white));
     final widgets = <Widget>[];
     if (o.status == 'DRAFT') {
       widgets.add(ElevatedButton.icon(
@@ -297,7 +353,10 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
         label: const Text('Kirim Barang'),
       ));
       widgets.add(const SizedBox(height: 8));
-      widgets.add(OutlinedButton.icon(onPressed: _busy ? null : _edit, icon: const Icon(Icons.edit_outlined), label: const Text('Ubah Draf')));
+      widgets.add(OutlinedButton.icon(
+          onPressed: _busy ? null : _edit,
+          icon: const Icon(Icons.edit_outlined),
+          label: const Text('Ubah Draf')));
     }
     if (o.canSettleOrReturn) {
       widgets.add(ElevatedButton.icon(
@@ -306,7 +365,10 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
         label: const Text('Catat Terjual'),
       ));
       widgets.add(const SizedBox(height: 8));
-      widgets.add(OutlinedButton.icon(onPressed: _busy ? null : _return, icon: const Icon(Icons.assignment_return_outlined), label: const Text('Retur Barang')));
+      widgets.add(OutlinedButton.icon(
+          onPressed: _busy ? null : _return,
+          icon: const Icon(Icons.assignment_return_outlined),
+          label: const Text('Retur Barang')));
     }
     if (o.canCancel) {
       widgets.add(const SizedBox(height: 8));
@@ -332,8 +394,16 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 110, child: Text(k, style: const TextStyle(color: AppColors.muted, fontSize: 12.5))),
-          Expanded(child: Text(v, style: TextStyle(fontSize: 13, fontWeight: bold ? FontWeight.w800 : FontWeight.w600))),
+          SizedBox(
+              width: 110,
+              child: Text(k,
+                  style:
+                      const TextStyle(color: AppColors.muted, fontSize: 12.5))),
+          Expanded(
+              child: Text(v,
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: bold ? FontWeight.w800 : FontWeight.w600))),
         ],
       ),
     );
@@ -347,7 +417,9 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(it.productName, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+            Text(it.productName,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w700, fontSize: 13.5)),
             const SizedBox(height: 2),
             Text(
               'Dikirim: ${it.qtySent} ${it.displayUnit}'
@@ -359,9 +431,13 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
             Wrap(
               spacing: 14,
               children: [
-                Text('Terjual: ${it.baseQtySold} ${it.baseUnit}', style: const TextStyle(fontSize: 12.5)),
-                Text('Retur: ${it.baseQtyReturned} ${it.baseUnit}', style: const TextStyle(fontSize: 12.5)),
-                Text('Sisa: ${it.baseQtyRemaining} ${it.baseUnit}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                Text('Terjual: ${it.baseQtySold} ${it.baseUnit}',
+                    style: const TextStyle(fontSize: 12.5)),
+                Text('Retur: ${it.baseQtyReturned} ${it.baseUnit}',
+                    style: const TextStyle(fontSize: 12.5)),
+                Text('Sisa: ${it.baseQtyRemaining} ${it.baseUnit}',
+                    style: const TextStyle(
+                        fontSize: 12.5, fontWeight: FontWeight.w700)),
               ],
             ),
           ],
@@ -370,7 +446,8 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
     );
   }
 
-  Widget _settlementCard(ConsignmentSettlement s, Map<String, ConsignmentItem> items) {
+  Widget _settlementCard(
+      ConsignmentSettlement s, Map<String, ConsignmentItem> items) {
     final isSale = s.type == 'SALE';
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -381,21 +458,36 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
           children: [
             Row(
               children: [
-                Icon(isSale ? Icons.point_of_sale_rounded : Icons.assignment_return_outlined, size: 16, color: AppColors.muted),
+                Icon(
+                    isSale
+                        ? Icons.point_of_sale_rounded
+                        : Icons.assignment_return_outlined,
+                    size: 16,
+                    color: AppColors.muted),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    isSale ? 'Terjual${s.invoiceNo != null ? ' · ${s.invoiceNo}' : ''}' : 'Retur',
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                    isSale
+                        ? 'Terjual${s.invoiceNo != null ? ' · ${s.invoiceNo}' : ''}'
+                        : 'Retur',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 13),
                   ),
                 ),
-                if (s.createdAt != null) Text(DateFormatter.short(s.createdAt!), style: const TextStyle(color: AppColors.muted, fontSize: 11.5)),
+                if (s.createdAt != null)
+                  Text(DateFormatter.short(s.createdAt!),
+                      style: const TextStyle(
+                          color: AppColors.muted, fontSize: 11.5)),
               ],
             ),
             if (s.isVoided)
               const Padding(
                 padding: EdgeInsets.only(top: 3),
-                child: Text('Dibatalkan (penjualan dibatalkan)', style: TextStyle(color: AppColors.danger, fontSize: 12, fontWeight: FontWeight.w700)),
+                child: Text('Dibatalkan (penjualan dibatalkan)',
+                    style: TextStyle(
+                        color: AppColors.danger,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700)),
               ),
             const SizedBox(height: 4),
             for (final l in s.lines)
@@ -408,7 +500,11 @@ class _ConsignmentDetailScreenState extends State<ConsignmentDetailScreen> {
                 ),
               ),
             if (s.note != null && s.note!.isNotEmpty)
-              Padding(padding: const EdgeInsets.only(top: 3), child: Text(s.note!, style: const TextStyle(color: AppColors.muted, fontSize: 12))),
+              Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(s.note!,
+                      style: const TextStyle(
+                          color: AppColors.muted, fontSize: 12))),
           ],
         ),
       ),

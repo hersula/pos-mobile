@@ -36,7 +36,8 @@ class ProductImagePicker extends StatelessWidget {
     this.uploadProgress,
   });
 
-  bool get _hasImage => pickedFile != null || (imageUrl != null && imageUrl!.isNotEmpty);
+  bool get _hasImage =>
+      pickedFile != null || (imageUrl != null && imageUrl!.isNotEmpty);
 
   Future<void> _pick(BuildContext context, ImageSource source) async {
     try {
@@ -68,7 +69,8 @@ class ProductImagePicker extends StatelessWidget {
           children: [
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 14),
-              child: Text('Gambar Produk', style: TextStyle(fontWeight: FontWeight.w700)),
+              child: Text('Gambar Produk',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
             ),
             ListTile(
               leading: const Icon(Icons.photo_camera_rounded),
@@ -88,8 +90,10 @@ class ProductImagePicker extends StatelessWidget {
             ),
             if (_hasImage)
               ListTile(
-                leading: const Icon(Icons.delete_outline_rounded, color: AppColors.danger),
-                title: const Text('Hapus Gambar', style: TextStyle(color: AppColors.danger)),
+                leading: const Icon(Icons.delete_outline_rounded,
+                    color: AppColors.danger),
+                title: const Text('Hapus Gambar',
+                    style: TextStyle(color: AppColors.danger)),
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   onRemoved();
@@ -112,10 +116,12 @@ class ProductImagePicker extends StatelessWidget {
       return Image.network(
         resolved,
         fit: BoxFit.cover,
-        loadingBuilder: (_, child, progress) =>
-            progress == null ? child : const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        loadingBuilder: (_, child, progress) => progress == null
+            ? child
+            : const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         errorBuilder: (_, __, ___) => const Center(
-          child: Icon(Icons.broken_image_outlined, color: AppColors.muted, size: 32),
+          child: Icon(Icons.broken_image_outlined,
+              color: AppColors.muted, size: 32),
         ),
       );
     }
@@ -126,7 +132,8 @@ class ProductImagePicker extends StatelessWidget {
         children: [
           Icon(Icons.add_a_photo_outlined, color: AppColors.muted, size: 30),
           SizedBox(height: 6),
-          Text('Tambah Gambar', style: TextStyle(color: AppColors.muted, fontSize: 12)),
+          Text('Tambah Gambar',
+              style: TextStyle(color: AppColors.muted, fontSize: 12)),
         ],
       ),
     );
@@ -140,7 +147,8 @@ class ProductImagePicker extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
-          onTap: (!enabled || uploading) ? null : () => _showSourceSheet(context),
+          onTap:
+              (!enabled || uploading) ? null : () => _showSourceSheet(context),
           child: Container(
             width: 110,
             height: 110,
@@ -174,7 +182,8 @@ class ProductImagePicker extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Gambar Produk', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              const Text('Gambar Produk',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
               const SizedBox(height: 4),
               const Text(
                 'Opsional. Maks. 1024px, otomatis dikompres sebelum dikirim.',
@@ -185,15 +194,19 @@ class ProductImagePicker extends StatelessWidget {
                 spacing: 8,
                 children: [
                   OutlinedButton.icon(
-                    onPressed: (!enabled || uploading) ? null : () => _showSourceSheet(context),
+                    onPressed: (!enabled || uploading)
+                        ? null
+                        : () => _showSourceSheet(context),
                     icon: const Icon(Icons.image_outlined, size: 16),
                     label: Text(_hasImage ? 'Ganti' : 'Pilih'),
                   ),
                   if (_hasImage)
                     TextButton.icon(
                       onPressed: (!enabled || uploading) ? null : onRemoved,
-                      icon: const Icon(Icons.close_rounded, size: 16, color: AppColors.danger),
-                      label: const Text('Hapus', style: TextStyle(color: AppColors.danger)),
+                      icon: const Icon(Icons.close_rounded,
+                          size: 16, color: AppColors.danger),
+                      label: const Text('Hapus',
+                          style: TextStyle(color: AppColors.danger)),
                     ),
                 ],
               ),

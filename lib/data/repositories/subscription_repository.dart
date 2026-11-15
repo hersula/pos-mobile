@@ -7,7 +7,8 @@ class SubscriptionRepository {
 
   Future<TenantSubscriptionStatus> getStatus() async {
     final res = await _client.get(ApiEndpoints.tenantSubscription);
-    return TenantSubscriptionStatus.fromJson(res['data'] as Map<String, dynamic>);
+    return TenantSubscriptionStatus.fromJson(
+        res['data'] as Map<String, dynamic>);
   }
 
   /// Upgrade tenant FREE -> SUBSCRIBE, langsung dapat trial 30 hari.

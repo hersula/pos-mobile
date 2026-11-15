@@ -67,13 +67,17 @@ class BluetoothPrinterService {
   }
 
   Future<List<PrinterDevice>> getPairedDevices() async {
-    final List<BluetoothInfo> paired = await PrintBluetoothThermal.pairedBluetooths;
-    return paired.map((d) => PrinterDevice(name: d.name, address: d.macAdress)).toList();
+    final List<BluetoothInfo> paired =
+        await PrintBluetoothThermal.pairedBluetooths;
+    return paired
+        .map((d) => PrinterDevice(name: d.name, address: d.macAdress))
+        .toList();
   }
 
   Future<bool> isConnected() => PrintBluetoothThermal.connectionStatus;
 
-  Future<bool> connect(String address) => PrintBluetoothThermal.connect(macPrinterAddress: address);
+  Future<bool> connect(String address) =>
+      PrintBluetoothThermal.connect(macPrinterAddress: address);
 
   Future<bool> disconnect() => PrintBluetoothThermal.disconnect;
 
@@ -162,7 +166,8 @@ class BluetoothPrinterService {
 
     return PrintResult(
       success: failed == 0,
-      mode: 'chunked (bertahap, ${chunkSize}b/${delayBetweenChunks.inMilliseconds}ms)',
+      mode:
+          'chunked (bertahap, ${chunkSize}b/${delayBetweenChunks.inMilliseconds}ms)',
       totalBytes: bytes.length,
       chunksSent: sent,
       chunksFailed: failed,

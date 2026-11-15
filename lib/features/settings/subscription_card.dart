@@ -66,8 +66,12 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
           'Kamu akan langsung dapat masa coba gratis 30 hari dengan transaksi tanpa batas. Setelah masa coba habis, tinggal ajukan pembayaran untuk lanjut.',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Upgrade Sekarang')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Batal')),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Upgrade Sekarang')),
         ],
       ),
     );
@@ -78,12 +82,17 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
       await _repo.upgradeToSubscribe();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Berhasil upgrade! Trial 30 hari sudah mulai berjalan.'), backgroundColor: AppColors.accent),
+          const SnackBar(
+              content:
+                  Text('Berhasil upgrade! Trial 30 hari sudah mulai berjalan.'),
+              backgroundColor: AppColors.accent),
         );
       }
       await _load();
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: AppColors.danger));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(e.message), backgroundColor: AppColors.danger));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -111,17 +120,23 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
               if (dialogError != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: Text(dialogError!, style: const TextStyle(color: AppColors.danger, fontSize: 12.5)),
+                  child: Text(dialogError!,
+                      style: const TextStyle(
+                          color: AppColors.danger, fontSize: 12.5)),
                 ),
               TextField(
                 controller: noteCtrl,
                 maxLines: 3,
-                decoration: const InputDecoration(hintText: 'Contoh: Sudah transfer Rp150.000 via BCA a.n. Budi'),
+                decoration: const InputDecoration(
+                    hintText:
+                        'Contoh: Sudah transfer Rp150.000 via BCA a.n. Budi'),
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: submitting ? null : () => Navigator.pop(ctx), child: const Text('Batal')),
+            TextButton(
+                onPressed: submitting ? null : () => Navigator.pop(ctx),
+                child: const Text('Batal')),
             ElevatedButton(
               onPressed: submitting
                   ? null
@@ -132,7 +147,10 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                         if (ctx.mounted) Navigator.pop(ctx);
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Pengajuan terkirim, menunggu konfirmasi admin.'), backgroundColor: AppColors.accent),
+                            const SnackBar(
+                                content: Text(
+                                    'Pengajuan terkirim, menunggu konfirmasi admin.'),
+                                backgroundColor: AppColors.accent),
                           );
                         }
                         await _load();
@@ -144,7 +162,11 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                       }
                     },
               child: submitting
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white))
                   : const Text('Kirim'),
             ),
           ],
@@ -170,7 +192,10 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Expanded(child: Text(_error ?? 'Gagal memuat status langganan', style: const TextStyle(color: AppColors.muted, fontSize: 12.5))),
+              Expanded(
+                  child: Text(_error ?? 'Gagal memuat status langganan',
+                      style: const TextStyle(
+                          color: AppColors.muted, fontSize: 12.5))),
               TextButton(onPressed: _load, child: const Text('Coba Lagi')),
             ],
           ),
@@ -198,14 +223,23 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(6)),
-                  child: const Text('PAKET GRATIS', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.3)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                      color: AppColors.paper,
+                      borderRadius: BorderRadius.circular(6)),
+                  child: const Text('PAKET GRATIS',
+                      style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.3)),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            Text('$used dari $limit transaksi hari ini', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
+            Text('$used dari $limit transaksi hari ini',
+                style: const TextStyle(
+                    fontWeight: FontWeight.w700, fontSize: 14.5)),
             const SizedBox(height: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
@@ -218,8 +252,13 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
             ),
             const SizedBox(height: 6),
             Text(
-              remaining > 0 ? '$remaining transaksi tersisa hari ini' : 'Batas transaksi harian sudah tercapai',
-              style: TextStyle(fontSize: 12, color: isNearLimit ? AppColors.danger : AppColors.muted, fontWeight: isNearLimit ? FontWeight.w700 : FontWeight.w400),
+              remaining > 0
+                  ? '$remaining transaksi tersisa hari ini'
+                  : 'Batas transaksi harian sudah tercapai',
+              style: TextStyle(
+                  fontSize: 12,
+                  color: isNearLimit ? AppColors.danger : AppColors.muted,
+                  fontWeight: isNearLimit ? FontWeight.w700 : FontWeight.w400),
             ),
             const SizedBox(height: 14),
             if (widget.isOwner)
@@ -228,8 +267,10 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                 child: ElevatedButton.icon(
                   onPressed: _submitting ? null : _confirmUpgrade,
                   icon: const Icon(Icons.workspace_premium_rounded, size: 18),
-                  label: Text(_submitting ? 'Memproses...' : 'Upgrade ke Berlangganan'),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.ink),
+                  label: Text(
+                      _submitting ? 'Memproses...' : 'Upgrade ke Berlangganan'),
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: AppColors.ink),
                 ),
               )
             else
@@ -256,7 +297,8 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
       return const Card(
         child: Padding(
           padding: EdgeInsets.all(16),
-          child: Text('Data langganan tidak ditemukan. Hubungi admin.', style: TextStyle(color: AppColors.muted, fontSize: 12.5)),
+          child: Text('Data langganan tidak ditemukan. Hubungi admin.',
+              style: TextStyle(color: AppColors.muted, fontSize: 12.5)),
         ),
       );
     }
@@ -274,16 +316,29 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(6)),
-                  child: const Text('BERLANGGANAN', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.3)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                      color: AppColors.paper,
+                      borderRadius: BorderRadius.circular(6)),
+                  child: const Text('BERLANGGANAN',
+                      style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.3)),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6)),
                   child: Text(
                     _statusLabels[sub.status] ?? sub.status,
-                    style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: color),
+                    style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: color),
                   ),
                 ),
               ],
@@ -291,11 +346,18 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
             const SizedBox(height: 12),
             if (sub.status == 'TRIAL' || sub.status == 'ACTIVE') ...[
               Text(
-                sub.daysRemaining > 0 ? '${sub.daysRemaining} hari lagi' : 'Berakhir hari ini',
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: AppColors.ink),
+                sub.daysRemaining > 0
+                    ? '${sub.daysRemaining} hari lagi'
+                    : 'Berakhir hari ini',
+                style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20,
+                    color: AppColors.ink),
               ),
               Text(
-                sub.status == 'TRIAL' ? 'sampai masa coba gratis berakhir' : 'sampai langganan perlu diperpanjang',
+                sub.status == 'TRIAL'
+                    ? 'sampai masa coba gratis berakhir'
+                    : 'sampai langganan perlu diperpanjang',
                 style: const TextStyle(fontSize: 12, color: AppColors.muted),
               ),
             ] else if (sub.status == 'PENDING_PAYMENT') ...[
@@ -329,9 +391,15 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(color: AppColors.pendingSoft, borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(
+                    color: AppColors.pendingSoft,
+                    borderRadius: BorderRadius.circular(8)),
                 alignment: Alignment.center,
-                child: const Text('Menunggu konfirmasi admin', style: TextStyle(color: AppColors.pending, fontWeight: FontWeight.w700, fontSize: 12.5)),
+                child: const Text('Menunggu konfirmasi admin',
+                    style: TextStyle(
+                        color: AppColors.pending,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.5)),
               ),
           ],
         ),

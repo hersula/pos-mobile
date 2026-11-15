@@ -146,8 +146,9 @@ class _StockOpnameCountScreenState extends State<StockOpnameCountScreen> {
           final m =
               RegExp(r'items[.\[](\d+)').firstMatch(path?.toString() ?? '');
           final idx = m == null ? null : int.tryParse(m.group(1)!);
-          if (idx != null && idx < _lastBatchIds.length)
+          if (idx != null && idx < _lastBatchIds.length) {
             id = _lastBatchIds[idx];
+          }
         }
         if (id == null) continue;
         for (final it in _opname?.items ?? const <OpnameItem>[]) {
@@ -185,9 +186,10 @@ class _StockOpnameCountScreenState extends State<StockOpnameCountScreen> {
       }
       if (!mounted) return true;
       setState(() => _saving = false);
-      if (!silent)
+      if (!silent) {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('Draft tersimpan')));
+      }
       return true;
     } on ApiException catch (e) {
       if (!mounted) return false;
@@ -307,7 +309,8 @@ class _StockOpnameCountScreenState extends State<StockOpnameCountScreen> {
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
         if (_saving) return;
-        if (await _confirmLeave() && mounted) Navigator.of(context).pop();
+        if (await _confirmLeave() && context.mounted)
+          Navigator.of(context).pop();
       },
       child: Scaffold(
         appBar: AppBar(
@@ -357,8 +360,9 @@ class _StockOpnameCountScreenState extends State<StockOpnameCountScreen> {
   }
 
   Widget _body(StockOpname? o, bool canCount) {
-    if (_loading && o == null)
+    if (_loading && o == null) {
       return const Center(child: CircularProgressIndicator());
+    }
     if (_loadError != null && o == null) {
       return OpnameErrorView(
           title: 'Gagal memuat sesi', message: _loadError, onRetry: _load);
@@ -475,8 +479,9 @@ class _StockOpnameCountScreenState extends State<StockOpnameCountScreen> {
                             _setCount(items[i].id, v, updateText: false),
                         onStep: (d) => _step(items[i], d),
                         onSubmitted: () {
-                          if (i + 1 < items.length)
+                          if (i + 1 < items.length) {
                             _focusFor(items[i + 1].id).requestFocus();
+                          }
                         },
                       ),
                     ),

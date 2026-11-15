@@ -59,7 +59,8 @@ class _PosScreenState extends State<PosScreen> {
       _error = null;
     });
     try {
-      final products = await _productRepo.getProducts(search: _searchCtrl.text.trim());
+      final products =
+          await _productRepo.getProducts(search: _searchCtrl.text.trim());
       if (mounted) setState(() => _products = products);
     } catch (e) {
       if (mounted) setState(() => _error = 'Gagal memuat produk');
@@ -82,13 +83,17 @@ class _PosScreenState extends State<PosScreen> {
       final matches = result.matchedUnitId == null
           ? <ProductUnit>[]
           : result.product.units.where((u) => u.id == result.matchedUnitId);
-      _addToCart(result.product, unit: matches.isNotEmpty ? matches.first : null);
+      _addToCart(result.product,
+          unit: matches.isNotEmpty ? matches.first : null);
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal mencari produk berdasarkan barcode')),
+          const SnackBar(
+              content: Text('Gagal mencari produk berdasarkan barcode')),
         );
       }
     }
@@ -97,7 +102,9 @@ class _PosScreenState extends State<PosScreen> {
   void _addToCart(Product product, {ProductUnit? unit}) {
     if (product.totalStock <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Stok ${product.name} habis'), backgroundColor: AppColors.danger),
+        SnackBar(
+            content: Text('Stok ${product.name} habis'),
+            backgroundColor: AppColors.danger),
       );
       return;
     }
@@ -105,11 +112,15 @@ class _PosScreenState extends State<PosScreen> {
     final cart = context.read<CartProvider>();
     // Level harga cuma berlaku utk satuan dasar (unit == null) -- satuan tambahan
     // (Dus dkk) selalu pakai harganya sendiri, tidak terpengaruh level yang aktif.
-    final unitPriceOverride = unit == null ? product.priceForLevel(cart.activePriceLevel?.id) : null;
+    final unitPriceOverride =
+        unit == null ? product.priceForLevel(cart.activePriceLevel?.id) : null;
     cart.addProduct(product, unit: unit, unitPriceOverride: unitPriceOverride);
-    final label = unit != null ? '${product.name} (${unit.name})' : product.name;
+    final label =
+        unit != null ? '${product.name} (${unit.name})' : product.name;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label ditambahkan'), duration: const Duration(milliseconds: 800)),
+      SnackBar(
+          content: Text('$label ditambahkan'),
+          duration: const Duration(milliseconds: 800)),
     );
   }
 
@@ -129,16 +140,22 @@ class _PosScreenState extends State<PosScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Text('Pilih Satuan — ${product.name}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                child: Text('Pilih Satuan — ${product.name}',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 16)),
               ),
               ListTile(
                 title: Text(product.unit),
-                trailing: Text(CurrencyFormatter.format(product.priceForLevel(activeLevelId)), style: const TextStyle(fontWeight: FontWeight.w700)),
+                trailing: Text(
+                    CurrencyFormatter.format(
+                        product.priceForLevel(activeLevelId)),
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
                 onTap: () => Navigator.pop(ctx, _baseUnitChoice),
               ),
               ...product.units.map((u) => ListTile(
                     title: Text(u.name),
-                    trailing: Text(CurrencyFormatter.format(u.sellPrice), style: const TextStyle(fontWeight: FontWeight.w700)),
+                    trailing: Text(CurrencyFormatter.format(u.sellPrice),
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
                     onTap: () => Navigator.pop(ctx, u),
                   )),
               const SizedBox(height: 8),
@@ -147,8 +164,10 @@ class _PosScreenState extends State<PosScreen> {
         );
       },
     );
-    if (!mounted || choice == null) return; // sheet ditutup tanpa memilih -> batal
-    _addToCart(product, unit: choice == _baseUnitChoice ? null : choice as ProductUnit);
+    if (!mounted || choice == null)
+      return; // sheet ditutup tanpa memilih -> batal
+    _addToCart(product,
+        unit: choice == _baseUnitChoice ? null : choice as ProductUnit);
   }
 
   @override
@@ -178,23 +197,37 @@ class _PosScreenState extends State<PosScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CartScreen())),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent),
+                  onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const CartScreen())),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(20)),
-                            child: Text('${cart.totalQty}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                                color: Colors.white24,
+                                borderRadius: BorderRadius.circular(20)),
+                            child: Text('${cart.totalQty}',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700)),
                           ),
                           const SizedBox(width: 10),
-                          const Text('Lihat Keranjang', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                          const Text('Lihat Keranjang',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700)),
                         ],
                       ),
-                      Text(CurrencyFormatter.format(cart.grandTotal), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                      Text(CurrencyFormatter.format(cart.grandTotal),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700)),
                     ],
                   ),
                 ),
@@ -283,7 +316,9 @@ class _PosScreenState extends State<PosScreen> {
       );
     }
     if (_products.isEmpty) {
-      return const Center(child: Text('Tidak ada produk', style: TextStyle(color: AppColors.muted)));
+      return const Center(
+          child: Text('Tidak ada produk',
+              style: TextStyle(color: AppColors.muted)));
     }
 
     final activeLevelId = context.watch<CartProvider>().activePriceLevel?.id;
@@ -322,7 +357,8 @@ class _LevelChip extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  const _LevelChip({required this.label, required this.selected, required this.onTap});
+  const _LevelChip(
+      {required this.label, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -331,14 +367,20 @@ class _LevelChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: selected ? AppColors.accent.withOpacity(0.12) : AppColors.surface,
+          color: selected
+              ? AppColors.accent.withValues(alpha: 0.12)
+              : AppColors.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? AppColors.accent : AppColors.line),
+          border:
+              Border.all(color: selected ? AppColors.accent : AppColors.line),
         ),
         alignment: Alignment.center,
         child: Text(
           label,
-          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: selected ? AppColors.accent : AppColors.muted),
+          style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: selected ? AppColors.accent : AppColors.muted),
         ),
       ),
     );
@@ -350,7 +392,11 @@ class _ProductCard extends StatelessWidget {
   final String? activeLevelId; // null = harga "Umum"
   final VoidCallback onTapAdd; // langsung add (satuan dasar saja)
   final VoidCallback onTapPickUnit; // ada >1 satuan -> tanya pilih dulu
-  const _ProductCard({required this.product, this.activeLevelId, required this.onTapAdd, required this.onTapPickUnit});
+  const _ProductCard(
+      {required this.product,
+      this.activeLevelId,
+      required this.onTapAdd,
+      required this.onTapPickUnit});
 
   @override
   Widget build(BuildContext context) {
@@ -378,7 +424,9 @@ class _ProductCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
                   width: double.infinity,
-                  decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(
+                      color: AppColors.paper,
+                      borderRadius: BorderRadius.circular(8)),
                   child: _buildImage(),
                 ),
               ),
@@ -393,11 +441,16 @@ class _ProductCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               CurrencyFormatter.format(product.priceForLevel(activeLevelId)),
-              style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700, fontSize: 13),
+              style: const TextStyle(
+                  color: AppColors.accent,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13),
             ),
             Text(
               outOfStock ? 'Stok habis' : 'Stok: ${product.totalStock}',
-              style: TextStyle(fontSize: 11, color: outOfStock ? AppColors.danger : AppColors.muted),
+              style: TextStyle(
+                  fontSize: 11,
+                  color: outOfStock ? AppColors.danger : AppColors.muted),
             ),
           ],
         ),
@@ -408,13 +461,14 @@ class _ProductCard extends StatelessWidget {
   Widget _buildImage() {
     final url = AppConfig.resolveImageUrl(product.imageUrl);
     if (url == null) {
-      return Icon(Icons.inventory_2_outlined, color: AppColors.muted.withOpacity(0.5), size: 30);
+      return Icon(Icons.inventory_2_outlined,
+          color: AppColors.muted.withValues(alpha: 0.5), size: 30);
     }
     return Image.network(
       url,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) =>
-          Icon(Icons.inventory_2_outlined, color: AppColors.muted.withOpacity(0.5), size: 30),
+      errorBuilder: (_, __, ___) => Icon(Icons.inventory_2_outlined,
+          color: AppColors.muted.withValues(alpha: 0.5), size: 30),
     );
   }
 }

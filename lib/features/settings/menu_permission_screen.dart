@@ -55,7 +55,12 @@ class _MenuPermissionScreenState extends State<MenuPermissionScreen> {
         if (r.role != role) return r;
         return RoleMenuPermissions(
           role: r.role,
-          menus: r.menus.map((m) => m.menuKey == menuKey ? MenuAccessEntry(menuKey: m.menuKey, canAccess: value, locked: m.locked) : m).toList(),
+          menus: r.menus
+              .map((m) => m.menuKey == menuKey
+                  ? MenuAccessEntry(
+                      menuKey: m.menuKey, canAccess: value, locked: m.locked)
+                  : m)
+              .toList(),
         );
       }).toList();
       _saving = true;
@@ -68,7 +73,8 @@ class _MenuPermissionScreenState extends State<MenuPermissionScreen> {
       if (mounted) setState(() => _matrix = updated);
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
         await _load(); // rollback ke state server kalau gagal
       }
     } finally {
@@ -81,7 +87,11 @@ class _MenuPermissionScreenState extends State<MenuPermissionScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Otoritas Menu'),
-        actions: [IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _loading ? null : _load)],
+        actions: [
+          IconButton(
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: _loading ? null : _load)
+        ],
       ),
       body: SafeArea(child: _buildBody()),
     );
@@ -96,7 +106,9 @@ class _MenuPermissionScreenState extends State<MenuPermissionScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.muted)),
+              Text(_error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.muted)),
               const SizedBox(height: 12),
               OutlinedButton(onPressed: _load, child: const Text('Coba Lagi')),
             ],
@@ -125,15 +137,22 @@ class _MenuPermissionScreenState extends State<MenuPermissionScreen> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                    child: Text(roleLabels[r.role] ?? r.role, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                    child: Text(roleLabels[r.role] ?? r.role,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 14)),
                   ),
                   for (final m in r.menus)
                     SwitchListTile(
                       dense: true,
                       title: Text(_menuLabels[m.menuKey] ?? m.menuKey),
-                      subtitle: m.locked ? const Text('Selalu diizinkan', style: TextStyle(fontSize: 11)) : null,
+                      subtitle: m.locked
+                          ? const Text('Selalu diizinkan',
+                              style: TextStyle(fontSize: 11))
+                          : null,
                       value: m.canAccess,
-                      onChanged: (m.locked || _saving) ? null : (v) => _toggle(r.role, m.menuKey, v),
+                      onChanged: (m.locked || _saving)
+                          ? null
+                          : (v) => _toggle(r.role, m.menuKey, v),
                     ),
                 ],
               ),

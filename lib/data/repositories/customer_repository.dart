@@ -10,10 +10,13 @@ class CustomerRepository {
       if (search != null && search.isNotEmpty) 'search': search,
     });
     final list = res['data'] as List<dynamic>;
-    return list.map((e) => Customer.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => Customer.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
-  Future<Customer> createCustomer({required String name, String? phone, String? email}) async {
+  Future<Customer> createCustomer(
+      {required String name, String? phone, String? email}) async {
     final res = await _client.post(ApiEndpoints.customers, data: {
       'name': name,
       if (phone != null && phone.isNotEmpty) 'phone': phone,

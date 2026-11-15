@@ -13,6 +13,7 @@ dependencies:
 
   # Networking
   dio: ^5.4.3
+  http: ^1.2.0
 
   # State management
   provider: ^6.1.2
@@ -41,6 +42,12 @@ dependencies:
 
   # Buka halaman pengaturan Bluetooth sistem Android langsung dari dalam app
   android_intent_plus: ^5.1.0
+
+  # Baca versi app lokal & build number
+  package_info_plus: ^10.2.2
+
+  # Buka URL untuk download update
+  url_launcher: ^6.2.0
 
 dev_dependencies:
   flutter_test:

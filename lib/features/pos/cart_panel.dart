@@ -32,7 +32,8 @@ class _CartPanelState extends State<CartPanel> {
   void initState() {
     super.initState();
     final cart = context.read<CartProvider>();
-    _discountCtrl = TextEditingController(text: cart.discountValue == 0 ? '' : cart.discountValue.toString());
+    _discountCtrl = TextEditingController(
+        text: cart.discountValue == 0 ? '' : cart.discountValue.toString());
     _taxCtrl = TextEditingController(text: cart.taxPercent.toString());
   }
 
@@ -57,18 +58,24 @@ class _CartPanelState extends State<CartPanel> {
                 Expanded(
                   child: Row(
                     children: [
-                      const Text('Keranjang', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                      const Text('Keranjang',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 16)),
                       if (cart.activePriceLevel != null) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppColors.accent.withOpacity(0.12),
+                            color: AppColors.accent.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             cart.activePriceLevel!.name,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.accent),
+                            style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.accent),
                           ),
                         ),
                       ],
@@ -77,14 +84,17 @@ class _CartPanelState extends State<CartPanel> {
                 ),
                 TextButton(
                   onPressed: cart.isEmpty ? null : () => cart.clear(),
-                  child: const Text('Kosongkan', style: TextStyle(color: AppColors.danger)),
+                  child: const Text('Kosongkan',
+                      style: TextStyle(color: AppColors.danger)),
                 ),
               ],
             ),
           ),
         Expanded(
           child: cart.isEmpty
-              ? const Center(child: Text('Keranjang masih kosong', style: TextStyle(color: AppColors.muted)))
+              ? const Center(
+                  child: Text('Keranjang masih kosong',
+                      style: TextStyle(color: AppColors.muted)))
               : ListView(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                   children: [
@@ -106,9 +116,12 @@ class _CartPanelState extends State<CartPanel> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: ElevatedButton(
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CheckoutScreen())),
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.ember),
-                child: Text('Lanjut ke Pembayaran · ${CurrencyFormatter.format(cart.grandTotal)}'),
+                onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const CheckoutScreen())),
+                style:
+                    ElevatedButton.styleFrom(backgroundColor: AppColors.ember),
+                child: Text(
+                    'Lanjut ke Pembayaran · ${CurrencyFormatter.format(cart.grandTotal)}'),
               ),
             ),
           ),
@@ -124,12 +137,19 @@ class _CartPanelState extends State<CartPanel> {
           Expanded(
             child: Text(
               cart.selectedCustomer?.name ?? 'Tanpa pelanggan',
-              style: TextStyle(color: cart.selectedCustomer != null ? AppColors.text : AppColors.muted, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                  color: cart.selectedCustomer != null
+                      ? AppColors.text
+                      : AppColors.muted,
+                  fontWeight: FontWeight.w500),
             ),
           ),
-          TextButton(onPressed: () => _pickCustomer(cart), child: const Text('Pilih')),
+          TextButton(
+              onPressed: () => _pickCustomer(cart), child: const Text('Pilih')),
           if (cart.selectedCustomer != null)
-            IconButton(icon: const Icon(Icons.close_rounded, size: 18), onPressed: () => cart.setCustomer(null)),
+            IconButton(
+                icon: const Icon(Icons.close_rounded, size: 18),
+                onPressed: () => cart.setCustomer(null)),
         ],
       ),
     );
@@ -151,23 +171,32 @@ class _CartPanelState extends State<CartPanel> {
             }
 
             return Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, left: 16, right: 16, top: 16),
+              padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(ctx).viewInsets.bottom,
+                  left: 16,
+                  right: 16,
+                  top: 16),
               child: SizedBox(
                 height: 420,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text('Pilih Pelanggan', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                    const Text('Pilih Pelanggan',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 16)),
                     const SizedBox(height: 12),
                     TextField(
                       controller: searchCtrl,
-                      decoration: const InputDecoration(hintText: 'Cari nama/nomor telepon'),
+                      decoration: const InputDecoration(
+                          hintText: 'Cari nama/nomor telepon'),
                       onChanged: search,
                     ),
                     const SizedBox(height: 12),
                     Expanded(
                       child: results.isEmpty
-                          ? const Center(child: Text('Ketik untuk mencari pelanggan', style: TextStyle(color: AppColors.muted)))
+                          ? const Center(
+                              child: Text('Ketik untuk mencari pelanggan',
+                                  style: TextStyle(color: AppColors.muted)))
                           : ListView.builder(
                               itemCount: results.length,
                               itemBuilder: (_, i) => ListTile(
@@ -185,10 +214,11 @@ class _CartPanelState extends State<CartPanel> {
                         final created = await _showCreateCustomerDialog();
                         if (created != null) {
                           cart.setCustomer(created);
-                          if (mounted) Navigator.pop(ctx);
+                          if (ctx.mounted) Navigator.pop(ctx);
                         }
                       },
-                      icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                      icon:
+                          const Icon(Icons.person_add_alt_1_rounded, size: 18),
                       label: const Text('Tambah Pelanggan Baru'),
                     ),
                   ],
@@ -212,21 +242,27 @@ class _CartPanelState extends State<CartPanel> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Nama')),
+            TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(labelText: 'Nama')),
             const SizedBox(height: 10),
-            TextField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Telepon')),
+            TextField(
+                controller: phoneCtrl,
+                decoration: const InputDecoration(labelText: 'Telepon')),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
           ElevatedButton(
             onPressed: () async {
               if (nameCtrl.text.trim().isEmpty) return;
               try {
-                final customer = await _customerRepo.createCustomer(name: nameCtrl.text.trim(), phone: phoneCtrl.text.trim());
-                if (mounted) Navigator.pop(ctx, customer);
+                final customer = await _customerRepo.createCustomer(
+                    name: nameCtrl.text.trim(), phone: phoneCtrl.text.trim());
+                if (ctx.mounted) Navigator.pop(ctx, customer);
               } catch (_) {
-                if (mounted) Navigator.pop(ctx);
+                if (ctx.mounted) Navigator.pop(ctx);
               }
             },
             child: const Text('Simpan'),
@@ -247,9 +283,11 @@ class _CartPanelState extends State<CartPanel> {
                 flex: 3,
                 child: TextField(
                   controller: _discountCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(labelText: 'Diskon'),
-                  onChanged: (v) => cart.setDiscount(cart.discountType, num.tryParse(v) ?? 0),
+                  onChanged: (v) =>
+                      cart.setDiscount(cart.discountType, num.tryParse(v) ?? 0),
                 ),
               ),
               const SizedBox(width: 10),
@@ -261,7 +299,8 @@ class _CartPanelState extends State<CartPanel> {
                     ButtonSegment(value: 'PERCENT', label: Text('%')),
                   ],
                   selected: {cart.discountType},
-                  onSelectionChanged: (s) => cart.setDiscount(s.first, cart.discountValue),
+                  onSelectionChanged: (s) =>
+                      cart.setDiscount(s.first, cart.discountValue),
                 ),
               ),
             ],
@@ -302,8 +341,10 @@ class _CartPanelState extends State<CartPanel> {
       child: Column(
         children: [
           _summaryRow('Subtotal', cart.subtotal),
-          if (cart.discountAmount > 0) _summaryRow('Diskon', -cart.discountAmount),
-          if (cart.taxAmount > 0) _summaryRow('PPN (${cart.taxPercent}%)', cart.taxAmount),
+          if (cart.discountAmount > 0)
+            _summaryRow('Diskon', -cart.discountAmount),
+          if (cart.taxAmount > 0)
+            _summaryRow('PPN (${cart.taxPercent}%)', cart.taxAmount),
           const Divider(height: 20),
           _summaryRow('Total', cart.grandTotal, bold: true),
         ],
@@ -312,13 +353,18 @@ class _CartPanelState extends State<CartPanel> {
   }
 
   Widget _summaryRow(String label, num amount, {bool bold = false}) {
-    final style = TextStyle(fontWeight: bold ? FontWeight.w800 : FontWeight.w500, fontSize: bold ? 16 : 13.5);
+    final style = TextStyle(
+        fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
+        fontSize: bold ? 16 : 13.5);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(child: Text(label, style: style.copyWith(color: bold ? AppColors.ink : AppColors.muted))),
+          Expanded(
+              child: Text(label,
+                  style: style.copyWith(
+                      color: bold ? AppColors.ink : AppColors.muted))),
           Text(CurrencyFormatter.format(amount), style: style),
         ],
       ),
@@ -347,26 +393,37 @@ class _CartItemTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        item.unit != null ? '${item.product.name} (${item.unitLabel})' : item.product.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+                        item.unit != null
+                            ? '${item.product.name} (${item.unitLabel})'
+                            : item.product.name,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 13.5),
                       ),
                       const SizedBox(height: 3),
                       Text(
                         '${CurrencyFormatter.format(item.unitPrice)} / ${item.unitLabel}',
-                        style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                        style: const TextStyle(
+                            color: AppColors.muted, fontSize: 12),
                       ),
                     ],
                   ),
                 ),
                 Row(
                   children: [
-                    _stepperButton(Icons.remove_rounded, () => cart.decrementQty(item.product.id, unitId: item.unit?.id)),
+                    _stepperButton(
+                        Icons.remove_rounded,
+                        () => cart.decrementQty(item.product.id,
+                            unitId: item.unit?.id)),
                     Container(
                       width: 32,
                       alignment: Alignment.center,
-                      child: Text('${item.qty}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                      child: Text('${item.qty}',
+                          style: const TextStyle(fontWeight: FontWeight.w700)),
                     ),
-                    _stepperButton(Icons.add_rounded, () => cart.incrementQty(item.product.id, unitId: item.unit?.id)),
+                    _stepperButton(
+                        Icons.add_rounded,
+                        () => cart.incrementQty(item.product.id,
+                            unitId: item.unit?.id)),
                   ],
                 ),
                 const SizedBox(width: 8),
@@ -375,7 +432,8 @@ class _CartItemTile extends StatelessWidget {
                   child: Text(
                     CurrencyFormatter.format(item.subtotal),
                     textAlign: TextAlign.right,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 13),
                   ),
                 ),
               ],
@@ -383,21 +441,26 @@ class _CartItemTile extends StatelessWidget {
             const SizedBox(height: 6),
             Row(
               children: [
-                const Icon(Icons.sell_outlined, size: 14, color: AppColors.muted),
+                const Icon(Icons.sell_outlined,
+                    size: 14, color: AppColors.muted),
                 const SizedBox(width: 6),
                 Expanded(
                   child: TextField(
                     controller: item.discountCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     style: const TextStyle(fontSize: 12.5),
                     decoration: const InputDecoration(
                       isDense: true,
                       isCollapsed: true,
                       hintText: 'Diskon item (Rp)',
-                      hintStyle: TextStyle(color: AppColors.muted, fontSize: 12.5),
+                      hintStyle:
+                          TextStyle(color: AppColors.muted, fontSize: 12.5),
                       border: InputBorder.none,
                     ),
-                    onChanged: (v) => cart.updateItemDiscount(item.product.id, num.tryParse(v) ?? 0, unitId: item.unit?.id),
+                    onChanged: (v) => cart.updateItemDiscount(
+                        item.product.id, num.tryParse(v) ?? 0,
+                        unitId: item.unit?.id),
                   ),
                 ),
               ],
@@ -415,7 +478,8 @@ class _CartItemTile extends StatelessWidget {
       child: Container(
         width: 28,
         height: 28,
-        decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(20)),
+        decoration: BoxDecoration(
+            color: AppColors.paper, borderRadius: BorderRadius.circular(20)),
         child: Icon(icon, size: 16),
       ),
     );
@@ -435,7 +499,9 @@ class _SectionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+            Text(title,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w700, fontSize: 13.5)),
             const SizedBox(height: 10),
             child,
           ],

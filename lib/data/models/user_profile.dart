@@ -3,7 +3,8 @@ class Tenant {
   final String businessName;
   final String planType;
 
-  Tenant({required this.id, required this.businessName, required this.planType});
+  Tenant(
+      {required this.id, required this.businessName, required this.planType});
 
   factory Tenant.fromJson(Map<String, dynamic> json) {
     return Tenant(
@@ -13,7 +14,8 @@ class Tenant {
     );
   }
 
-  Map<String, dynamic> toJson() => {'id': id, 'businessName': businessName, 'planType': planType};
+  Map<String, dynamic> toJson() =>
+      {'id': id, 'businessName': businessName, 'planType': planType};
 }
 
 // 4 tab utama di bottom nav (lihat dashboard_screen.dart _menuTabs).
@@ -45,22 +47,36 @@ class UserProfile {
       name: json['name'] as String? ?? '-',
       email: json['email'] as String? ?? '-',
       role: json['role'] as String,
-      menuAccess: menuAccessJson?.map((e) => e as String).toList() ?? kAllMenuKeys,
+      menuAccess:
+          menuAccessJson?.map((e) => e as String).toList() ?? kAllMenuKeys,
       tenant: Tenant.fromJson(json['tenant'] as Map<String, dynamic>),
     );
   }
 
-  Map<String, dynamic> toJson() =>
-      {'id': id, 'name': name, 'email': email, 'role': role, 'menuAccess': menuAccess, 'tenant': tenant.toJson()};
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'email': email,
+        'role': role,
+        'menuAccess': menuAccess,
+        'tenant': tenant.toJson()
+      };
 
   bool get canManageInventory => ['OWNER', 'MANAGER', 'GUDANG'].contains(role);
   bool get canSell => ['OWNER', 'MANAGER', 'KASIR'].contains(role);
   bool get canCancelSale => ['OWNER', 'MANAGER'].contains(role);
+
   /// Konsinyasi: tulis hanya OWNER/MANAGER (sesuai kontrak backend); role lain baca saja.
   bool get canWriteConsignment => ['OWNER', 'MANAGER'].contains(role);
+
   /// Stock Opname: buat/finalisasi/batal hanya OWNER/MANAGER.
   bool get canManageStockOpname => ['OWNER', 'MANAGER'].contains(role);
+
+  /// Aktif/nonaktifkan kategori: hanya OWNER/MANAGER (sesuai kontrak backend).
+  bool get canManageCategoryStatus => ['OWNER', 'MANAGER'].contains(role);
+
   /// Mengisi hitungan: OWNER/MANAGER/GUDANG/KASIR.
-  bool get canCountStockOpname => ['OWNER', 'MANAGER', 'GUDANG', 'KASIR'].contains(role);
+  bool get canCountStockOpname =>
+      ['OWNER', 'MANAGER', 'GUDANG', 'KASIR'].contains(role);
   bool get canViewAccounting => ['OWNER', 'MANAGER', 'AKUNTAN'].contains(role);
 }

@@ -8,7 +8,8 @@ import '../../core/constants/app_colors.dart';
 /// barcode di form produk maupun mencari produk langsung di halaman kasir.
 /// Helper singkat: buka halaman scan, return barcode yang terbaca (atau null
 /// kalau dibatalkan). Contoh pakai: `final code = await scanBarcode(context);`
-Future<String?> scanBarcode(BuildContext context, {String title = 'Scan Barcode'}) {
+Future<String?> scanBarcode(BuildContext context,
+    {String title = 'Scan Barcode'}) {
   return Navigator.of(context).push<String>(
     MaterialPageRoute(builder: (_) => BarcodeScannerScreen(title: title)),
   );
@@ -60,7 +61,9 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
             icon: ValueListenableBuilder(
               valueListenable: _controller,
               builder: (context, state, child) {
-                return Icon(state.torchState == TorchState.on ? Icons.flash_on_rounded : Icons.flash_off_rounded);
+                return Icon(state.torchState == TorchState.on
+                    ? Icons.flash_on_rounded
+                    : Icons.flash_off_rounded);
               },
             ),
             onPressed: () => _controller.toggleTorch(),
@@ -83,8 +86,11 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
             child: Column(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(20)),
                   child: const Text(
                     'Arahkan kamera ke barcode produk',
                     style: TextStyle(color: Colors.white, fontSize: 13),
@@ -93,7 +99,8 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Batal', style: TextStyle(color: Colors.white70)),
+                  child: const Text('Batal',
+                      style: TextStyle(color: Colors.white70)),
                 ),
               ],
             ),

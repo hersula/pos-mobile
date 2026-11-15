@@ -18,7 +18,8 @@ class _LevelPriceDraft {
   final PriceLevel level;
   final TextEditingController priceCtrl;
 
-  _LevelPriceDraft({required this.level, String price = ''}) : priceCtrl = TextEditingController(text: price);
+  _LevelPriceDraft({required this.level, String price = ''})
+      : priceCtrl = TextEditingController(text: price);
 
   void dispose() => priceCtrl.dispose();
 
@@ -40,7 +41,12 @@ class _UnitDraft {
   final TextEditingController priceCtrl;
   final TextEditingController barcodeCtrl;
 
-  _UnitDraft({this.id, String name = '', String conversionQty = '', String sellPrice = '', String barcode = ''})
+  _UnitDraft(
+      {this.id,
+      String name = '',
+      String conversionQty = '',
+      String sellPrice = '',
+      String barcode = ''})
       : nameCtrl = TextEditingController(text: name),
         conversionCtrl = TextEditingController(text: conversionQty),
         priceCtrl = TextEditingController(text: sellPrice),
@@ -66,13 +72,18 @@ class _UnitDraft {
     final name = nameCtrl.text.trim();
     final conversion = int.tryParse(conversionCtrl.text.trim());
     final price = num.tryParse(priceCtrl.text.trim());
-    if (name.isEmpty || conversion == null || conversion <= 0 || price == null || price < 0) return null;
+    if (name.isEmpty ||
+        conversion == null ||
+        conversion <= 0 ||
+        price == null ||
+        price < 0) return null;
     return {
       if (id != null) 'id': id,
       'name': name,
       'conversionQty': conversion,
       'sellPrice': price,
-      if (barcodeCtrl.text.trim().isNotEmpty) 'barcode': barcodeCtrl.text.trim(),
+      if (barcodeCtrl.text.trim().isNotEmpty)
+        'barcode': barcodeCtrl.text.trim(),
     };
   }
 }
@@ -128,9 +139,12 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     _skuCtrl = TextEditingController(text: p?.sku ?? '');
     _barcodeCtrl = TextEditingController(text: p?.barcode ?? '');
     _unitCtrl = TextEditingController(text: p?.unit ?? 'pcs');
-    _costPriceCtrl = TextEditingController(text: p != null ? p.costPrice.toString() : '');
-    _sellPriceCtrl = TextEditingController(text: p != null ? p.sellPrice.toString() : '');
-    _minStockCtrl = TextEditingController(text: p != null ? p.minStock.toString() : '0');
+    _costPriceCtrl =
+        TextEditingController(text: p != null ? p.costPrice.toString() : '');
+    _sellPriceCtrl =
+        TextEditingController(text: p != null ? p.sellPrice.toString() : '');
+    _minStockCtrl =
+        TextEditingController(text: p != null ? p.minStock.toString() : '0');
     _categoryId = p?.categoryId;
     _imageUrl = p?.imageUrl;
     _unitDrafts.addAll((p?.units ?? []).map((u) => _UnitDraft.fromUnit(u)));
@@ -165,11 +179,13 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 Expanded(
                   child: TextField(
                     controller: draft.nameCtrl,
-                    decoration: const InputDecoration(labelText: 'Nama Satuan (mis. Dus)', isDense: true),
+                    decoration: const InputDecoration(
+                        labelText: 'Nama Satuan (mis. Dus)', isDense: true),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.danger),
+                  icon: const Icon(Icons.close_rounded,
+                      size: 18, color: AppColors.danger),
                   onPressed: () => _removeUnitRow(index),
                 ),
               ],
@@ -181,15 +197,20 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   child: TextField(
                     controller: draft.conversionCtrl,
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(labelText: '1 ${draft.nameCtrl.text.trim().isEmpty ? "satuan" : draft.nameCtrl.text.trim()} = berapa ${_unitCtrl.text.trim().isEmpty ? "satuan dasar" : _unitCtrl.text.trim()}?', isDense: true),
+                    decoration: InputDecoration(
+                        labelText:
+                            '1 ${draft.nameCtrl.text.trim().isEmpty ? "satuan" : draft.nameCtrl.text.trim()} = berapa ${_unitCtrl.text.trim().isEmpty ? "satuan dasar" : _unitCtrl.text.trim()}?',
+                        isDense: true),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: TextField(
                     controller: draft.priceCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Harga Jual', isDense: true),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                        labelText: 'Harga Jual', isDense: true),
                   ),
                 ),
               ],
@@ -220,17 +241,38 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         _warehouseRepo.getWarehouses(),
         _priceLevelRepo.getPriceLevels(),
       ]);
+      var categories = results[0] as List<Category>;
+      // Produk yang diedit mungkin masih memakai kategori yang sudah
+      // dinonaktifkan. Pastikan tetap tampil agar nilainya tidak hilang.
+      if (_categoryId != null && !categories.any((c) => c.id == _categoryId)) {
+        try {
+          final allCategories =
+              await _categoryRepo.getCategories(includeInactive: true);
+          final current =
+              allCategories.where((c) => c.id == _categoryId).toList();
+          if (current.isNotEmpty) {
+            categories = [...categories, current.first];
+          }
+        } catch (_) {
+          // Abaikan; kategori tetap tidak muncul bila gagal diambil.
+        }
+      }
       if (mounted) {
         setState(() {
-          _categories = results[0] as List<Category>;
+          _categories = categories;
           _warehouses = results[1] as List<Warehouse>;
           if (_warehouses.isNotEmpty) _warehouseId = _warehouses.first.id;
 
           final priceLevels = results[2] as List<PriceLevel>;
           final existingPrices = widget.product?.prices ?? [];
           _levelPriceDrafts.addAll(priceLevels.map((level) {
-            final existing = existingPrices.where((p) => p.priceLevelId == level.id);
-            return _LevelPriceDraft(level: level, price: existing.isNotEmpty ? existing.first.sellPrice.toString() : '');
+            final existing =
+                existingPrices.where((p) => p.priceLevelId == level.id);
+            return _LevelPriceDraft(
+                level: level,
+                price: existing.isNotEmpty
+                    ? existing.first.sellPrice.toString()
+                    : '');
           }));
         });
       }
@@ -264,7 +306,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   String? _validateUnitDrafts() {
     for (final d in _unitDrafts) {
       if (d.toJson() == null) {
-        final label = d.nameCtrl.text.trim().isEmpty ? 'satuan baru' : d.nameCtrl.text.trim();
+        final label = d.nameCtrl.text.trim().isEmpty
+            ? 'satuan baru'
+            : d.nameCtrl.text.trim();
         return 'Satuan "$label" belum lengkap (nama, konversi, dan harga jual wajib diisi)';
       }
     }
@@ -279,7 +323,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       return;
     }
     final unitsPayload = _unitDrafts.map((d) => d.toJson()!).toList();
-    final pricesPayload = _levelPriceDrafts.map((d) => d.toJson()).whereType<Map<String, dynamic>>().toList();
+    final pricesPayload = _levelPriceDrafts
+        .map((d) => d.toJson())
+        .whereType<Map<String, dynamic>>()
+        .toList();
 
     setState(() {
       _saving = true;
@@ -363,10 +410,15 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Nonaktifkan Produk?'),
-        content: const Text('Produk tidak akan muncul lagi di daftar penjualan, tapi histori transaksi lama tetap aman.'),
+        content: const Text(
+            'Produk tidak akan muncul lagi di daftar penjualan, tapi histori transaksi lama tetap aman.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Nonaktifkan')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Batal')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Nonaktifkan')),
         ],
       ),
     );
@@ -376,7 +428,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       await _productRepo.deactivateProduct(widget.product!.id);
       if (mounted) Navigator.of(context).pop(true);
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
     }
   }
 
@@ -388,7 +442,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         actions: [
           if (_isEdit)
             IconButton(
-              icon: const Icon(Icons.delete_outline_rounded, color: AppColors.danger),
+              icon: const Icon(Icons.delete_outline_rounded,
+                  color: AppColors.danger),
               onPressed: _confirmDeactivate,
             ),
         ],
@@ -407,8 +462,12 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         Container(
                           margin: const EdgeInsets.only(bottom: 16),
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: AppColors.dangerSoft, borderRadius: BorderRadius.circular(10)),
-                          child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13.5)),
+                          decoration: BoxDecoration(
+                              color: AppColors.dangerSoft,
+                              borderRadius: BorderRadius.circular(10)),
+                          child: Text(_error!,
+                              style: const TextStyle(
+                                  color: AppColors.danger, fontSize: 13.5)),
                         ),
                       ProductImagePicker(
                         pickedFile: _pickedImage,
@@ -427,16 +486,24 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       const SizedBox(height: 20),
                       TextFormField(
                         controller: _nameCtrl,
-                        decoration: const InputDecoration(labelText: 'Nama Produk'),
-                        validator: (v) => (v == null || v.trim().length < 2) ? 'Nama produk wajib diisi' : null,
+                        decoration:
+                            const InputDecoration(labelText: 'Nama Produk'),
+                        validator: (v) => (v == null || v.trim().length < 2)
+                            ? 'Nama produk wajib diisi'
+                            : null,
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
                         value: _categoryId,
                         isExpanded: true,
-                        decoration: const InputDecoration(labelText: 'Kategori (opsional)'),
+                        decoration: const InputDecoration(
+                            labelText: 'Kategori (opsional)'),
                         items: _categories
-                            .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
+                            .map((c) => DropdownMenuItem(
+                                value: c.id,
+                                child: Text(c.isActive
+                                    ? c.name
+                                    : '${c.name} (Nonaktif)')))
                             .toList(),
                         onChanged: (v) => setState(() => _categoryId = v),
                       ),
@@ -446,14 +513,16 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                           Expanded(
                             child: TextFormField(
                               controller: _skuCtrl,
-                              decoration: const InputDecoration(labelText: 'SKU (opsional)'),
+                              decoration: const InputDecoration(
+                                  labelText: 'SKU (opsional)'),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: TextFormField(
                               controller: _unitCtrl,
-                              decoration: const InputDecoration(labelText: 'Satuan (pcs/kg/dll)'),
+                              decoration: const InputDecoration(
+                                  labelText: 'Satuan (pcs/kg/dll)'),
                             ),
                           ),
                         ],
@@ -477,7 +546,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                             child: TextFormField(
                               controller: _costPriceCtrl,
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(labelText: 'Harga Modal'),
+                              decoration: const InputDecoration(
+                                  labelText: 'Harga Modal'),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -485,8 +555,12 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                             child: TextFormField(
                               controller: _sellPriceCtrl,
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(labelText: 'Harga Jual'),
-                              validator: (v) => (v == null || num.tryParse(v) == null) ? 'Harga tidak valid' : null,
+                              decoration: const InputDecoration(
+                                  labelText: 'Harga Jual'),
+                              validator: (v) =>
+                                  (v == null || num.tryParse(v) == null)
+                                      ? 'Harga tidak valid'
+                                      : null,
                             ),
                           ),
                         ],
@@ -495,13 +569,17 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       TextFormField(
                         controller: _minStockCtrl,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Stok Minimum (untuk peringatan stok menipis)'),
+                        decoration: const InputDecoration(
+                            labelText:
+                                'Stok Minimum (untuk peringatan stok menipis)'),
                       ),
                       const SizedBox(height: 20),
                       Row(
                         children: [
                           const Expanded(
-                            child: Text('Satuan Tambahan (opsional)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                            child: Text('Satuan Tambahan (opsional)',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w700, fontSize: 14)),
                           ),
                           TextButton.icon(
                             onPressed: _addUnitRow,
@@ -512,16 +590,21 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       ),
                       Text(
                         'Contoh: satuan dasar "Botol", tambahkan "Dus" = 24 Botol dengan harga jual sendiri.',
-                        style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                        style: const TextStyle(
+                            color: AppColors.muted, fontSize: 12),
                       ),
                       const SizedBox(height: 8),
-                      ...List.generate(_unitDrafts.length, (i) => _buildUnitRow(i)),
+                      ...List.generate(
+                          _unitDrafts.length, (i) => _buildUnitRow(i)),
                       if (_levelPriceDrafts.isNotEmpty) ...[
                         const SizedBox(height: 20),
-                        const Text('Harga per Level (opsional)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                        const Text('Harga per Level (opsional)',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 14)),
                         const Text(
                           'Kosongkan kalau level itu pakai Harga Jual ("Umum") di atas.',
-                          style: TextStyle(color: AppColors.muted, fontSize: 12),
+                          style:
+                              TextStyle(color: AppColors.muted, fontSize: 12),
                         ),
                         const SizedBox(height: 8),
                         ..._levelPriceDrafts.map(
@@ -529,22 +612,30 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                             padding: const EdgeInsets.only(bottom: 10),
                             child: TextField(
                               controller: d.priceCtrl,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              decoration: InputDecoration(labelText: 'Harga ${d.level.name}', isDense: true),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              decoration: InputDecoration(
+                                  labelText: 'Harga ${d.level.name}',
+                                  isDense: true),
                             ),
                           ),
                         ),
                       ],
                       if (!_isEdit) ...[
                         const SizedBox(height: 20),
-                        const Text('Stok Awal (opsional)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                        const Text('Stok Awal (opsional)',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 14)),
                         const SizedBox(height: 10),
                         DropdownButtonFormField<String>(
                           value: _warehouseId,
                           isExpanded: true,
-                          decoration: const InputDecoration(labelText: 'Gudang/Toko'),
+                          decoration:
+                              const InputDecoration(labelText: 'Gudang/Toko'),
                           items: _warehouses
-                              .map((w) => DropdownMenuItem(value: w.id, child: Text(w.name)))
+                              .map((w) => DropdownMenuItem(
+                                  value: w.id, child: Text(w.name)))
                               .toList(),
                           onChanged: (v) => setState(() => _warehouseId = v),
                         ),
@@ -552,7 +643,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         TextFormField(
                           controller: _initialStockCtrl,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Jumlah Stok Awal'),
+                          decoration: const InputDecoration(
+                              labelText: 'Jumlah Stok Awal'),
                         ),
                       ],
                       const SizedBox(height: 24),
@@ -562,9 +654,11 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white),
                               )
-                            : Text(_isEdit ? 'Simpan Perubahan' : 'Tambah Produk'),
+                            : Text(
+                                _isEdit ? 'Simpan Perubahan' : 'Tambah Produk'),
                       ),
                       const SizedBox(height: 20),
                     ],

@@ -17,6 +17,7 @@ class ApiClient {
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
         contentType: 'application/json',
+        headers: {'Accept': 'application/json'},
       ),
     );
 
@@ -68,7 +69,8 @@ class ApiClient {
       final refreshToken = await LocalStorage.instance.getRefreshToken();
       if (refreshToken == null) return false;
 
-      final response = await Dio(BaseOptions(baseUrl: AppConfig.apiBaseUrl)).post(
+      final response =
+          await Dio(BaseOptions(baseUrl: AppConfig.apiBaseUrl)).post(
         '/auth/refresh',
         data: {'refreshToken': refreshToken},
       );
@@ -83,11 +85,13 @@ class ApiClient {
     }
   }
 
-  Future<Map<String, dynamic>> get(String path, {Map<String, dynamic>? query}) async {
+  Future<Map<String, dynamic>> get(String path,
+      {Map<String, dynamic>? query}) async {
     return _handle(() => _dio.get(path, queryParameters: query));
   }
 
-  Future<Map<String, dynamic>> post(String path, {Map<String, dynamic>? data}) async {
+  Future<Map<String, dynamic>> post(String path,
+      {Map<String, dynamic>? data}) async {
     return _handle(() => _dio.post(path, data: data));
   }
 
@@ -107,19 +111,23 @@ class ApiClient {
     );
   }
 
-  Future<Map<String, dynamic>> put(String path, {Map<String, dynamic>? data}) async {
+  Future<Map<String, dynamic>> put(String path,
+      {Map<String, dynamic>? data}) async {
     return _handle(() => _dio.put(path, data: data));
   }
 
-  Future<Map<String, dynamic>> patch(String path, {Map<String, dynamic>? data}) async {
+  Future<Map<String, dynamic>> patch(String path,
+      {Map<String, dynamic>? data}) async {
     return _handle(() => _dio.patch(path, data: data));
   }
 
-  Future<Map<String, dynamic>> delete(String path, {Map<String, dynamic>? data}) async {
+  Future<Map<String, dynamic>> delete(String path,
+      {Map<String, dynamic>? data}) async {
     return _handle(() => _dio.delete(path, data: data));
   }
 
-  Future<Map<String, dynamic>> _handle(Future<Response> Function() request) async {
+  Future<Map<String, dynamic>> _handle(
+      Future<Response> Function() request) async {
     try {
       final response = await request();
       if (response.data is Map<String, dynamic>) {
@@ -130,12 +138,31 @@ class ApiClient {
       final data = e.response?.data;
       final message = (data is Map && data['message'] != null)
           ? data['message'].toString()
-          : 'Tidak bisa terhubung ke server. Periksa koneksi internet kamu.';
+          : describeNetworkError(e);
       throw ApiException(
         message,
         statusCode: e.response?.statusCode,
         data: data is Map<String, dynamic> ? data : null,
       );
+    }
+  }
+
+  /// Pesan error jaringan yang menyebutkan penyebabnya.
+  static String describeNetworkError(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return 'Server tidak merespons (timeout). Coba lagi sebentar.';
+      case DioExceptionType.badCertificate:
+        return 'Sertifikat keamanan server tidak valid. Periksa tanggal & jam perangkat.';
+      case DioExceptionType.connectionError:
+        return 'Tidak bisa terhubung ke ${AppConfig.baseUrl}. Periksa koneksi internet atau DNS perangkat.';
+      default:
+        final code = e.response?.statusCode;
+        if (code != null)
+          return 'Server membalas error ($code). Coba lagi nanti.';
+        return 'Gagal menghubungi server: ${e.message ?? e.error ?? 'kesalahan tidak diketahui'}';
     }
   }
 }

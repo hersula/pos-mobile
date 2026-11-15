@@ -18,7 +18,8 @@ class AppColors {
   static const accent = Color(0xFF0E6B4A); // emerald - brand & aksi utama
   static const accentSoft = Color(0xFFE2F1E9);
 
-  static const ember = Color(0xFFE3572C); // aksen bayar/total - khusus CTA pembayaran
+  static const ember =
+      Color(0xFFE3572C); // aksen bayar/total - khusus CTA pembayaran
   static const emberSoft = Color(0xFFFBE3D8);
 
   static const pending = Color(0xFFB8862E); // amber

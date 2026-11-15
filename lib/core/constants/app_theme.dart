@@ -38,7 +38,8 @@ class AppTheme {
           backgroundColor: AppColors.accent,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
           elevation: 0,
         ),
@@ -48,14 +49,16 @@ class AppTheme {
           foregroundColor: AppColors.ink,
           side: const BorderSide(color: AppColors.line, width: 1.4),
           padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 18),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.paper,
-        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: AppColors.line),

@@ -21,7 +21,8 @@ class CartScreen extends StatelessWidget {
               cart.clear();
               Navigator.of(context).pop();
             },
-            child: const Text('Kosongkan', style: TextStyle(color: AppColors.danger)),
+            child: const Text('Kosongkan',
+                style: TextStyle(color: AppColors.danger)),
           ),
         ],
       ),

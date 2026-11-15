@@ -35,5 +35,6 @@ class ProductPrice {
     );
   }
 
-  Map<String, dynamic> toJson() => {'priceLevelId': priceLevelId, 'sellPrice': sellPrice};
+  Map<String, dynamic> toJson() =>
+      {'priceLevelId': priceLevelId, 'sellPrice': sellPrice};
 }

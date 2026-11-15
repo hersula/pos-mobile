@@ -5,7 +5,8 @@ import 'product_unit.dart';
 
 class CartItem {
   final Product product;
-  final ProductUnit? unit; // null = dijual pakai satuan dasar produk (product.unit)
+  final ProductUnit?
+      unit; // null = dijual pakai satuan dasar produk (product.unit)
   int qty;
   num unitPrice; // bisa diubah manual oleh kasir (mis. harga nego), default sellPrice satuan/produk
   num discountAmount; // diskon nominal per item, opsional
@@ -16,9 +17,15 @@ class CartItem {
   // item dihapus dari keranjang (lihat CartProvider.removeItem/decrementQty/clear).
   late final TextEditingController discountCtrl;
 
-  CartItem({required this.product, this.unit, this.qty = 1, num? unitPrice, this.discountAmount = 0})
+  CartItem(
+      {required this.product,
+      this.unit,
+      this.qty = 1,
+      num? unitPrice,
+      this.discountAmount = 0})
       : unitPrice = unitPrice ?? (unit?.sellPrice ?? product.sellPrice) {
-    discountCtrl = TextEditingController(text: discountAmount == 0 ? '' : discountAmount.toStringAsFixed(0));
+    discountCtrl = TextEditingController(
+        text: discountAmount == 0 ? '' : discountAmount.toStringAsFixed(0));
   }
 
   /// Label satuan yang ditampilkan di keranjang/struk, mis. "Dus" atau satuan dasar produk.

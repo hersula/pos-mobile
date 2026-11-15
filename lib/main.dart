@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'core/constants/app_theme.dart';
 import 'core/storage/local_storage.dart';
 import 'features/auth/login_screen.dart';
-import 'features/auth/pending_status_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'services/bluetooth_printer_service.dart';
 import 'state/auth_provider.dart';

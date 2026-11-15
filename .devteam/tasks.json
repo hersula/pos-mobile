@@ -1,0 +1,159 @@
+{
+ "goal": "Fitur aktif/nonaktif kategori produk (backend + mobile)",
+ "created": 1794703660.945428,
+ "tasks": [
+  {
+   "id": "T1",
+   "title": "Endpoint versi aplikasi + model AppVersion (Prisma)",
+   "agent": "backend",
+   "depends_on": [],
+   "acceptance": "GET /api/app/version mengembalikan kontrak yang disepakati; CRUD admin OWNER-only; docs/api-contract.md diperbarui",
+   "model": "claude:haiku",
+   "size": "M",
+   "status": "done",
+   "note": "",
+   "started": 1794701908.7497492,
+   "ended": 1794702074.3311996,
+   "wave": 1,
+   "runner": "backend",
+   "owner": "herma"
+  },
+  {
+   "id": "T2",
+   "title": "Pemeriksa versi + dialog update di Flutter",
+   "agent": "frontend",
+   "depends_on": [],
+   "acceptance": "Cek versi saat startup, dialog wajib/opsional, buka URL unduhan, tidak crash saat offline",
+   "model": "claude:haiku",
+   "size": "M",
+   "status": "done",
+   "note": "",
+   "started": 1794701922.9404736,
+   "ended": 1794702107.2043543,
+   "wave": 1,
+   "runner": "frontend",
+   "owner": "herma"
+  },
+  {
+   "id": "T8",
+   "title": "Field isActive pada Category + filter & endpoint toggle",
+   "agent": "backend",
+   "depends_on": [],
+   "acceptance": "migrasi MariaDB valid, GET default hanya aktif, PATCH isActive OWNER/MANAGER, kontrak diperbarui",
+   "model": "claude:sonnet",
+   "size": "M",
+   "status": "done",
+   "note": "isActive + filter + PATCH; migrasi 20261115080000_add_category_is_active (belum dijalankan)",
+   "started": 1794703674.7161436,
+   "ended": 1794703896.3682961,
+   "wave": 1,
+   "runner": "backend",
+   "owner": "herma"
+  },
+  {
+   "id": "T9",
+   "title": "Toggle aktif/nonaktif kategori di mobile + filter kategori aktif",
+   "agent": "frontend",
+   "depends_on": [],
+   "acceptance": "switch di layar kategori, kategori nonaktif tidak muncul di pemilihan produk/kasir",
+   "model": "claude:sonnet",
+   "size": "M",
+   "status": "done",
+   "note": "Switch + chip Nonaktif, edit produk kategori nonaktif tetap terpilih",
+   "started": 1794703686.3940227,
+   "ended": 1794703897.2614245,
+   "wave": 1,
+   "runner": "frontend",
+   "owner": "herma"
+  },
+  {
+   "id": "T3",
+   "title": "Review statis integrasi auto-update",
+   "agent": "qc",
+   "depends_on": [
+    "T1",
+    "T2"
+   ],
+   "acceptance": "docs/qc/auto-update.md berisi temuan; bug kritis dilaporkan",
+   "model": "claude:sonnet",
+   "size": "S",
+   "status": "done",
+   "note": "",
+   "started": 1794702117.9234552,
+   "ended": 1794702191.9157515,
+   "wave": 2,
+   "runner": "qc",
+   "owner": "herma"
+  },
+  {
+   "id": "T10",
+   "title": "Review statis fitur aktif/nonaktif kategori",
+   "agent": "qc",
+   "depends_on": [
+    "T8",
+    "T9"
+   ],
+   "acceptance": "docs/qc/kategori-aktif.md berisi temuan",
+   "model": "claude:sonnet",
+   "size": "S",
+   "status": "done",
+   "note": "",
+   "started": 1794703849.780373,
+   "ended": 1794703893.033185,
+   "wave": 2,
+   "runner": "qc",
+   "owner": "herma"
+  },
+  {
+   "id": "T4",
+   "title": "Perbaikan BUG-AU-001/003/004 (backend)",
+   "agent": "backend",
+   "depends_on": [
+    "T3"
+   ],
+   "acceptance": "tsc lulus, api-contract selaras",
+   "model": "",
+   "size": "S",
+   "status": "done",
+   "note": "3 bug diperbaiki, tsc lulus",
+   "started": null,
+   "ended": 1794702321.9058712,
+   "wave": 3
+  },
+  {
+   "id": "T5",
+   "title": "Perbaikan BUG-AU-002 (mobile)",
+   "agent": "frontend",
+   "depends_on": [
+    "T3"
+   ],
+   "acceptance": "dialog mandatory tidak bisa ditutup",
+   "model": "",
+   "size": "S",
+   "status": "done",
+   "note": "dialog mandatory tidak bisa ditutup; analyze bersih",
+   "started": null,
+   "ended": 1794702322.657962,
+   "wave": 3
+  },
+  {
+   "id": "T6",
+   "title": "Regresi QC auto-update",
+   "agent": "qc",
+   "depends_on": [
+    "T4",
+    "T5"
+   ],
+   "acceptance": "semua bug CLOSED",
+   "model": "",
+   "size": "S",
+   "status": "done",
+   "note": "Regresi 15/11: BUG-AU-001..004 CLOSED, tidak ada bug baru",
+   "started": null,
+   "ended": 1794702325.1643689,
+   "wave": 4
+  }
+ ],
+ "updated": 1794703897.2618198,
+ "updated_by": "herma"
+}

@@ -74,10 +74,13 @@ class ConsignmentItem {
   String get displayUnit => unitLabel ?? baseUnit;
 
   /// Harga per satuan dasar (dibulatkan 2 desimal, sama seperti backend).
-  num get basePrice => conversionQty > 0 ? (agreedUnitPrice / conversionQty * 100).round() / 100 : agreedUnitPrice;
+  num get basePrice => conversionQty > 0
+      ? (agreedUnitPrice / conversionQty * 100).round() / 100
+      : agreedUnitPrice;
 
   factory ConsignmentItem.fromJson(Map<String, dynamic> json) {
-    final product = (json['product'] as Map<String, dynamic>?) ?? const <String, dynamic>{};
+    final product =
+        (json['product'] as Map<String, dynamic>?) ?? const <String, dynamic>{};
     final conv = parseInt(json['conversionQty'], fallback: 1);
     return ConsignmentItem(
       id: json['id'] as String,
@@ -102,9 +105,11 @@ class ConsignmentSettlementLine {
   final String consignmentItemId;
   final int baseQty;
 
-  ConsignmentSettlementLine({required this.consignmentItemId, required this.baseQty});
+  ConsignmentSettlementLine(
+      {required this.consignmentItemId, required this.baseQty});
 
-  factory ConsignmentSettlementLine.fromJson(Map<String, dynamic> json) => ConsignmentSettlementLine(
+  factory ConsignmentSettlementLine.fromJson(Map<String, dynamic> json) =>
+      ConsignmentSettlementLine(
         consignmentItemId: json['consignmentItemId'] as String? ?? '',
         baseQty: parseInt(json['baseQty']),
       );
@@ -143,7 +148,10 @@ class ConsignmentSettlement {
       note: json['note'] as String?,
       voidedAt: _parseDate(json['voidedAt']),
       createdAt: _parseDate(json['createdAt']),
-      lines: lines.map((e) => ConsignmentSettlementLine.fromJson(e as Map<String, dynamic>)).toList(),
+      lines: lines
+          .map((e) =>
+              ConsignmentSettlementLine.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
@@ -190,25 +198,32 @@ class ConsignmentOrder {
   String get statusLabel => kConsignmentStatusLabels[status] ?? status;
 
   /// Barang masih bisa dicatat terjual / diretur.
-  bool get canSettleOrReturn => status == 'SENT' || status == 'PARTIALLY_SETTLED';
+  bool get canSettleOrReturn =>
+      status == 'SENT' || status == 'PARTIALLY_SETTLED';
 
   /// Sesuai kontrak: batal dari DRAFT, atau SENT yang belum ada terjual/retur.
   bool get canCancel =>
-      status == 'DRAFT' || (status == 'SENT' && items.every((e) => e.baseQtySold == 0 && e.baseQtyReturned == 0));
+      status == 'DRAFT' ||
+      (status == 'SENT' &&
+          items.every((e) => e.baseQtySold == 0 && e.baseQtyReturned == 0));
 
   factory ConsignmentOrder.fromJson(Map<String, dynamic> json) {
-    final customer = (json['customer'] as Map<String, dynamic>?) ?? const <String, dynamic>{};
-    final source = (json['sourceWarehouse'] as Map<String, dynamic>?) ?? const <String, dynamic>{};
+    final customer = (json['customer'] as Map<String, dynamic>?) ??
+        const <String, dynamic>{};
+    final source = (json['sourceWarehouse'] as Map<String, dynamic>?) ??
+        const <String, dynamic>{};
     final items = (json['items'] as List<dynamic>?) ?? [];
     final settlements = (json['settlements'] as List<dynamic>?) ?? [];
     return ConsignmentOrder(
       id: json['id'] as String,
       consignmentNo: json['consignmentNo'] as String? ?? '-',
       status: json['status'] as String? ?? 'DRAFT',
-      customerId: json['customerId'] as String? ?? customer['id'] as String? ?? '',
+      customerId:
+          json['customerId'] as String? ?? customer['id'] as String? ?? '',
       customerName: customer['name'] as String? ?? '-',
       customerPhone: customer['phone'] as String?,
-      sourceWarehouseId: json['sourceWarehouseId'] as String? ?? source['id'] as String? ?? '',
+      sourceWarehouseId:
+          json['sourceWarehouseId'] as String? ?? source['id'] as String? ?? '',
       sourceWarehouseName: source['name'] as String? ?? '-',
       consignWarehouseId: json['consignWarehouseId'] as String?,
       sentAt: _parseDate(json['sentAt']),
@@ -216,9 +231,14 @@ class ConsignmentOrder {
       note: json['note'] as String?,
       cancelReason: json['cancelReason'] as String?,
       createdAt: _parseDate(json['createdAt']),
-      summary: ConsignmentSummary.fromJson(json['summary'] as Map<String, dynamic>?),
-      items: items.map((e) => ConsignmentItem.fromJson(e as Map<String, dynamic>)).toList(),
-      settlements: settlements.map((e) => ConsignmentSettlement.fromJson(e as Map<String, dynamic>)).toList(),
+      summary:
+          ConsignmentSummary.fromJson(json['summary'] as Map<String, dynamic>?),
+      items: items
+          .map((e) => ConsignmentItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      settlements: settlements
+          .map((e) => ConsignmentSettlement.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
@@ -230,15 +250,18 @@ class ConsignmentSettleResult {
   final String? invoiceNo;
   final num? saleTotal;
 
-  ConsignmentSettleResult({required this.consignment, this.saleId, this.invoiceNo, this.saleTotal});
+  ConsignmentSettleResult(
+      {required this.consignment, this.saleId, this.invoiceNo, this.saleTotal});
 
   factory ConsignmentSettleResult.fromJson(Map<String, dynamic> json) {
     final sale = json['sale'] as Map<String, dynamic>?;
     return ConsignmentSettleResult(
-      consignment: ConsignmentOrder.fromJson(json['consignment'] as Map<String, dynamic>),
+      consignment: ConsignmentOrder.fromJson(
+          json['consignment'] as Map<String, dynamic>),
       saleId: sale?['id'] as String?,
       invoiceNo: sale?['invoiceNo'] as String?,
-      saleTotal: sale?['grandTotal'] == null ? null : parseNum(sale?['grandTotal']),
+      saleTotal:
+          sale?['grandTotal'] == null ? null : parseNum(sale?['grandTotal']),
     );
   }
 }
@@ -250,9 +273,15 @@ class OutletStockProduct {
   final String unit;
   final int quantity;
 
-  OutletStockProduct({required this.productId, required this.name, this.sku, required this.unit, required this.quantity});
+  OutletStockProduct(
+      {required this.productId,
+      required this.name,
+      this.sku,
+      required this.unit,
+      required this.quantity});
 
-  factory OutletStockProduct.fromJson(Map<String, dynamic> json) => OutletStockProduct(
+  factory OutletStockProduct.fromJson(Map<String, dynamic> json) =>
+      OutletStockProduct(
         productId: json['productId'] as String? ?? '',
         name: json['name'] as String? ?? '-',
         sku: json['sku'] as String?,
@@ -283,7 +312,9 @@ class OutletStock {
       customerName: json['customerName'] as String? ?? '-',
       warehouseId: json['warehouseId'] as String? ?? '',
       warehouseName: json['warehouseName'] as String? ?? '-',
-      products: products.map((e) => OutletStockProduct.fromJson(e as Map<String, dynamic>)).toList(),
+      products: products
+          .map((e) => OutletStockProduct.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

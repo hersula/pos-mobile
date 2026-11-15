@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../data/models/user_profile.dart';
+import '../../services/app_update_checker.dart';
 import '../../state/auth_provider.dart';
 import '../inventory/product_list_screen.dart';
 import '../pos/pos_screen.dart';
@@ -16,7 +17,12 @@ class _MenuTab {
   final IconData selectedIcon;
   final String label;
 
-  const _MenuTab({required this.key, required this.screen, required this.icon, required this.selectedIcon, required this.label});
+  const _MenuTab(
+      {required this.key,
+      required this.screen,
+      required this.icon,
+      required this.selectedIcon,
+      required this.label});
 }
 
 class DashboardScreen extends StatefulWidget {
@@ -28,13 +34,54 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _index = 0;
-  final GlobalKey<ReportsScreenState> _reportsKey = GlobalKey<ReportsScreenState>();
+  final GlobalKey<ReportsScreenState> _reportsKey =
+      GlobalKey<ReportsScreenState>();
+  late final AppUpdateChecker _updateChecker;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateChecker = AppUpdateChecker();
+    // Inisialisasi checker dan cek versi setelah UI siap
+    _initUpdateChecker();
+  }
+
+  Future<void> _initUpdateChecker() async {
+    try {
+      await _updateChecker.init();
+      if (mounted) {
+        await _updateChecker.checkAndShowDialogIfNeeded(context);
+      }
+    } catch (e) {
+      debugPrint('Dashboard: Error initializing update checker: $e');
+    }
+  }
 
   late final List<_MenuTab> _allTabs = [
-    const _MenuTab(key: 'kasir', screen: PosScreen(), icon: Icons.point_of_sale_outlined, selectedIcon: Icons.point_of_sale_rounded, label: 'Kasir'),
-    const _MenuTab(key: 'inventori', screen: ProductListScreen(), icon: Icons.inventory_2_outlined, selectedIcon: Icons.inventory_2_rounded, label: 'Inventori'),
-    _MenuTab(key: 'laporan', screen: ReportsScreen(key: _reportsKey), icon: Icons.bar_chart_outlined, selectedIcon: Icons.bar_chart_rounded, label: 'Laporan'),
-    const _MenuTab(key: 'pengaturan', screen: SettingsScreen(), icon: Icons.settings_outlined, selectedIcon: Icons.settings_rounded, label: 'Pengaturan'),
+    const _MenuTab(
+        key: 'kasir',
+        screen: PosScreen(),
+        icon: Icons.point_of_sale_outlined,
+        selectedIcon: Icons.point_of_sale_rounded,
+        label: 'Kasir'),
+    const _MenuTab(
+        key: 'inventori',
+        screen: ProductListScreen(),
+        icon: Icons.inventory_2_outlined,
+        selectedIcon: Icons.inventory_2_rounded,
+        label: 'Inventori'),
+    _MenuTab(
+        key: 'laporan',
+        screen: ReportsScreen(key: _reportsKey),
+        icon: Icons.bar_chart_outlined,
+        selectedIcon: Icons.bar_chart_rounded,
+        label: 'Laporan'),
+    const _MenuTab(
+        key: 'pengaturan',
+        screen: SettingsScreen(),
+        icon: Icons.settings_outlined,
+        selectedIcon: Icons.settings_rounded,
+        label: 'Pengaturan'),
   ];
 
   List<_MenuTab> _visibleTabs(UserProfile? user) {
@@ -61,14 +108,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final index = _index >= tabs.length ? 0 : _index;
 
     return Scaffold(
-      body: IndexedStack(index: index, children: tabs.map((t) => t.screen).toList()),
+      body: IndexedStack(
+          index: index, children: tabs.map((t) => t.screen).toList()),
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
         onDestinationSelected: (i) => _onDestinationSelected(tabs, i),
         backgroundColor: AppColors.surface,
         indicatorColor: AppColors.accentSoft,
         destinations: tabs
-            .map((t) => NavigationDestination(icon: Icon(t.icon), selectedIcon: Icon(t.selectedIcon), label: t.label))
+            .map((t) => NavigationDestination(
+                icon: Icon(t.icon),
+                selectedIcon: Icon(t.selectedIcon),
+                label: t.label))
             .toList(),
       ),
     );

@@ -53,7 +53,9 @@ class _UserFormScreenState extends State<UserFormScreen> {
     super.dispose();
   }
 
-  bool get _isSelf => _isEdit && widget.user!.id == context.read<AuthProvider>().currentUser?.id;
+  bool get _isSelf =>
+      _isEdit &&
+      widget.user!.id == context.read<AuthProvider>().currentUser?.id;
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -93,10 +95,15 @@ class _UserFormScreenState extends State<UserFormScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Nonaktifkan User?'),
-        content: const Text('User tidak akan bisa login lagi, tapi histori transaksinya tetap aman.'),
+        content: const Text(
+            'User tidak akan bisa login lagi, tapi histori transaksinya tetap aman.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Nonaktifkan')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Batal')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Nonaktifkan')),
         ],
       ),
     );
@@ -106,7 +113,9 @@ class _UserFormScreenState extends State<UserFormScreen> {
       await _userRepo.deactivateUser(widget.user!.id);
       if (mounted) Navigator.of(context).pop(true);
     } on ApiException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
     }
   }
 
@@ -118,7 +127,8 @@ class _UserFormScreenState extends State<UserFormScreen> {
         actions: [
           if (_isEdit && !_isSelf)
             IconButton(
-              icon: const Icon(Icons.delete_outline_rounded, color: AppColors.danger),
+              icon: const Icon(Icons.delete_outline_rounded,
+                  color: AppColors.danger),
               onPressed: _confirmDeactivate,
             ),
         ],
@@ -135,13 +145,19 @@ class _UserFormScreenState extends State<UserFormScreen> {
                   Container(
                     margin: const EdgeInsets.only(bottom: 16),
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: AppColors.dangerSoft, borderRadius: BorderRadius.circular(10)),
-                    child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13.5)),
+                    decoration: BoxDecoration(
+                        color: AppColors.dangerSoft,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: Text(_error!,
+                        style: const TextStyle(
+                            color: AppColors.danger, fontSize: 13.5)),
                   ),
                 TextFormField(
                   controller: _nameCtrl,
                   decoration: const InputDecoration(labelText: 'Nama'),
-                  validator: (v) => (v == null || v.trim().length < 2) ? 'Nama wajib diisi' : null,
+                  validator: (v) => (v == null || v.trim().length < 2)
+                      ? 'Nama wajib diisi'
+                      : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -149,24 +165,33 @@ class _UserFormScreenState extends State<UserFormScreen> {
                   enabled: !_isEdit, // email tidak bisa diubah setelah dibuat
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(labelText: 'Email'),
-                  validator: (v) => (v == null || !v.contains('@')) ? 'Email tidak valid' : null,
+                  validator: (v) => (v == null || !v.contains('@'))
+                      ? 'Email tidak valid'
+                      : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _phoneCtrl,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(labelText: 'No. HP (opsional)'),
+                  decoration:
+                      const InputDecoration(labelText: 'No. HP (opsional)'),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _passwordCtrl,
                   obscureText: true,
-                  decoration: InputDecoration(labelText: _isEdit ? 'Password Baru (opsional)' : 'Password'),
+                  decoration: InputDecoration(
+                      labelText:
+                          _isEdit ? 'Password Baru (opsional)' : 'Password'),
                   validator: (v) {
                     if (_isEdit) {
-                      return (v != null && v.isNotEmpty && v.length < 6) ? 'Password minimal 6 karakter' : null;
+                      return (v != null && v.isNotEmpty && v.length < 6)
+                          ? 'Password minimal 6 karakter'
+                          : null;
                     }
-                    return (v == null || v.length < 6) ? 'Password minimal 6 karakter' : null;
+                    return (v == null || v.length < 6)
+                        ? 'Password minimal 6 karakter'
+                        : null;
                   },
                 ),
                 const SizedBox(height: 12),
@@ -175,9 +200,12 @@ class _UserFormScreenState extends State<UserFormScreen> {
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Level (Role)'),
                   items: roleOrder
-                      .map((r) => DropdownMenuItem(value: r, child: Text(roleLabels[r] ?? r)))
+                      .map((r) => DropdownMenuItem(
+                          value: r, child: Text(roleLabels[r] ?? r)))
                       .toList(),
-                  onChanged: _isSelf ? null : (v) => setState(() => _role = v ?? _role),
+                  onChanged: _isSelf
+                      ? null
+                      : (v) => setState(() => _role = v ?? _role),
                 ),
                 if (_isEdit) ...[
                   const SizedBox(height: 4),
@@ -186,14 +214,19 @@ class _UserFormScreenState extends State<UserFormScreen> {
                     title: const Text('Aktif'),
                     subtitle: const Text('User nonaktif tidak bisa login'),
                     value: _isActive,
-                    onChanged: _isSelf ? null : (v) => setState(() => _isActive = v),
+                    onChanged:
+                        _isSelf ? null : (v) => setState(() => _isActive = v),
                   ),
                 ],
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _saving ? null : _submit,
                   child: _saving
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
                       : Text(_isEdit ? 'Simpan Perubahan' : 'Tambah User'),
                 ),
                 const SizedBox(height: 20),
