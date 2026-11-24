@@ -540,7 +540,7 @@ class _CountRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final diff = count == null ? null : count! - item.systemQty;
     final sub = [
-      if (item.sku != null) item.sku!,
+      if (item.sku?.isNotEmpty ?? false) item.sku!,
       if (item.unit.isNotEmpty) item.unit
     ].join(' · ');
     return Card(
@@ -548,6 +548,10 @@ class _CountRow extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
+          // Tinggi baris tetap (_rowExtent, untuk lompat ke item saat scan)
+          // sengaja diberi ruang lebih agar aman di ukuran font besar;
+          // isi dipusatkan supaya sisa ruangnya tidak menumpuk di bawah.
+          mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(

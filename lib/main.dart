@@ -47,6 +47,11 @@ class PosApp extends StatelessWidget {
         title: 'Q-Pos',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        // Tetap terang sampai seluruh layar dimigrasi dari `AppColors.x` ke
+        // `context.pos.x`; lihat docs/manual/tema.md. Ganti ke
+        // ThemeMode.system untuk mengikuti pengaturan HP.
+        themeMode: ThemeMode.light,
         home: const _RootGate(),
       ),
     );

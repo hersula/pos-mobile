@@ -100,8 +100,8 @@ class DiffTag extends StatelessWidget {
       fg = AppColors.pending;
     } else if (d == 0) {
       label = 'Cocok';
-      bg = AppColors.accentSoft;
-      fg = AppColors.accent;
+      bg = AppColors.successSoft;
+      fg = AppColors.success;
     } else if (d > 0) {
       label = '+${fmtQty(d)} lebih';
       bg = AppColors.infoSoft;
@@ -307,7 +307,17 @@ class BottomActionBar extends StatelessWidget {
           border: Border(top: BorderSide(color: AppColors.line))),
       child: SafeArea(
         top: false,
-        child: CenteredColumn(child: Row(children: children)),
+        // heightFactor: 1 wajib: Scaffold memberi bottomNavigationBar batas
+        // tinggi setinggi layar, dan Align tanpa heightFactor ikut membesar
+        // sehingga bar ini menutupi seluruh layar.
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: Row(children: children),
+          ),
+        ),
       ),
     );
   }

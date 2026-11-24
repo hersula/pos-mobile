@@ -270,12 +270,20 @@ class _SessionCard extends StatelessWidget {
                               color: s.status == 'COMPLETED' && diffItems
                                   ? diffColor(s.summary.netValue)
                                   : AppColors.text)),
-                      const SizedBox(height: 2),
-                      Text(s.statusLabel,
-                          style: TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w700,
-                              color: color)),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(s.statusLabel,
+                            style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: color)),
+                      ),
                     ],
                   ),
                 ],

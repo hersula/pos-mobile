@@ -288,7 +288,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           padding: const EdgeInsets.all(12),
           child: ElevatedButton(
             onPressed: _submitting ? null : _submit,
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.ember),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.ember,
+                foregroundColor: AppColors.onEmber),
             child: _submitting
                 ? const SizedBox(
                     width: 18,

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_config.dart';
+import '../../core/constants/pos_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/responsive.dart';
 import '../../data/models/price_level.dart';
@@ -334,7 +335,8 @@ class _PosScreenState extends State<PosScreen> {
               crossAxisCount: columns,
               mainAxisSpacing: 10,
               crossAxisSpacing: 10,
-              childAspectRatio: 0.82,
+              // Lebih tinggi dari lebar supaya foto produk tampil besar.
+              childAspectRatio: 0.72,
             ),
             itemCount: _products.length,
             itemBuilder: (context, i) {
@@ -402,55 +404,67 @@ class _ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final outOfStock = product.totalStock <= 0;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: outOfStock
-          ? () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Stok produk ini habis')),
-              )
-          : (product.hasMultipleUnits ? onTapPickUnit : onTapAdd),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.line),
-        ),
-        padding: const EdgeInsets.all(12),
+    final pos = context.pos;
+
+    // Foto memenuhi bagian atas kartu (tanpa padding) supaya produk mudah
+    // dikenali kasir; nama/harga/stok di bawahnya.
+    return Material(
+      color: pos.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: pos.line),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: outOfStock
+            ? () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Stok produk ini habis')),
+                )
+            : (product.hasMultipleUnits ? onTapPickUnit : onTapAdd),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                      color: AppColors.paper,
-                      borderRadius: BorderRadius.circular(8)),
-                  child: _buildImage(),
+              child: Container(
+                width: double.infinity,
+                color: pos.productImageBg,
+                child: Opacity(
+                  opacity: outOfStock ? 0.45 : 1,
+                  child: _buildImage(pos),
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              product.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              CurrencyFormatter.format(product.priceForLevel(activeLevelId)),
-              style: const TextStyle(
-                  color: AppColors.accent,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13),
-            ),
-            Text(
-              outOfStock ? 'Stok habis' : 'Stok: ${product.totalStock}',
-              style: TextStyle(
-                  fontSize: 11,
-                  color: outOfStock ? AppColors.danger : AppColors.muted),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: pos.text),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    CurrencyFormatter.format(
+                        product.priceForLevel(activeLevelId)),
+                    style: TextStyle(
+                        color: pos.accent,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14),
+                  ),
+                  Text(
+                    outOfStock ? 'Stok habis' : 'Stok: ${product.totalStock}',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: outOfStock ? pos.danger : pos.muted),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -458,17 +472,15 @@ class _ProductCard extends StatelessWidget {
     );
   }
 
-  Widget _buildImage() {
+  Widget _buildImage(PosColors pos) {
+    final placeholder = Icon(Icons.inventory_2_outlined,
+        color: pos.muted.withValues(alpha: 0.5), size: 36);
     final url = AppConfig.resolveImageUrl(product.imageUrl);
-    if (url == null) {
-      return Icon(Icons.inventory_2_outlined,
-          color: AppColors.muted.withValues(alpha: 0.5), size: 30);
-    }
+    if (url == null) return placeholder;
     return Image.network(
       url,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Icon(Icons.inventory_2_outlined,
-          color: AppColors.muted.withValues(alpha: 0.5), size: 30),
+      errorBuilder: (_, __, ___) => placeholder,
     );
   }
 }

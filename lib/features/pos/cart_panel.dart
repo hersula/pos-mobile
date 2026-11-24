@@ -118,8 +118,9 @@ class _CartPanelState extends State<CartPanel> {
               child: ElevatedButton(
                 onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const CheckoutScreen())),
-                style:
-                    ElevatedButton.styleFrom(backgroundColor: AppColors.ember),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.ember,
+                    foregroundColor: AppColors.onEmber),
                 child: Text(
                     'Lanjut ke Pembayaran · ${CurrencyFormatter.format(cart.grandTotal)}'),
               ),
